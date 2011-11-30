@@ -74,10 +74,16 @@ def main_step():
     except (IOError, EOFError):
         wdb, results, rng = wisdom.Wisdom(), [], numpy.random.RandomState(2)
 
-    try:
+    for iii in xrange(100):
         pgen = problem_generator(rng)
-
         prob_spec = pgen.next()
+
+        prob_spec = wisdom.ProblemSpec(n_imgs=1, height=128, width=128, depth=8, n_filters=4,
+                filter_height=7, filter_width=7,
+                img_strides=None,
+                filter_strides=None,
+                border_mode='valid')
+
         print prob_spec
         if len(wdb._observations) > 3 + getattr(wdb, '_dtree_n_obs', 0):
             wdb.build_dtree(force=True)
@@ -91,58 +97,38 @@ def main_step():
         # only fed into the training set if it's an improvement over the
         # current best suggestion. Therefore only errors are corrected, and
         # the training set stays "focused?"
+        #  Not sure if this is good or not.
+
+        #
+        # XXX: how does pycuda's cache interact with this idea of a walltime
+        # of patience?
         #
 
-        smart_op_spec = prob_spec.plan(patience=-1,
-                wisdom=wdb,
-                verbose=1,
-                device=device
+        op_specs = dict(
+                ref=wisdom.reference_op_spec(),
+                quick=prob_spec.plan(patience=-1, wisdom=None,
+                    device=device,
+                    rng=rng),
+                slow=prob_spec.plan(patience=float(patience), wisdom=None,
+                    device=device,
+                    rng=rng),
+                wise=prob_spec.plan(patience=float(patience),
+                    wisdom=wdb,
+                    device=device,
+                    rng=rng ),
                 )
-        ref_op_spec = wisdom.reference_op_spec()
+        finding = {}
+        for k, op_spec in sorted(op_specs.items()):
+            speed = prob_spec.measure_speed(op_spec,
+                    n_warmups=2, n_runs=5, wisdom=wdb, ctxt=ctxt)
+            finding[k] = speed
 
-        smart_speed = prob_spec.measure_speed(smart_op_spec,
-                n_warmups=2, n_runs=5,
-                wisdom=wdb)
+        print 'FINDING', finding
+        results.append(finding)
 
-        if smart_op_spec != ref_op_spec:
-            ref_speed = prob_spec.measure_speed(ref_op_spec,
-                    n_warmups=2, n_runs=5,
-                    wisdom=None)
-            if ref_speed > smart_speed:
-                wdb.record(prob_spec, ref_op_spec, ref_speed)
-            finding = dict(
-                    smart=smart_speed,
-                    ref=ref_speed)
-            results.append(finding)
-            best_op_spec = smart_op_spec if smart_speed > ref_speed else ref_op_spec
-        else:
-            results.append(dict(smart=smart_speed, ref=smart_speed))
-            best_op_spec = smart_op_spec
-
-        print 'FINDING', results[-1]
-        # -- some exploration
-        N = float(N)
-        while N > 0:
-            random_op_spec = wisdom.random_op_cross(best_op_spec,
-                    wisdom.random_op_spec(rng),
-                    rng, .75)
-
-            if random_op_spec == best_op_spec:
-                N -= .2
-                continue
-            random_speed = prob_spec.measure_speed(random_op_spec,
-                n_warmups=2, n_runs=5,
-                wisdom=None,
-                abort_thresh=smart_speed * .75, # should be best speed
-                save_on_abort=False)
-            if random_speed > smart_speed:
-                wdb.record(prob_spec, random_op_spec, random_speed)
-            print random_speed
-            N -= 1
-    finally:
-        ofile = open(wisdomfile, 'w')
-        cPickle.dump((wdb, results, rng), ofile)
-        ofile.close()
+    ofile = open(wisdomfile, 'w')
+    cPickle.dump((wdb, results, rng), ofile)
+    ofile.close()
 
 
 def main_insert_random_stuff():

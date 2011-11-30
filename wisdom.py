@@ -211,7 +211,8 @@ class ProblemSpec(object):
 
         raise NotImplementedError()
 
-    def plan(self, patience=0.1, wisdom=None, approx_n_uses=1000, verbose=0):
+    def plan(self, patience=0.1, wisdom=None, approx_n_uses=1000, verbose=0,
+            device=None, rng=None):
         """
         problem_spec - ProblemSpec instance
         patience - return a plan within this many seconds.
@@ -235,12 +236,14 @@ class ProblemSpec(object):
                     n_warmups=2,
                     n_runs=5,
                     abort_thresh=encumbent_speed * 0.75,
-                    wisdom=wisdom)
+                    wisdom=wisdom,
+                    device=device)
         logger.debug("Cycling through %i candidates from wisdom db" % (
                 len(candidates)))
 
         encumbent_speed = self.measure_speed(encumbent, n_warmups=2, n_runs=5,
-                wisdom=wisdom)
+                wisdom=wisdom,
+                device=device)
         for candidate in candidates[1:]:
             if (time.time() - t_start) >= patience:
                 logger.debug( "Breaking at position %i" % (
@@ -251,8 +254,8 @@ class ProblemSpec(object):
                 encumbent = candidate
                 encumbent_speed = candidate_speed
 
-        # XXX: why does rng = np.random not resample things??
-        rng = np.random.RandomState(int(time.time() * 1000))
+        if rng is None:
+            rng = np.random.RandomState(int(time.time() * 1000))
         # XXX: instead of drawing randomly
         #      - draw randomly and filter using the dtree
         #      - randomly perturb and hillclimb from the encumbent
@@ -269,7 +272,7 @@ class ProblemSpec(object):
 
 
     def measure_speed(self, op_spec, n_warmups, n_runs, abort_thresh=None,
-            wisdom=None, save_on_abort=True):
+            wisdom=None, save_on_abort=True, device=None):
         """Return GFLOPS/S of op, not counting transfer times.
 
         abort_thresh - return 0 if the true value appears to be
@@ -296,7 +299,7 @@ class ProblemSpec(object):
                                     'download',
                                     )])
 
-        with CudaContext(self.device) as context:
+        with CudaContext(device) as context:
 
             # XXX one image at a time
             in_ = fbconv3_cuda.Input(*img_shp)
