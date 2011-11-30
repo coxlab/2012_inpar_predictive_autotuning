@@ -10,29 +10,12 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.WARN)
 
-# Initialize CUDA
+# CUDA
 from pycuda import driver, gpuarray, compiler, tools
-from pycuda.driver import device_attribute
-driver.init()
-context = tools.make_default_context()
-device = context.get_device()
-import atexit
-atexit.register(context.pop)
-
-
-def get_device_attribute(name):
-    return device.get_attribute(device_attribute.__dict__[name])
-device_name = device.name().replace(' ', '_')
-
-print "=" * 80
-print "Using:", device_name
-print "=" * 80
 
 #import os
 from os import path
 
-#import pycuda.autoinit
-from pycuda import driver
 from Cheetah.Template import Template
 
 from fbconv3_utils import InvalidConfig, MYPATH
@@ -60,7 +43,13 @@ class FilterOp(object):
                  maxrregcount=None,  # None, 8, 16, 32
                  # --
                  use_fast_math=False,
+                 ctxt=None,
                  ):
+        assert ctxt is not None
+
+        def get_device_attribute(name):
+            return ctxt.get_device().get_attribute(
+                    driver.device_attribute.__dict__[name])
 
         # block of threads
         block = block_w, block_h, 1

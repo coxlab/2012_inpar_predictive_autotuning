@@ -18,6 +18,19 @@ import fbconv3_cuda
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+from pycuda import driver
+def init_cuda(dev_id):
+    driver.init()
+    logger.info( "GPU Device listing")
+    for i in range(driver.Device.count()):
+        device = driver.Device(i)
+        logger.info( "Device %i: %s %s" % (i,  device.name(),
+            device.compute_capability()))
+    device = driver.Device(dev_id)
+    logger.info("Using: %s" % device.name())
+    return device
+
+
 # XXX : should the average GFLOP/S be measured by dividing by trials or by
 #       time? (Should it be more important to tune the more expensive calls? I
 #       think yes)
@@ -52,7 +65,9 @@ def problem_generator(rng):
         yield prob_spec
 
 def main_step():
-    _python, _cmd, wisdomfile, N = sys.argv
+    _python, _cmd, dev_id, wisdomfile, N = sys.argv
+
+    device = init_cuda(int(dev_id))
 
     try:
         wdb, results, rng = cPickle.load(open(wisdomfile))
@@ -80,7 +95,9 @@ def main_step():
 
         smart_op_spec = prob_spec.plan(patience=-1,
                 wisdom=wdb,
-                verbose=1)
+                verbose=1,
+                device=device
+                )
         ref_op_spec = wisdom.reference_op_spec()
 
         smart_speed = prob_spec.measure_speed(smart_op_spec,
@@ -182,4 +199,5 @@ def main_fig1():
 if __name__ == '__main__':
     cmd = sys.argv[1]
     main = globals()['main_' + cmd]
+
     sys.exit(main())

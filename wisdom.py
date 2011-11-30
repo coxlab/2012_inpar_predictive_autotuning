@@ -10,6 +10,16 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 RSEED = 123
 
+class CudaContext(object):
+    def __init__(self, device):
+        self.device = device
+    def __enter__(self):
+        self.context = self.device.make_context()
+        return self.context
+    def __exit__(self, *args):
+        self.context.pop()
+
+
 class OpSpec(object):
     def __init__(self,
             block_w,
@@ -40,9 +50,9 @@ class OpSpec(object):
         assigns = ['%s=%s' % (n, v) for v, n in self.feature_pairs()]
         return "OpSpec(%s)" % ", ".join(assigns)
 
-    def FilterOp(self, imgs, filters, outs):
+    def FilterOp(self, imgs, filters, outs, ctxt):
         return fbconv3_cuda.FilterOp(imgs, filters, outs,
-                **self.__dict__)
+                ctxt=ctxt, **self.__dict__)
 
     def feature_pairs(self):
         return [(self.block_w, 'block_w'),
@@ -120,6 +130,7 @@ class ProblemSpec(object):
             img_strides,   # how is image physically strided
             filter_strides,# how is filter physically strided
             border_mode,   # one of 'valid', 'full', 'same'
+            device=None,
             ):
         self.__dict__.update(locals())
         del self.self
@@ -285,92 +296,94 @@ class ProblemSpec(object):
                                     'download',
                                     )])
 
-        # XXX one image at a time
-        in_ = fbconv3_cuda.Input(*img_shp)
-        fb_ = fbconv3_cuda.Filterbank(*ker_shp)
-        out_ = fbconv3_cuda.Output(*out_shp)
+        with CudaContext(self.device) as context:
 
-        # -- set-up operation (i.e. compilation)
-        fb_[:] = 0
-        try:
-            fop = op_spec.FilterOp(in_, fb_, out_)
-        except (fbconv3_cuda.InvalidConfig,
-                pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
-                pycuda.driver.CompileError,): #XXX: using too much shared memory
-            if wisdom and save_on_abort:
-                wisdom.record(self, op_spec, 0)
-            return 0
+            # XXX one image at a time
+            in_ = fbconv3_cuda.Input(*img_shp)
+            fb_ = fbconv3_cuda.Filterbank(*ker_shp)
+            out_ = fbconv3_cuda.Output(*out_shp)
 
-        for i in xrange(n_warmups + n_runs):
-
-            # -- upload data
-            start = time.time()
-            in_[:] = in_data
-            # XXX: is writing a 0 here important for correctness?
-            out_[:] = 0
-            fb_[:] = fb_data
-            end = time.time()
-            t_upload = end - start
-
-            # -- process convolution
-            # Note Bene: Filter != Conv
-            start = time.time()
+            # -- set-up operation (i.e. compilation)
+            fb_[:] = 0
             try:
-                t_cuda = fop()
-            except fbconv3_cuda.InvalidConfig:
+                fop = op_spec.FilterOp(in_, fb_, out_, ctxt=context)
+            except (fbconv3_cuda.InvalidConfig,
+                    pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
+                    pycuda.driver.CompileError,): #XXX: using too much shared memory
                 if wisdom and save_on_abort:
                     wisdom.record(self, op_spec, 0)
                 return 0
-            end = time.time()
-            t_process = end - start
 
-            if i > 0 and (gflop / t_cuda < abort_thresh):
-                if wisdom and save_on_abort:
-                    wisdom.record(self, op_spec, gflop / t_cuda)
-                return 0
+            for i in xrange(n_warmups + n_runs):
 
-            start = time.time()
-            out_data = out_[:]
-            end = time.time()
-            t_download = end - start
+                # -- upload data
+                start = time.time()
+                in_[:] = in_data
+                # XXX: is writing a 0 here important for correctness?
+                out_[:] = 0
+                fb_[:] = fb_data
+                end = time.time()
+                t_upload = end - start
 
-            if i >= n_warmups:
-                timings['upload'] += [t_upload]
-                timings['process'] += [t_process]
-                timings['cuda'] += [t_cuda]
-                timings['download'] += [t_download]
+                # -- process convolution
+                # Note Bene: Filter != Conv
+                start = time.time()
+                try:
+                    t_cuda = fop()
+                except fbconv3_cuda.InvalidConfig:
+                    if wisdom and save_on_abort:
+                        wisdom.record(self, op_spec, 0)
+                    return 0
+                end = time.time()
+                t_process = end - start
 
-            if 0:
-                gflops_cuda = gflop / t_cuda
-                gflops_proc = gflop / t_process
-                gflops_tot = gflop / (t_process+t_upload+t_download)
-                print "gflops_cuda", gflops_cuda
-                print "gflops_proc", gflops_proc
-                print "gflops_tot", gflops_tot
+                if i > 0 and (gflop / t_cuda < abort_thresh):
+                    if wisdom and save_on_abort:
+                        wisdom.record(self, op_spec, gflop / t_cuda)
+                    return 0
 
-        timings_stats = dict([(key, {'median': sp.median(t),
-                                     'mean': sp.mean(t),
-                                     'std': sp.std(t),
-                                     'max': max(t),
-                                     'min': min(t),
-                                     }
-                               )
-                              for key, t in timings.iteritems()
-                              ]
-                             )
+                start = time.time()
+                out_data = out_[:]
+                end = time.time()
+                t_download = end - start
 
-        gflops_cuda = {
-            'median': gflop / timings_stats['cuda']['median'],
-            'mean': gflop / timings_stats['cuda']['mean'],
-            'max': gflop / timings_stats['cuda']['min'],
-            'min': gflop / timings_stats['cuda']['max'],
-            }
+                if i >= n_warmups:
+                    timings['upload'] += [t_upload]
+                    timings['process'] += [t_process]
+                    timings['cuda'] += [t_cuda]
+                    timings['download'] += [t_download]
 
-        # print "GFLOPS_CUDA", gflops_cuda
+                if 0:
+                    gflops_cuda = gflop / t_cuda
+                    gflops_proc = gflop / t_process
+                    gflops_tot = gflop / (t_process+t_upload+t_download)
+                    print "gflops_cuda", gflops_cuda
+                    print "gflops_proc", gflops_proc
+                    print "gflops_tot", gflops_tot
 
-        if wisdom:
-            wisdom.record(self, op_spec, gflops_cuda['max'])
-        return gflops_cuda['max']
+            timings_stats = dict([(key, {'median': sp.median(t),
+                                         'mean': sp.mean(t),
+                                         'std': sp.std(t),
+                                         'max': max(t),
+                                         'min': min(t),
+                                         }
+                                   )
+                                  for key, t in timings.iteritems()
+                                  ]
+                                 )
+
+            gflops_cuda = {
+                'median': gflop / timings_stats['cuda']['median'],
+                'mean': gflop / timings_stats['cuda']['mean'],
+                'max': gflop / timings_stats['cuda']['min'],
+                'min': gflop / timings_stats['cuda']['max'],
+                }
+
+            # print "GFLOPS_CUDA", gflops_cuda
+
+            if wisdom:
+                wisdom.record(self, op_spec, gflops_cuda['max'])
+            return gflops_cuda['max']
 
     def assert_correct(self, op):
         """raise assertion error if op() produces incorrect output
