@@ -39,7 +39,8 @@ def problem_generator(rng):
     # TODO: sample fbcorr parameters from within LFW models
     space = rSON2(
             "nimgs" , 1, #one_of(1, 2, 4, 8, 16),
-            "isize" , one_of(8, 13, 27, 28, 32, 81, 100, 121, 160, 200, 256),
+            "iheight" , one_of(8, 16, 32, 64, 96, 121, 160, 200, 256),
+            "iwidth" , one_of(8, 16, 32, 64, 96, 121, 160, 200, 256),
             "depth" , one_of(1, 4, 8, 16, 32, 64), # XXX: 3 for rgb
             "nfilters" , one_of(1, 4, 8, 16, 32, 64), # must be 1 or 4k
             "fsize" , one_of(3, 5, 7, 9, 11),
@@ -48,8 +49,8 @@ def problem_generator(rng):
         s = space.sample(rng=rng)
         prob_spec = wisdom.ProblemSpec(
                 n_imgs=s['nimgs'],
-                height=s['isize'],
-                width=s['isize'],
+                height=s['iheight'],
+                width=s['iwidth'],
                 depth=s['depth'],
                 n_filters=s['nfilters'],
                 filter_height=s['fsize'],
@@ -65,9 +66,9 @@ def problem_generator(rng):
         yield prob_spec
 
 def main_step():
-    _python, _cmd, dev_id, wisdomfile, N = sys.argv
+    _python, _cmd, dev_id_str, wisdomfile, patience_str = sys.argv
 
-    device = init_cuda(int(dev_id))
+    device = init_cuda(int(dev_id_str))
 
     try:
         wdb, results, rng = cPickle.load(open(wisdomfile))
@@ -109,10 +110,10 @@ def main_step():
                 quick=prob_spec.plan(patience=-1, wisdom=None,
                     device=device,
                     rng=rng),
-                slow=prob_spec.plan(patience=float(patience), wisdom=None,
+                slow=prob_spec.plan(patience=float(patience_str), wisdom=None,
                     device=device,
                     rng=rng),
-                wise=prob_spec.plan(patience=float(patience),
+                wise=prob_spec.plan(patience=float(patience_str),
                     wisdom=wdb,
                     device=device,
                     rng=rng ),
@@ -120,15 +121,15 @@ def main_step():
         finding = {}
         for k, op_spec in sorted(op_specs.items()):
             speed = prob_spec.measure_speed(op_spec,
-                    n_warmups=2, n_runs=5, wisdom=wdb, ctxt=ctxt)
+                    n_warmups=2, n_runs=5, wisdom=wdb, device=device)
             finding[k] = speed
 
         print 'FINDING', finding
         results.append(finding)
 
-    ofile = open(wisdomfile, 'w')
-    cPickle.dump((wdb, results, rng), ofile)
-    ofile.close()
+        ofile = open(wisdomfile, 'w')
+        cPickle.dump((wdb, results, rng), ofile)
+        ofile.close()
 
 
 def main_insert_random_stuff():

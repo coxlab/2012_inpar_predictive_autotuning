@@ -17,7 +17,9 @@ class CudaContext(object):
         self.context = self.device.make_context()
         return self.context
     def __exit__(self, *args):
+        #print "MEM INFO", pycuda.driver.mem_get_info()
         self.context.pop()
+        self.context.detach()
 
 
 class OpSpec(object):
@@ -62,6 +64,7 @@ class OpSpec(object):
                 (self.n_output4s==1, 'output4s_1'),
                 (self.n_output4s==2, 'output4s_2'),
                 (self.spill, 'spill'),
+                (self.imul_fast, 'imul_fast'),
                 (self.pad_shared, 'pad_shared'),
                 (self.use_tex1dfetch, 'tex1dfetch'),
                 (self.maxrregcount==None, 'maxreg_none'),
@@ -200,18 +203,7 @@ class ProblemSpec(object):
         assigns = ['%s=%s' % (n, v) for v, n in self.feature_pairs()]
         return "ProblemSpec(%s)" % ", ".join(assigns)
 
-    def autotune_random(self, timeout=float('inf'), max_trials=100, n_warmups=2, n_runs=5):
-        """
-        Run a random search on FBConv3 bandit to find the best settings for
-        this problem spec, return optimal FilterOp.
-        """
-        # basically call fbconv3_benchmark.benchmark_run with self as
-        # argument.
-        t_start = time.time()
-
-        raise NotImplementedError()
-
-    def plan(self, patience=0.1, wisdom=None, approx_n_uses=1000, verbose=0,
+    def plan(self, patience=0.0, wisdom=None, approx_n_uses=1000, verbose=0,
             device=None, rng=None):
         """
         problem_spec - ProblemSpec instance
@@ -223,28 +215,28 @@ class ProblemSpec(object):
         """
         t_start = time.time()
         # -- start by getting something to return ASAP
+        encumbent = reference_op_spec()
+        if (time.time() - t_start) >= patience:
+            return encumbent
+
         if wisdom is None:
             wisdom = Wisdom()
 
-        candidates = wisdom.ranked_suggestions(self)
-        encumbent = candidates[0]
-        if (time.time() - t_start) >= patience:
-            return encumbent
+        encumbent_speed = self.measure_speed(encumbent, n_warmups=2, n_runs=8,
+                wisdom=wisdom, device=device)
 
         def clock_candidate():
             return self.measure_speed(candidate,
                     n_warmups=2,
-                    n_runs=5,
+                    n_runs=8,
                     abort_thresh=encumbent_speed * 0.75,
+                    save_on_abort=False,
                     wisdom=wisdom,
                     device=device)
-        logger.debug("Cycling through %i candidates from wisdom db" % (
-                len(candidates)))
 
-        encumbent_speed = self.measure_speed(encumbent, n_warmups=2, n_runs=5,
-                wisdom=wisdom,
-                device=device)
-        for candidate in candidates[1:]:
+        for candidate in wisdom.ranked_suggestions(self)[:3]:
+            if candidate == encumbent:
+                continue
             if (time.time() - t_start) >= patience:
                 logger.debug( "Breaking at position %i" % (
                             candidates.index(candidate)))
@@ -256,12 +248,15 @@ class ProblemSpec(object):
 
         if rng is None:
             rng = np.random.RandomState(int(time.time() * 1000))
+
         # XXX: instead of drawing randomly
         #      - draw randomly and filter using the dtree
         #      - randomly perturb and hillclimb from the encumbent
         #      - run some other kind of optimization strategy here
         while (time.time() - t_start) < patience:
-            candidate = random_op_spec(rng)
+            candidate = random_op_cross(encumbent,
+                    random_op_spec(rng),
+                    rng, .75) # XXX: local search should be parametrized somehow
             candidate_speed = clock_candidate()
             if candidate_speed > 0:
                 if candidate_speed > encumbent_speed:
@@ -269,7 +264,6 @@ class ProblemSpec(object):
                     encumbent_speed = candidate_speed
 
         return encumbent
-
 
     def measure_speed(self, op_spec, n_warmups, n_runs, abort_thresh=None,
             wisdom=None, save_on_abort=True, device=None):
@@ -363,6 +357,9 @@ class ProblemSpec(object):
                     print "gflops_cuda", gflops_cuda
                     print "gflops_proc", gflops_proc
                     print "gflops_tot", gflops_tot
+
+            if 0:
+                print 'TIMINGS', timings
 
             timings_stats = dict([(key, {'median': sp.median(t),
                                          'mean': sp.mean(t),
@@ -473,6 +470,7 @@ class Wisdom(object):
                     logger.warn('ignoring duplicate entry: %s, %s' % (
                         prob_spec, op_spec))
                     return
+        #print "RECORD", (prob_spec, op_spec, speed)
         self._observations.append((prob_spec, op_spec, speed))
 
     def build_dtree_rec(self, features, targets, global_idxs, feature_names,
