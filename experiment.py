@@ -50,7 +50,7 @@ def problem_generator(rng):
         prob_spec = wisdom.ProblemSpec(
                 n_imgs=s['nimgs'],
                 height=s['iheight'],
-                width=s['iwidth'],
+                width=s['iheight'], # XXX: why is assert height==width in FilterOp??
                 depth=s['depth'],
                 n_filters=s['nfilters'],
                 filter_height=s['fsize'],
@@ -75,15 +75,9 @@ def main_step():
     except (IOError, EOFError):
         wdb, results, rng = wisdom.Wisdom(), [], numpy.random.RandomState(2)
 
-    for iii in xrange(100):
+    for iii in xrange(1000):
         pgen = problem_generator(rng)
         prob_spec = pgen.next()
-
-        prob_spec = wisdom.ProblemSpec(n_imgs=1, height=128, width=128, depth=8, n_filters=4,
-                filter_height=7, filter_width=7,
-                img_strides=None,
-                filter_strides=None,
-                border_mode='valid')
 
         print prob_spec
         if len(wdb._observations) > 3 + getattr(wdb, '_dtree_n_obs', 0):
@@ -105,23 +99,28 @@ def main_step():
         # of patience?
         #
 
-        op_specs = dict(
-                ref=wisdom.reference_op_spec(),
-                quick=prob_spec.plan(patience=-1, wisdom=None,
+        finding = {}
+        for k in 'ref', 'slow', 'wise':
+            print "EXP: PLANNING ", k
+            if k == 'ref':
+                op_spec=wisdom.reference_op_spec()
+            elif k == 'quick':
+                op_spec=prob_spec.plan(patience=-1, wisdom=None,
                     device=device,
-                    rng=rng),
-                slow=prob_spec.plan(patience=float(patience_str), wisdom=None,
+                    rng=rng)
+            elif k == 'slow':
+                op_spec=prob_spec.plan(patience=float(patience_str), wisdom=None,
                     device=device,
-                    rng=rng),
-                wise=prob_spec.plan(patience=float(patience_str),
+                    rng=rng)
+            elif k == 'wise':
+                op_spec=prob_spec.plan(patience=float(patience_str),
                     wisdom=wdb,
                     device=device,
-                    rng=rng ),
-                )
-        finding = {}
-        for k, op_spec in sorted(op_specs.items()):
+                    rng=rng)
+            print "EXP: MEASURING ", k, "..."
             speed = prob_spec.measure_speed(op_spec,
-                    n_warmups=2, n_runs=5, wisdom=wdb, device=device)
+                    n_warmups=2, n_runs=8, wisdom=wdb, device=device)
+            print "EXP: MEASURED ", speed
             finding[k] = speed
 
         print 'FINDING', finding
@@ -175,11 +174,19 @@ def main_fig1():
     _python, _cmd, wisdomfile = sys.argv
     wdb, results, rng = cPickle.load(open(wisdomfile))
     import matplotlib.pyplot as plt
-    y = [r['smart'] / r['ref'] for r in results if r['ref'] > 0]
-    plt.scatter(numpy.arange(len(y)), y)
+    for key, col in ('slow', 'r'),  ('wise', 'g'), ('quick', 'b'):
+        y = [r[key] / r['ref'] if (r['ref'] > 0 and r[key]>0) else 1
+                for r in results]
+        print y
+        plt.scatter(numpy.arange(len(y)), y, label=key, c=col)
+        yy = [r[key] / r['ref']
+                for r in results if r['ref'] > 0 and r[key] > 0]
+        gmean = numpy.exp( numpy.log(yy).mean())
+        plt.axhline(gmean, c=col)
+
     plt.xlabel('amount of training data')
-    plt.ylabel('speed of dtree / speed of reference')
-    plt.axhline(1.0)
+    plt.ylabel('speed up over reference')
+    plt.legend()
     plt.show()
 
 

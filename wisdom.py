@@ -225,7 +225,9 @@ class ProblemSpec(object):
         encumbent_speed = self.measure_speed(encumbent, n_warmups=2, n_runs=8,
                 wisdom=wisdom, device=device)
 
+        n_clocked = [0]
         def clock_candidate():
+            n_clocked[0] += 1
             return self.measure_speed(candidate,
                     n_warmups=2,
                     n_runs=8,
@@ -238,8 +240,6 @@ class ProblemSpec(object):
             if candidate == encumbent:
                 continue
             if (time.time() - t_start) >= patience:
-                logger.debug( "Breaking at position %i" % (
-                            candidates.index(candidate)))
                 return encumbent
             candidate_speed = clock_candidate()
             if candidate_speed > encumbent_speed:
@@ -262,7 +262,7 @@ class ProblemSpec(object):
                 if candidate_speed > encumbent_speed:
                     encumbent = candidate
                     encumbent_speed = candidate_speed
-
+        #print 'N_CLOCKED', n_clocked[0]
         return encumbent
 
     def measure_speed(self, op_spec, n_warmups, n_runs, abort_thresh=None,
@@ -309,6 +309,7 @@ class ProblemSpec(object):
                     pycuda.driver.CompileError,): #XXX: using too much shared memory
                 if wisdom and save_on_abort:
                     wisdom.record(self, op_spec, 0)
+                print '-- InvalidConfig'
                 return 0
 
             for i in xrange(n_warmups + n_runs):
@@ -330,6 +331,7 @@ class ProblemSpec(object):
                 except fbconv3_cuda.InvalidConfig:
                     if wisdom and save_on_abort:
                         wisdom.record(self, op_spec, 0)
+                    print '-- InvalidConfig'
                     return 0
                 end = time.time()
                 t_process = end - start
@@ -337,6 +339,7 @@ class ProblemSpec(object):
                 if i > 0 and (gflop / t_cuda < abort_thresh):
                     if wisdom and save_on_abort:
                         wisdom.record(self, op_spec, gflop / t_cuda)
+                    print '-- InvalidConfig'
                     return 0
 
                 start = time.time()
@@ -358,8 +361,6 @@ class ProblemSpec(object):
                     print "gflops_proc", gflops_proc
                     print "gflops_tot", gflops_tot
 
-            if 0:
-                print 'TIMINGS', timings
 
             timings_stats = dict([(key, {'median': sp.median(t),
                                          'mean': sp.mean(t),
@@ -379,7 +380,7 @@ class ProblemSpec(object):
                 'min': gflop / timings_stats['cuda']['max'],
                 }
 
-            # print "GFLOPS_CUDA", gflops_cuda
+            print "GFLOPS_CUDA", gflops_cuda
 
             if wisdom:
                 wisdom.record(self, op_spec, gflops_cuda['max'])
@@ -455,19 +456,25 @@ class Wisdom(object):
         else:
             rvals.sort()
             rvals.reverse()
-            print 'compatible', len(scores_idxs)
-            for r in rvals[:5]:
-                print 'RANKED SUG', r
+            if 0:
+                print 'compatible', len(scores_idxs)
+                for r in rvals[:5]:
+                    print 'RANKED SUG', r
             return [r[1] for r in rvals]
 
     def record(self, prob_spec, op_spec, speed):
-        for pspec, ospec, s in self._observations:
+        for ii, (pspec, ospec, s) in enumerate(self._observations):
             if (pspec == prob_spec and ospec == op_spec):
                 if abs(np.log(s) - np.log(speed)) > np.log(1.2):
-                    raise Exception('duplicate entry w different speed',
-                            (s, speed))
+                    logger.error('duplicate entry w different speed: %s, %s' % (
+                        s, speed))
+                    self._observations[ii]= (
+                            pspec, ospec, .5 * s + .5 * speed)
+                    return
+                    #raise Exception('duplicate entry w different speed',
+                    #        (s, speed))
                 else:
-                    logger.warn('ignoring duplicate entry: %s, %s' % (
+                    logger.debug('ignoring duplicate entry: %s, %s' % (
                         prob_spec, op_spec))
                     return
         #print "RECORD", (prob_spec, op_spec, speed)
@@ -475,7 +482,7 @@ class Wisdom(object):
 
     def build_dtree_rec(self, features, targets, global_idxs, feature_names,
             min_improvement=.1,
-            min_split_size=3):
+            min_split_size=10):
         assert len(features) == len(targets) == len(global_idxs)
         assert features.shape[1] == len(feature_names)
         targets_var = np.var(targets)
