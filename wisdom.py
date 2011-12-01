@@ -222,8 +222,9 @@ class ProblemSpec(object):
         if wisdom is None:
             wisdom = Wisdom()
 
-        encumbent_speed = self.measure_speed(encumbent, n_warmups=2, n_runs=8,
-                wisdom=wisdom, device=device)
+        encumbent_speed = ref_speed = self.measure_speed(encumbent,
+                n_warmups=2, n_runs=8, ref_speed=None, wisdom=wisdom,
+                device=device)
 
         n_clocked = [0]
         def clock_candidate():
@@ -231,7 +232,8 @@ class ProblemSpec(object):
             return self.measure_speed(candidate,
                     n_warmups=2,
                     n_runs=8,
-                    abort_thresh=encumbent_speed * 0.75,
+                    ref_speed=ref_speed,
+                    abort_rel_thresh=0.5,
                     save_on_abort=False,
                     wisdom=wisdom,
                     device=device)
@@ -265,12 +267,13 @@ class ProblemSpec(object):
         #print 'N_CLOCKED', n_clocked[0]
         return encumbent
 
-    def measure_speed(self, op_spec, n_warmups, n_runs, abort_thresh=None,
-            wisdom=None, save_on_abort=True, device=None):
+    def measure_speed(self, op_spec, n_warmups, n_runs, ref_speed,
+            abort_rel_thresh=.5,
+            save_on_abort=True,
+            wisdom=None,
+            device=None):
         """Return GFLOPS/S of op, not counting transfer times.
 
-        abort_thresh - return 0 if the true value appears to be
-                       lower than this (for early exit).
         """
         all_timings = {}
         gflop = self.gflops()
@@ -293,6 +296,7 @@ class ProblemSpec(object):
                                     'download',
                                     )])
 
+        max_gflop_per_s = 0
         with CudaContext(device) as context:
 
             # XXX one image at a time
@@ -306,10 +310,10 @@ class ProblemSpec(object):
                 fop = op_spec.FilterOp(in_, fb_, out_, ctxt=context)
             except (fbconv3_cuda.InvalidConfig,
                     pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
-                    pycuda.driver.CompileError,): #XXX: using too much shared memory
+                    pycuda.driver.CompileError,), e: #XXX: using too much shared memory
                 if wisdom and save_on_abort:
-                    wisdom.record(self, op_spec, 0)
-                print '-- InvalidConfig'
+                    wisdom.record(self, op_spec, 0, 0)
+                print '-- InvalidConfig', e
                 return 0
 
             for i in xrange(n_warmups + n_runs):
@@ -328,30 +332,33 @@ class ProblemSpec(object):
                 start = time.time()
                 try:
                     t_cuda = fop()
-                except fbconv3_cuda.InvalidConfig:
+                except fbconv3_cuda.InvalidConfig, e:
                     if wisdom and save_on_abort:
-                        wisdom.record(self, op_spec, 0)
-                    print '-- InvalidConfig'
+                        wisdom.record(self, op_spec, 0, 0)
+                    print '-- InvalidConfig', e
                     return 0
                 end = time.time()
                 t_process = end - start
 
-                if i > 0 and (gflop / t_cuda < abort_thresh):
-                    if wisdom and save_on_abort:
-                        wisdom.record(self, op_spec, gflop / t_cuda)
-                    print '-- InvalidConfig'
-                    return 0
+                gflop_per_s = gflop / t_cuda
+                max_gflop_per_s = max(max_gflop_per_s, gflop_per_s)
+                if i > n_warmups and ref_speed is not None:
+                    if (max_gflop_per_s < ref_speed * abort_rel_thresh):
+                        if wisdom and save_on_abort:
+                            wisdom.record(self, op_spec, max_gflop_per_s,
+                                    ref_speed)
+                        print '-- Performance too slow'
+                        return 0
 
                 start = time.time()
                 out_data = out_[:]
                 end = time.time()
                 t_download = end - start
 
-                if i >= n_warmups:
-                    timings['upload'] += [t_upload]
-                    timings['process'] += [t_process]
-                    timings['cuda'] += [t_cuda]
-                    timings['download'] += [t_download]
+                timings['upload'] += [t_upload]
+                timings['process'] += [t_process]
+                timings['cuda'] += [t_cuda]
+                timings['download'] += [t_download]
 
                 if 0:
                     gflops_cuda = gflop / t_cuda
@@ -383,7 +390,14 @@ class ProblemSpec(object):
             print "GFLOPS_CUDA", gflops_cuda
 
             if wisdom:
-                wisdom.record(self, op_spec, gflops_cuda['max'])
+                if ref_speed is None:
+                    wisdom.record(self, op_spec,
+                            gflops_cuda['max'], gflops_cuda['max'])
+                else:
+                    wisdom.record(self, op_spec,
+                            gflops_cuda['max'], ref_speed)
+            print gflops_cuda['max'] , max_gflop_per_s
+            assert gflops_cuda['max'] == max_gflop_per_s
             return gflops_cuda['max']
 
     def assert_correct(self, op):
@@ -462,23 +476,13 @@ class Wisdom(object):
                     print 'RANKED SUG', r
             return [r[1] for r in rvals]
 
-    def record(self, prob_spec, op_spec, speed):
-        for ii, (pspec, ospec, s) in enumerate(self._observations):
+    def record(self, prob_spec, op_spec, speed, ref_speed):
+        assert ref_speed is not None
+        for ii, (pspec, ospec, s, rs) in enumerate(self._observations):
             if (pspec == prob_spec and ospec == op_spec):
-                if abs(np.log(s) - np.log(speed)) > np.log(1.2):
-                    logger.error('duplicate entry w different speed: %s, %s' % (
-                        s, speed))
-                    self._observations[ii]= (
-                            pspec, ospec, .5 * s + .5 * speed)
-                    return
-                    #raise Exception('duplicate entry w different speed',
-                    #        (s, speed))
-                else:
-                    logger.debug('ignoring duplicate entry: %s, %s' % (
-                        prob_spec, op_spec))
-                    return
-        #print "RECORD", (prob_spec, op_spec, speed)
-        self._observations.append((prob_spec, op_spec, speed))
+                self._observations[ii][2] = .75 * s + .25 * speed
+                self._observations[ii][3] = .75 * rs + .25 * ref_speed
+        self._observations.append([prob_spec, op_spec, speed, ref_speed])
 
     def build_dtree_rec(self, features, targets, global_idxs, feature_names,
             min_improvement=.1,
@@ -563,11 +567,11 @@ class Wisdom(object):
         targets = []
         logger.info('building dtree from %i observations' %
                 len(self._observations))
-        for prob_spec, op_spec, speed in self._observations:
+        for prob_spec, op_spec, speed, ref_speed in self._observations:
             feature = np.concatenate([
                 prob_spec.feature_values(),
                 op_spec.feature_values()])
-            target = np.log(speed + 1e-10)
+            target = np.log(speed + 1e-10) - np.log(ref_speed + 1e-10)
             features.append(feature)
             targets.append(target)
 

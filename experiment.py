@@ -119,7 +119,8 @@ def main_step():
                     rng=rng)
             print "EXP: MEASURING ", k, "..."
             speed = prob_spec.measure_speed(op_spec,
-                    n_warmups=2, n_runs=8, wisdom=wdb, device=device)
+                    n_warmups=2, n_runs=8, ref_speed=None, wisdom=None,
+                    device=device)
             print "EXP: MEASURED ", speed
             finding[k] = speed
 
@@ -174,7 +175,7 @@ def main_fig1():
     _python, _cmd, wisdomfile = sys.argv
     wdb, results, rng = cPickle.load(open(wisdomfile))
     import matplotlib.pyplot as plt
-    for key, col in ('slow', 'r'),  ('wise', 'g'), ('quick', 'b'):
+    for key, col in ('slow', 'r'),  ('wise', 'g'), ('ref', 'b'):
         y = [r[key] / r['ref'] if (r['ref'] > 0 and r[key]>0) else 1
                 for r in results]
         print y
