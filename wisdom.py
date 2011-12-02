@@ -509,6 +509,7 @@ class Timing(object):
                                     'cuda',
                                     'download',
                                     )])
+
     def stats(self):
         return dict(
                 [(key, {
@@ -519,103 +520,131 @@ class Timing(object):
                     'min': min(t),
                     }) for key, t in self.timings.iteritems()])
 
-    def speed(self):
+    def speed(self, key='median'):
         stats = self.stats()
         gflop = self.prob_spec.gflops()
         gflops_cuda = {
             'median': gflop / stats['cuda']['median'],
-            'mean': gflop / stats['cuda']['mean'],
-            'max': gflop / stats['cuda']['min'],
+            #'mean': gflop / stats['cuda']['mean'],
+            ## mean is different if
+            ## computed before or after division
+            'max': gflop / stats['cuda']['min'],  # -- N.B. flip min -> max
             'min': gflop / stats['cuda']['max'],
             }
-        return gflops_cuda['max']
+        return gflops_cuda[key]
 
-    def measure(self, device, N=8):
-        """
-        Add N timing measurements to self.timings
-        """
+    def measure_1(self, fop, in_, out_, fb_, in_data, fb_data):
+        # -- upload data
+        try:
+            start = time.time()
+            in_[:] = in_data
+            # XXX: is writing a 0 here important for correctness?
+            out_[:] = 0
+            fb_[:] = fb_data
+            end = time.time()
+            t_upload = end - start
+
+            # -- process convolution
+            # Note Bene: Filter != Conv
+            start = time.time()
+            try:
+                t_cuda = fop()
+            except fbconv3_cuda.InvalidConfig, e:
+                logger.debug('-- InvalidConfig %s' % str(e))
+                self.valid = False
+                return
+            end = time.time()
+            t_process = end - start
+
+            start = time.time()
+            out_data = out_[:]
+            end = time.time()
+            t_download = end - start
+
+            self.timings['upload'] += [t_upload]
+            self.timings['process'] += [t_process]
+            self.timings['cuda'] += [t_cuda]
+            self.timings['download'] += [t_download]
+        except pycuda._driver.LaunchError:
+            # memcpy can fail, call can fail
+            self.valid = False
+
+    def get_sample_data(self):
 
         img_shp = self.prob_spec.image_shape()
         ker_shp = self.prob_spec.filters_shape()
         out_shp = self.prob_spec.output_shape()
 
         data_rng = np.random.RandomState(12345)
-        in_data = data_rng.randn(*img_shp).astype('float32')
-        fb_data = data_rng.randn(*ker_shp).astype( 'float32')
+        # XXX: put random numbers or arange mod something to check correctness
+        in_data = np.zeros(img_shp, dtype='float32')
+        fb_data = np.zeros(ker_shp, dtype='float32')
         out_data = np.empty(out_shp, dtype='float32')
+        return in_data, fb_data, out_data
+
+    def measure_setup(self, context):
+        img_shp = self.prob_spec.image_shape()
+        ker_shp = self.prob_spec.filters_shape()
+        out_shp = self.prob_spec.output_shape()
+
+        in_ = fbconv3_cuda.Input(*img_shp)
+        fb_ = fbconv3_cuda.Filterbank(*ker_shp)
+        out_ = fbconv3_cuda.Output(*out_shp)
+
+        # -- set-up operation (i.e. compilation)
+        fb_[:] = 0
+        fop = self.op_spec.FilterOp(in_, fb_, out_, ctxt=context)
+        return fop, in_, fb_, out_
+
+    def measure(self, device, N=8):
+        """
+        Add N timing measurements to self.timings
+        """
+        in_data, fb_data, out_dat = self.get_sample_data()
 
         with CudaContext(device) as context:
-
-            # XXX one image at a time
-            in_ = fbconv3_cuda.Input(*img_shp)
-            fb_ = fbconv3_cuda.Filterbank(*ker_shp)
-            out_ = fbconv3_cuda.Output(*out_shp)
-
-            # -- set-up operation (i.e. compilation)
-            fb_[:] = 0
             try:
-                fop = self.op_spec.FilterOp(in_, fb_, out_, ctxt=context)
+                fop, in_, fb_, out_ = self.measure_setup(context)
             except (fbconv3_cuda.InvalidConfig,
                     pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
                     pycuda.driver.CompileError,), e: #XXX: using too much shared memory
                 logger.debug('-- InvalidConfig %s' % str(e))
                 self.valid = False
                 return
-
             for i in xrange(N):
+                self.measure_1(fop, in_, out_, fb_, in_data, fb_data)
 
-                # -- upload data
-                start = time.time()
-                in_[:] = in_data
-                # XXX: is writing a 0 here important for correctness?
-                out_[:] = 0
-                fb_[:] = fb_data
-                end = time.time()
-                t_upload = end - start
+def quick_winner(new_timing, timing, device):
+    in_data, fb_data, out_dat = new_timing.get_sample_data()
+    with CudaContext(device) as context:
+        try:
+            fop, in_, fb_, out_ = new_timing.measure_setup(context)
+        except (fbconv3_cuda.InvalidConfig,
+                pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
+                pycuda.driver.CompileError,), e: #XXX: using too much shared memory
+            logger.debug('-- InvalidConfig %s' % str(e))
+            new_timing.valid = False
+        i = 0
+        while i < 10 and new_timing.valid:
+            if i >= 3 and new_timing.speed('max') < .5 * timing.speed():
+                break
+            new_timing.measure_1(fop, in_, out_, fb_, in_data, fb_data)
+            i += 1
+    if new_timing.valid and new_timing.speed() > timing.speed():
+        return new_timing
+    else:
+        return timing
 
-                # -- process convolution
-                # Note Bene: Filter != Conv
-                start = time.time()
-                try:
-                    t_cuda = fop()
-                except fbconv3_cuda.InvalidConfig, e:
-                    logger.debug('-- InvalidConfig %s' % str(e))
-                    self.valid = False
-                    return
-                end = time.time()
-                t_process = end - start
-
-                start = time.time()
-                out_data = out_[:]
-                end = time.time()
-                t_download = end - start
-
-                self.timings['upload'] += [t_upload]
-                self.timings['process'] += [t_process]
-                self.timings['cuda'] += [t_cuda]
-                self.timings['download'] += [t_download]
-
-
-def gcg_grid_autotune(prob_spec, device):
+def gcg_grid_autotune(timing, device):
     import fbconv3_cuda_metaparams_cherrypick
     metaparams_list = fbconv3_cuda_metaparams_cherrypick.metaparams_list
 
     results = []
     for mp in metaparams_list:
-        op_spec = OpSpec(use_fast_math=True, **mp)
-        timing = Timing(prob_spec, op_spec)
-        timing.measure(device)
-        if timing.valid:
-            #print '-- gcg timing', timing.speed()
-            results.append((timing.speed(), op_spec))
-        else:
-            #print '-- gcg skipping invalid op_spec'
-            pass
-    if results:
-        results.sort()
-        return results[-1][1]
-    else:
-        return reference_op_spec()
+        op_spec = OpSpec(use_fast_math=False, **mp)
+        new_timing = Timing(timing.prob_spec, op_spec)
+        timing = quick_winner(new_timing, timing, device)
+    return timing
 
 
 def genetic_step(timing, device, mutation_rate, rng):
@@ -625,16 +654,14 @@ def genetic_step(timing, device, mutation_rate, rng):
             random_op_spec(rng),
             rng, mutation_rate)
     new_timing = Timing(timing.prob_spec, candidate)
-    new_timing.measure(device)
-    if new_timing.valid and new_timing.speed() > timing.speed():
-        return new_timing
-    else:
-        return timing
+    return quick_winner(new_timing, timing, device)
 
 
 def tree_step(timing, device, rng, wisdom, ref_speed, N, mutation_rate):
     #print 'building tree'
+    t0 = time.time()
     wisdom.build_dtree(rng)
+    print 'building dtree took', time.time() - t0
     #wisdom.print_dtree()
     #print 'searching for candidate'
     if wisdom._dtree is None:
@@ -663,13 +690,11 @@ def tree_step(timing, device, rng, wisdom, ref_speed, N, mutation_rate):
     #print 'timing (candidate score)', candidate_score
     new_timing.measure(device)
     if new_timing.valid:
-        print 'new_timing', new_timing.speed(), ref_speed
         wisdom.record(new_timing.prob_spec, new_timing.op_spec,
                 new_timing.speed(), ref_speed)
     else:
-        print 'new_timing fail'
         wisdom.record(new_timing.prob_spec, new_timing.op_spec,
-                0, ref_speed)
+                0.8 * ref_speed, ref_speed)
 
     if new_timing.valid and new_timing.speed() > timing.speed():
         return new_timing
