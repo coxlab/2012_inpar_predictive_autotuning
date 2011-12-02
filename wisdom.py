@@ -2,13 +2,12 @@ import logging
 import time
 import fbconv3_cuda
 import numpy as np
-import scipy as sp
+import scipy
 from hyperopt.ht_dist2 import one_of, rSON2
 import pycuda.driver
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-RSEED = 123
 
 class CudaContext(object):
     def __init__(self, device):
@@ -78,6 +77,7 @@ class OpSpec(object):
     def feature_values(self):
         return map(float, zip(*self.feature_pairs())[0])
 
+
 def random_op_spec(rng):
     dct = rSON2(
         "block_w" , one_of(4, 8, 16, 32, 64, 128),
@@ -92,6 +92,7 @@ def random_op_spec(rng):
         "use_fast_math", one_of(False, True),
         ).sample(rng)
     return OpSpec(**dct)
+
 
 def random_op_cross(op1, op2, rng, r=.5):
     return OpSpec(
@@ -133,7 +134,6 @@ class ProblemSpec(object):
             img_strides,   # how is image physically strided
             filter_strides,# how is filter physically strided
             border_mode,   # one of 'valid', 'full', 'same'
-            device=None,
             ):
         self.__dict__.update(locals())
         del self.self
@@ -153,6 +153,9 @@ class ProblemSpec(object):
             raise NotImplementedError()
         if border_mode != 'valid':
             raise NotImplementedError()
+
+    def is_valid(self):
+        return self.out_height > 0 and self.out_width > 0
 
     def gflops(self):
         return (self.n_imgs
@@ -203,207 +206,15 @@ class ProblemSpec(object):
         assigns = ['%s=%s' % (n, v) for v, n in self.feature_pairs()]
         return "ProblemSpec(%s)" % ", ".join(assigns)
 
-    def plan(self, patience=0.0, wisdom=None, approx_n_uses=1000, verbose=0,
-            device=None, rng=None):
-        """
-        problem_spec - ProblemSpec instance
-        patience - return a plan within this many seconds.
-        wisdom - a Wisdom object (for reading and writing)
-        approx_n_uses - estimated number of times this plan will be used (for budgeting search)
+    def image_shape(self):
+        return (self.height, self.width, self.depth)
 
-        Returns a FilterOp object
-        """
-        t_start = time.time()
-        # -- start by getting something to return ASAP
-        encumbent = reference_op_spec()
-        if (time.time() - t_start) >= patience:
-            return encumbent
-
-        if wisdom is None:
-            wisdom = Wisdom()
-
-        encumbent_speed = ref_speed = self.measure_speed(encumbent,
-                n_warmups=2, n_runs=8, ref_speed=None, wisdom=wisdom,
-                device=device)
-
-        n_clocked = [0]
-        def clock_candidate():
-            n_clocked[0] += 1
-            return self.measure_speed(candidate,
-                    n_warmups=2,
-                    n_runs=8,
-                    ref_speed=ref_speed,
-                    abort_rel_thresh=0.5,
-                    save_on_abort=False,
-                    wisdom=wisdom,
-                    device=device)
-
-        for candidate in wisdom.ranked_suggestions(self)[:3]:
-            if candidate == encumbent:
-                continue
-            if (time.time() - t_start) >= patience:
-                return encumbent
-            candidate_speed = clock_candidate()
-            if candidate_speed > encumbent_speed:
-                encumbent = candidate
-                encumbent_speed = candidate_speed
-
-        if rng is None:
-            rng = np.random.RandomState(int(time.time() * 1000))
-
-        # XXX: instead of drawing randomly
-        #      - draw randomly and filter using the dtree
-        #      - randomly perturb and hillclimb from the encumbent
-        #      - run some other kind of optimization strategy here
-        while (time.time() - t_start) < patience:
-            candidate = random_op_cross(encumbent,
-                    random_op_spec(rng),
-                    rng, .75) # XXX: local search should be parametrized somehow
-            candidate_speed = clock_candidate()
-            if candidate_speed > 0:
-                if candidate_speed > encumbent_speed:
-                    encumbent = candidate
-                    encumbent_speed = candidate_speed
-        #print 'N_CLOCKED', n_clocked[0]
-        return encumbent
-
-    def measure_speed(self, op_spec, n_warmups, n_runs, ref_speed,
-            abort_rel_thresh=.5,
-            save_on_abort=True,
-            wisdom=None,
-            device=None):
-        """Return GFLOPS/S of op, not counting transfer times.
-
-        """
-        all_timings = {}
-        gflop = self.gflops()
-
-        img_shp = (self.height, self.width, self.depth)
-        ker_shp = (self.n_filters, self.filter_height, self.filter_width,
+    def filters_shape(self):
+        return (self.n_filters, self.filter_height, self.filter_width,
                 self.depth)
-        out_shp = (self.out_height, self.out_width, self.n_filters)
 
-        sp.random.seed(RSEED)
-        in_data = sp.random.randn(*img_shp).astype('float32')
-        fb_data = sp.random.randn(*ker_shp).astype( 'float32')
-        out_data = sp.empty(out_shp, dtype='float32')
-
-        timings = dict([(key, [])
-                        for key in ('upload',
-                                    #'set_up',
-                                    'process',
-                                    'cuda',
-                                    'download',
-                                    )])
-
-        max_gflop_per_s = 0
-        with CudaContext(device) as context:
-
-            # XXX one image at a time
-            in_ = fbconv3_cuda.Input(*img_shp)
-            fb_ = fbconv3_cuda.Filterbank(*ker_shp)
-            out_ = fbconv3_cuda.Output(*out_shp)
-
-            # -- set-up operation (i.e. compilation)
-            fb_[:] = 0
-            try:
-                fop = op_spec.FilterOp(in_, fb_, out_, ctxt=context)
-            except (fbconv3_cuda.InvalidConfig,
-                    pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
-                    pycuda.driver.CompileError,), e: #XXX: using too much shared memory
-                if wisdom and save_on_abort:
-                    wisdom.record(self, op_spec, 0, 0)
-                print '-- InvalidConfig', e
-                return 0
-
-            for i in xrange(n_warmups + n_runs):
-
-                # -- upload data
-                start = time.time()
-                in_[:] = in_data
-                # XXX: is writing a 0 here important for correctness?
-                out_[:] = 0
-                fb_[:] = fb_data
-                end = time.time()
-                t_upload = end - start
-
-                # -- process convolution
-                # Note Bene: Filter != Conv
-                start = time.time()
-                try:
-                    t_cuda = fop()
-                except fbconv3_cuda.InvalidConfig, e:
-                    if wisdom and save_on_abort:
-                        wisdom.record(self, op_spec, 0, 0)
-                    print '-- InvalidConfig', e
-                    return 0
-                end = time.time()
-                t_process = end - start
-
-                gflop_per_s = gflop / t_cuda
-                max_gflop_per_s = max(max_gflop_per_s, gflop_per_s)
-                if i > n_warmups and ref_speed is not None:
-                    if (max_gflop_per_s < ref_speed * abort_rel_thresh):
-                        if wisdom and save_on_abort:
-                            wisdom.record(self, op_spec, max_gflop_per_s,
-                                    ref_speed)
-                        print '-- Performance too slow'
-                        return 0
-
-                start = time.time()
-                out_data = out_[:]
-                end = time.time()
-                t_download = end - start
-
-                timings['upload'] += [t_upload]
-                timings['process'] += [t_process]
-                timings['cuda'] += [t_cuda]
-                timings['download'] += [t_download]
-
-                if 0:
-                    gflops_cuda = gflop / t_cuda
-                    gflops_proc = gflop / t_process
-                    gflops_tot = gflop / (t_process+t_upload+t_download)
-                    print "gflops_cuda", gflops_cuda
-                    print "gflops_proc", gflops_proc
-                    print "gflops_tot", gflops_tot
-
-
-            timings_stats = dict([(key, {'median': sp.median(t),
-                                         'mean': sp.mean(t),
-                                         'std': sp.std(t),
-                                         'max': max(t),
-                                         'min': min(t),
-                                         }
-                                   )
-                                  for key, t in timings.iteritems()
-                                  ]
-                                 )
-
-            gflops_cuda = {
-                'median': gflop / timings_stats['cuda']['median'],
-                'mean': gflop / timings_stats['cuda']['mean'],
-                'max': gflop / timings_stats['cuda']['min'],
-                'min': gflop / timings_stats['cuda']['max'],
-                }
-
-            print "GFLOPS_CUDA", gflops_cuda
-
-            if wisdom:
-                if ref_speed is None:
-                    wisdom.record(self, op_spec,
-                            gflops_cuda['max'], gflops_cuda['max'])
-                else:
-                    wisdom.record(self, op_spec,
-                            gflops_cuda['max'], ref_speed)
-            print gflops_cuda['max'] , max_gflop_per_s
-            assert gflops_cuda['max'] == max_gflop_per_s
-            return gflops_cuda['max']
-
-    def assert_correct(self, op):
-        """raise assertion error if op() produces incorrect output
-        """
-        raise NotImplementedError()
+    def output_shape(self):
+        return (self.out_height, self.out_width, self.n_filters)
 
 
 class Wisdom(object):
@@ -438,7 +249,6 @@ class Wisdom(object):
                 return []
             else:
                 return [(node['mean'], node['idxs'])]
-
 
     def ranked_suggestions(self, prob_spec):
         if self._dtree is None:
@@ -485,48 +295,87 @@ class Wisdom(object):
         self._observations.append([prob_spec, op_spec, speed, ref_speed])
 
     def build_dtree_rec(self, features, targets, global_idxs, feature_names,
-            min_improvement=.1,
-            min_split_size=10):
+            min_improvement,
+            min_split_size,
+            min_n_valid,
+            min_frac_valid,
+            rng):
+
         assert len(features) == len(targets) == len(global_idxs)
         assert features.shape[1] == len(feature_names)
-        targets_var = np.var(targets)
-        total_sse = (len(targets) * targets_var)
-        logger.debug('total squared error = %f' % total_sse)
-        if total_sse < min_improvement:
+        n_valid = max(min_n_valid, int(min_frac_valid * len(features)))
+
+        def make_this_a_leaf():
             return dict(
                     kind='leaf',
                     mean=np.mean(targets),
-                    var=targets_var,
+                    var=np.var(targets),
                     idxs=global_idxs)
 
+        def sse(x):
+            return np.var(x) * x.size
+
+        if len(features) < 2 * min_split_size + n_valid:
+            # -- we don't have enough data
+            return make_this_a_leaf()
+
+        all_idxs = np.arange(len(features))
+        rng.shuffle(all_idxs)
+
+        valid_idxs = all_idxs[:n_valid]
+        train_idxs = all_idxs[n_valid:]
+
+        orig_sse_valid = np.sum(
+                (targets[valid_idxs] - np.mean(targets[train_idxs])) ** 2)
+        if orig_sse_valid < min_improvement:
+            return make_this_a_leaf()
+
+        # -- find best split point over all features
         best_sse = float('inf')
-
         for i in xrange(features.shape[1]):
-            features_i = features[:, i]
-            order_i = np.argsort(features_i)
+            train_features_i = features[train_idxs, i]
+            order_i = np.argsort(train_features_i)
 
-            sorted_target = targets[order_i]
+            sorted_target_i = targets[train_idxs][order_i]
 
             # XXX : do this in linear time instead of quadratic!
-            # XXX: check for off by 1
-            for j in xrange(min_split_size, len(features) - min_split_size):
-                if features_i[order_i[j - 1]] != features_i[order_i[j]]:
-                    below = sorted_target[:j]
-                    above = sorted_target[j:]
-                    new_total_sse = (len(below) * np.var(below)
-                            + len(above) * np.var(above))
+            for j in xrange(min_split_size,
+                    len(train_features_i) - min_split_size):
+                assert train_features_i[order_i[j - 1]] <= train_features_i[order_i[j]]
+                if train_features_i[order_i[j - 1]] != train_features_i[order_i[j]]:
+                    below = sorted_target_i[:j]
+                    above = sorted_target_i[j:]
+                    new_total_sse = sse(below) + sse(above)
                     if new_total_sse < best_sse:
-                        split_pt = (0.5 * features_i[order_i[j - 1]]
-                                + 0.5 * features_i[order_i[j]])
+                        split_pt = (0.5 * train_features_i[order_i[j - 1]]
+                                + 0.5 * train_features_i[order_i[j]])
                         logger.debug('new best sse %f  (%i, %i) (%s < %s)' % (
                             new_total_sse,
                             i, j,
                             feature_names[i], split_pt))
-                        best_ij = (i, j, split_pt)
+                        best_ij = (i, j, split_pt,
+                                np.mean(below), np.mean(above))
                         best_sse = new_total_sse
 
-        if best_sse < (total_sse - min_improvement):
-            ii, jj, split_pt = best_ij
+        if best_sse == float('inf'):
+            # this can happen if the features are discrete, and such that it
+            # isn't possible to leave min_split_size examples in a subtree,
+            # even if there are more than 2 * min_split_size examples here.
+            return make_this_a_leaf()
+
+        ii, _jj, split_pt, mean_below, mean_above = best_ij
+        # -- determine validation set performance
+        new_sse_valid = 0
+        for vi in valid_idxs:
+            tvi = targets[vi]
+            fvi = features[vi, ii]
+            if fvi < split_pt:
+                new_sse_valid += (tvi - mean_below) ** 2
+            else:
+                new_sse_valid += (tvi - mean_above) ** 2
+
+
+        if new_sse_valid < (orig_sse_valid - min_improvement):
             one_to_n = np.arange(len(features))
             leftidxs = one_to_n[features[:, ii] < split_pt]
             rightidxs = one_to_n[features[:, ii] >= split_pt]
@@ -542,30 +391,38 @@ class Wisdom(object):
                         features[leftidxs],
                         targets[leftidxs],
                         global_idxs[leftidxs],
-                        feature_names,
+                        feature_names=feature_names,
+                        min_improvement=min_improvement,
+                        min_split_size=min_split_size,
+                        min_n_valid=min_n_valid,
+                        min_frac_valid=min_frac_valid,
+                        rng=rng,
                         ),
                     right=self.build_dtree_rec(
                         features[rightidxs],
                         targets[rightidxs],
                         global_idxs[rightidxs],
-                        feature_names,
+                        feature_names=feature_names,
+                        min_improvement=min_improvement,
+                        min_split_size=min_split_size,
+                        min_n_valid=min_n_valid,
+                        min_frac_valid=min_frac_valid,
+                        rng=rng,
                         ),
                     )
         else:
-            return dict(
-                    kind='leaf',
-                    mean=np.mean(targets),
-                    var=targets_var,
-                    idxs=global_idxs)
+            return make_this_a_leaf()
 
-    def build_dtree(self, force=True):
+    def build_dtree(self, rng, force=True):
         if not force:
-            if (len(self._observations) < 10 or
+            if (len(self._observations) < 7 or
                     len(self._observations) < 1.1 * self._dtree_n_obs):
                 return
+        if len(self._observations) == 0:
+            return
         features = []
         targets = []
-        logger.info('building dtree from %i observations' %
+        logger.debug('building dtree from %i observations' %
                 len(self._observations))
         for prob_spec, op_spec, speed, ref_speed in self._observations:
             feature = np.concatenate([
@@ -582,7 +439,13 @@ class Wisdom(object):
 
         self._dtree = self.build_dtree_rec(features, targets,
                 global_idxs=np.arange(len(features)),
-                feature_names=feature_names)
+                feature_names=feature_names,
+                min_improvement=0,
+                min_split_size=3,
+                min_n_valid=5,
+                min_frac_valid=.2,
+                rng=rng,
+                )
         self._dtree_n_obs = len(features)
 
         if 0:
@@ -592,6 +455,9 @@ class Wisdom(object):
                 print 'OBS', i, o[2]
 
     def print_dtree(self, node=None, prefix=""):
+        if self._dtree is None:
+            print 'DTREE undefined'
+            return
         if node is None:
             node = self._dtree
         if node is self._dtree:
@@ -606,4 +472,280 @@ class Wisdom(object):
             print 'avg of ', len(node['idxs']),
             print ': ', node['mean'],
             print '+-', np.sqrt(node['var'])
+
+    def _find_leaf(self, feature, node, prefix=""):
+        if node['kind'] == 'fork':
+            if feature[node['feature']] < node['value']:
+                #print '-- branch ', node['feature_name'], '<', node['value']
+                child = node['left']
+            else:
+                #print '-- branch ', node['feature_name'], '>=', node['value']
+                child = node['right']
+            return self._find_leaf(feature, child, prefix+"  ")
+        else:
+            return node
+
+    def predict(self, prob_spec, op_spec):
+        if self._dtree is None:
+            return 0
+        else:
+            leaf = self._find_leaf(
+                    feature=np.asarray(
+                        prob_spec.feature_values() + op_spec.feature_values()),
+                    node=self._dtree,
+                    )
+            return leaf['mean']
+
+
+class Timing(object):
+    def __init__(self, prob_spec, op_spec):
+        self.prob_spec = prob_spec
+        self.op_spec = op_spec
+        self.valid = True
+        self.timings = dict([(key, [])
+                        for key in ('upload',
+                                    #'set_up',
+                                    'process',
+                                    'cuda',
+                                    'download',
+                                    )])
+    def stats(self):
+        return dict(
+                [(key, {
+                    'median': scipy.median(t),
+                    'mean': scipy.mean(t),
+                    'std': scipy.std(t),
+                    'max': max(t),
+                    'min': min(t),
+                    }) for key, t in self.timings.iteritems()])
+
+    def speed(self):
+        stats = self.stats()
+        gflop = self.prob_spec.gflops()
+        gflops_cuda = {
+            'median': gflop / stats['cuda']['median'],
+            'mean': gflop / stats['cuda']['mean'],
+            'max': gflop / stats['cuda']['min'],
+            'min': gflop / stats['cuda']['max'],
+            }
+        return gflops_cuda['max']
+
+    def measure(self, device, N=8):
+        """
+        Add N timing measurements to self.timings
+        """
+
+        img_shp = self.prob_spec.image_shape()
+        ker_shp = self.prob_spec.filters_shape()
+        out_shp = self.prob_spec.output_shape()
+
+        data_rng = np.random.RandomState(12345)
+        in_data = data_rng.randn(*img_shp).astype('float32')
+        fb_data = data_rng.randn(*ker_shp).astype( 'float32')
+        out_data = np.empty(out_shp, dtype='float32')
+
+        with CudaContext(device) as context:
+
+            # XXX one image at a time
+            in_ = fbconv3_cuda.Input(*img_shp)
+            fb_ = fbconv3_cuda.Filterbank(*ker_shp)
+            out_ = fbconv3_cuda.Output(*out_shp)
+
+            # -- set-up operation (i.e. compilation)
+            fb_[:] = 0
+            try:
+                fop = self.op_spec.FilterOp(in_, fb_, out_, ctxt=context)
+            except (fbconv3_cuda.InvalidConfig,
+                    pycuda._driver.LogicError,    #XXX: cuModuleGetTexRef not found
+                    pycuda.driver.CompileError,), e: #XXX: using too much shared memory
+                logger.debug('-- InvalidConfig %s' % str(e))
+                self.valid = False
+                return
+
+            for i in xrange(N):
+
+                # -- upload data
+                start = time.time()
+                in_[:] = in_data
+                # XXX: is writing a 0 here important for correctness?
+                out_[:] = 0
+                fb_[:] = fb_data
+                end = time.time()
+                t_upload = end - start
+
+                # -- process convolution
+                # Note Bene: Filter != Conv
+                start = time.time()
+                try:
+                    t_cuda = fop()
+                except fbconv3_cuda.InvalidConfig, e:
+                    logger.debug('-- InvalidConfig %s' % str(e))
+                    self.valid = False
+                    return
+                end = time.time()
+                t_process = end - start
+
+                start = time.time()
+                out_data = out_[:]
+                end = time.time()
+                t_download = end - start
+
+                self.timings['upload'] += [t_upload]
+                self.timings['process'] += [t_process]
+                self.timings['cuda'] += [t_cuda]
+                self.timings['download'] += [t_download]
+
+
+def gcg_grid_autotune(prob_spec, device):
+    import fbconv3_cuda_metaparams_cherrypick
+    metaparams_list = fbconv3_cuda_metaparams_cherrypick.metaparams_list
+
+    results = []
+    for mp in metaparams_list:
+        op_spec = OpSpec(use_fast_math=True, **mp)
+        timing = Timing(prob_spec, op_spec)
+        timing.measure(device)
+        if timing.valid:
+            #print '-- gcg timing', timing.speed()
+            results.append((timing.speed(), op_spec))
+        else:
+            #print '-- gcg skipping invalid op_spec'
+            pass
+    if results:
+        results.sort()
+        return results[-1][1]
+    else:
+        return reference_op_spec()
+
+
+def genetic_step(timing, device, mutation_rate, rng):
+    assert timing.valid
+    candidate = random_op_cross(
+            timing.op_spec,
+            random_op_spec(rng),
+            rng, mutation_rate)
+    new_timing = Timing(timing.prob_spec, candidate)
+    new_timing.measure(device)
+    if new_timing.valid and new_timing.speed() > timing.speed():
+        return new_timing
+    else:
+        return timing
+
+
+def tree_step(timing, device, rng, wisdom, ref_speed, N, mutation_rate):
+    #print 'building tree'
+    wisdom.build_dtree(rng)
+    #wisdom.print_dtree()
+    #print 'searching for candidate'
+    if wisdom._dtree is None:
+        candidate = random_op_cross(
+                timing.op_spec,
+                random_op_spec(rng),
+                rng, mutation_rate)
+    else:
+        candidate = timing.op_spec
+        candidate_score = wisdom.predict(
+                timing.prob_spec,
+                candidate)
+        for i in range(N):
+            candidate2 = random_op_cross(
+                    candidate,
+                    random_op_spec(rng),
+                    rng, mutation_rate)
+            candidate2_score = wisdom.predict(
+                    timing.prob_spec,
+                    candidate2)
+            if candidate2_score >= candidate_score:
+                # print '--  cand score', candidate2_score
+                candidate = candidate2
+                candidate_score = candidate2_score
+    new_timing = Timing(timing.prob_spec, candidate)
+    #print 'timing (candidate score)', candidate_score
+    new_timing.measure(device)
+    if new_timing.valid:
+        print 'new_timing', new_timing.speed(), ref_speed
+        wisdom.record(new_timing.prob_spec, new_timing.op_spec,
+                new_timing.speed(), ref_speed)
+    else:
+        print 'new_timing fail'
+        wisdom.record(new_timing.prob_spec, new_timing.op_spec,
+                0, ref_speed)
+
+    if new_timing.valid and new_timing.speed() > timing.speed():
+        return new_timing
+    else:
+        return timing
+
+
+
+def plan(self, patience=0.0, wisdom=None, approx_n_uses=1000, verbose=0,
+        device=None, rng=None):
+    """
+    problem_spec - ProblemSpec instance
+    patience - return a plan within this many seconds.
+    wisdom - a Wisdom object (for reading and writing)
+    approx_n_uses - estimated number of times this plan will be used (for budgeting search)
+
+    Returns a FilterOp object
+    """
+    t_start = time.time()
+    # -- start by getting something to return ASAP
+    encumbent = reference_op_spec()
+    if (time.time() - t_start) >= patience:
+        return encumbent
+
+    if wisdom is None:
+        wisdom = Wisdom()
+
+    encumbent_speed = ref_speed = self.measure_speed(encumbent,
+            n_warmups=2, n_runs=8, ref_speed=None, wisdom=wisdom,
+            device=device)
+
+    n_clocked = [0]
+    def clock_candidate():
+        n_clocked[0] += 1
+        return self.measure_speed(candidate,
+                n_warmups=2,
+                n_runs=8,
+                ref_speed=ref_speed,
+                abort_rel_thresh=0.5,
+                save_on_abort=False,
+                wisdom=wisdom,
+                device=device)
+
+    for candidate in wisdom.ranked_suggestions(self)[:3]:
+        if candidate == encumbent:
+            continue
+        if (time.time() - t_start) >= patience:
+            return encumbent
+        candidate_speed = clock_candidate()
+        if candidate_speed > encumbent_speed:
+            encumbent = candidate
+            encumbent_speed = candidate_speed
+
+    if rng is None:
+        rng = np.random.RandomState(int(time.time() * 1000))
+
+    # XXX: instead of drawing randomly
+    #      - draw randomly and filter using the dtree
+    #      - randomly perturb and hillclimb from the encumbent
+    #      - run some other kind of optimization strategy here
+    while (time.time() - t_start) < patience:
+        candidate = random_op_cross(encumbent,
+                random_op_spec(rng),
+                rng, .75) # XXX: local search should be parametrized somehow
+        candidate_speed = clock_candidate()
+        if candidate_speed > 0:
+            if candidate_speed > encumbent_speed:
+                encumbent = candidate
+                encumbent_speed = candidate_speed
+    #print 'N_CLOCKED', n_clocked[0]
+    return encumbent
+
+
+def assert_correct(prob_spec, op):
+    """raise assertion error if op() produces incorrect output
+    """
+    raise NotImplementedError()
+
 

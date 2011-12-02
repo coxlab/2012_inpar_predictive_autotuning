@@ -8,7 +8,7 @@ import logging
 import sys
 import time
 
-import numpy
+import numpy as np
 import pycuda._driver
 
 import wisdom
@@ -38,11 +38,11 @@ def init_cuda(dev_id):
 def problem_generator(rng):
     # TODO: sample fbcorr parameters from within LFW models
     space = rSON2(
-            "nimgs" , 1, #one_of(1, 2, 4, 8, 16),
-            "iheight" , one_of(8, 16, 32, 64, 96, 121, 160, 200, 256),
-            "iwidth" , one_of(8, 16, 32, 64, 96, 121, 160, 200, 256),
-            "depth" , one_of(1, 4, 8, 16, 32, 64), # XXX: 3 for rgb
-            "nfilters" , one_of(1, 4, 8, 16, 32, 64), # must be 1 or 4k
+            "nimgs" , 1, #one_of(1, 2, 4, 8, 16, 32, 64, 128),
+            "iheight" , one_of(8, 16, 32, 64, 96, 128, 160, 200, 256, 512, 1024),
+            "iwidth" , one_of(8, 16, 32, 64, 96, 128, 160, 200, 256, 512, 1024),
+            "depth" , one_of(1, 4, 8, 16, 32, 64, 128, 256), # XXX: 3 for rgb
+            "nfilters" , one_of(1, 4, 8, 16, 32, 64, 128, 256), # must be 1 or 4k
             "fsize" , one_of(3, 5, 7, 9, 11),
             )
     while True:
@@ -58,136 +58,140 @@ def problem_generator(rng):
                 img_strides=None,
                 filter_strides=None,
                 border_mode='valid')
-        if prob_spec.gflops() > 100:
-            # too big...
-            continue
-        if prob_spec.out_height <= 0:
-            continue
-        yield prob_spec
+        if .1 < prob_spec.gflops() < 10:
+            if prob_spec.is_valid():
+                yield prob_spec
 
 def main_step():
-    _python, _cmd, dev_id_str, wisdomfile, patience_str = sys.argv
+    _python, _cmd, dev_id_str, wisdomfile = sys.argv
 
     device = init_cuda(int(dev_id_str))
 
     try:
         wdb, results, rng = cPickle.load(open(wisdomfile))
     except (IOError, EOFError):
-        wdb, results, rng = wisdom.Wisdom(), [], numpy.random.RandomState(2)
+        wdb, results, rng = wisdom.Wisdom(), [], np.random.RandomState(2)
 
-    for iii in xrange(1000):
+    while True:
+        ii = len(results)
+
         pgen = problem_generator(rng)
         prob_spec = pgen.next()
+        print "=" * 80
+        print "PROB GFLOPS", prob_spec.gflops()
 
         print prob_spec
-        if len(wdb._observations) > 3 + getattr(wdb, '_dtree_n_obs', 0):
-            wdb.build_dtree(force=True)
-        print 'n_observations', len(wdb._observations)
-
-        #
-        # The strategy for updating the training set seems to be important.
-        # Currently, what seems to work best is that the speed of the
-        # suggestion from plan is ALWAYS fed back as a training example, but
-        # the feedback of other suggestion mechanisms (ref, random, etc.) is
-        # only fed into the training set if it's an improvement over the
-        # current best suggestion. Therefore only errors are corrected, and
-        # the training set stays "focused?"
-        #  Not sure if this is good or not.
-
-        #
-        # XXX: how does pycuda's cache interact with this idea of a walltime
-        # of patience?
-        #
+        wdb.build_dtree(rng=rng, force=True)
+        wdb.print_dtree()
 
         finding = {}
-        for k in 'ref', 'slow', 'wise':
-            print "EXP: PLANNING ", k
-            if k == 'ref':
-                op_spec=wisdom.reference_op_spec()
-            elif k == 'quick':
-                op_spec=prob_spec.plan(patience=-1, wisdom=None,
-                    device=device,
-                    rng=rng)
-            elif k == 'slow':
-                op_spec=prob_spec.plan(patience=float(patience_str), wisdom=None,
-                    device=device,
-                    rng=rng)
-            elif k == 'wise':
-                op_spec=prob_spec.plan(patience=float(patience_str),
-                    wisdom=wdb,
-                    device=device,
-                    rng=rng)
-            print "EXP: MEASURING ", k, "..."
-            speed = prob_spec.measure_speed(op_spec,
-                    n_warmups=2, n_runs=8, ref_speed=None, wisdom=None,
-                    device=device)
-            print "EXP: MEASURED ", speed
-            finding[k] = speed
+        def add_finding(k, op_spec):
+            if op_spec == getattr(finding.get('ref', None), 'op_spec', None):
+                print "EXP: REUSING REF", k
+                finding[k] = finding['ref']
+            else:
+                print "EXP: MEASURING ", k, "...",
+                test_timing = wisdom.Timing(prob_spec, op_spec)
+                test_timing.measure(device)
+                if test_timing.valid:
+                    print "EXP: MEASURED ", k, test_timing.speed()
+                    finding[k] = test_timing
+                else:
+                    print "ERROR: INVALID TEST TIMING", k
 
-        print 'FINDING', finding
+        add_finding('ref', wisdom.reference_op_spec())
+        if 'ref' not in finding:
+            # reference couldn't run
+            continue
+
+        # don't reuse test_timing, it would be cheating
+        timing = wisdom.Timing(prob_spec, finding['ref'].op_spec)
+        timing.measure(device)
+
+        if 0:
+            rand_timing = timing
+            for ii in xrange(75+1):
+                rand_timing = wisdom.genetic_step(
+                        rand_timing, device, mutation_rate=1.0, rng=rng)
+                if ii == 25:
+                    add_finding('rand25', rand_timing.op_spec)
+                if ii == 50:
+                    add_finding('rand50', rand_timing.op_spec)
+                if ii == 75:
+                    add_finding('rand75', rand_timing.op_spec)
+
+        if 1:  # tree-filtered random search
+            tree_timing = timing
+            tree_wisdom = wisdom.Wisdom()
+            ref_speed = timing.speed()
+            tree_wisdom.record(prob_spec, timing.op_spec, ref_speed,
+                    ref_speed)
+            for ii in xrange(75+1):
+                tree_timing = wisdom.tree_step(
+                        tree_timing, device, rng=rng, wisdom=tree_wisdom,
+                        N=3, mutation_rate=.25,
+                        ref_speed=ref_speed)
+                if ii == 25:
+                    add_finding('tree25', tree_timing.op_spec)
+                if ii == 50:
+                    add_finding('tree50', tree_timing.op_spec)
+                if ii == 75:
+                    add_finding('tree75', tree_timing.op_spec)
+
+
+        if 1:  # genetic search
+            gen_timing = timing
+            for ii in xrange(75+1):
+                gen_timing = wisdom.genetic_step(
+                        gen_timing, device, mutation_rate=0.25, rng=rng)
+                if ii == 25:
+                    add_finding('gen25', gen_timing.op_spec)
+                if ii == 50:
+                    add_finding('gen50', gen_timing.op_spec)
+                if ii == 75:
+                    add_finding('gen75', gen_timing.op_spec)
+
+        if 1:
+            add_finding('grid',
+                op_spec=wisdom.gcg_grid_autotune(prob_spec, device))
+
         results.append(finding)
-
         ofile = open(wisdomfile, 'w')
         cPickle.dump((wdb, results, rng), ofile)
         ofile.close()
-
-
-def main_insert_random_stuff():
-    _python, _cmd, wisdomfile, N = sys.argv
-
-    try:
-        wdb = cPickle.load(open(wisdomfile))
-    except (IOError, EOFError):
-        wdb = wisdom.Wisdom()
-
-    patience = 20  # seconds
-    for i, prob_spec in zip(range(int(N)), problem_generator()):
-        try:
-            random_op_spec = wisdom.random_op_spec(numpy.random)
-            random_speed = prob_spec.measure_speed(random_op_spec,
-                    n_warmups=2, n_runs=6)
-            break
-        except fbconv3_cuda.InvalidConfig:
-            random_speed = 0
-            continue
-        except pycuda._driver.LogicError:
-            #XXX: cuModuleGetTexRef not found
-            random_speed = 0
-            continue
-        except pycuda._driver.CompileError:
-            #XXX: cuModuleGetTexRef not found
-            random_speed = 0
-            continue
-        print 'RANDOM:', random_speed
-        wdb.record(prob_spec, random_op_spec, random_speed)
-
-    cPickle.dump(wdb, open(wisdomfile, 'w'))
-
-
-def main_dtree():
-    _python, _cmd, wisdomfile = sys.argv
-    wdb = cPickle.load(open(wisdomfile))
-    wdb.build_dtree()
-    cPickle.dump(wdb, open(wisdomfile, 'w'))
-
 
 def main_fig1():
     _python, _cmd, wisdomfile = sys.argv
     wdb, results, rng = cPickle.load(open(wisdomfile))
     import matplotlib.pyplot as plt
-    for key, col in ('slow', 'r'),  ('wise', 'g'), ('ref', 'b'):
-        y = [r[key] / r['ref'] if (r['ref'] > 0 and r[key]>0) else 1
-                for r in results]
-        print y
-        plt.scatter(numpy.arange(len(y)), y, label=key, c=col)
-        yy = [r[key] / r['ref']
-                for r in results if r['ref'] > 0 and r[key] > 0]
-        gmean = numpy.exp( numpy.log(yy).mean())
-        plt.axhline(gmean, c=col)
+    for key, col, marker in [
+            ('rand25', (.50, 0, 0), 'o'),
+            ('rand50', (.75, 0, 0), 'o'),
+            ('rand75', (.99, 0, 0), 'o'),
+            ('gen25',  (0, .50, 0), '+'),
+            ('gen50',  (0, .75, 0), '+'),
+            ('gen75',  (0, .99, 0), '+'),
+            ('tree25', (0, 0, .50), '+'),
+            ('tree50', (0, 0, .75), '+'),
+            ('tree75', (0, 0, .99), '+'),
+            ('grid',   (0,  0, 0), 'o'),
+            ]:
+        def getspeed(r, k='ref'):
+            if k in r:
+                return r[k].speed()
+            else:
+                return None
+        a = np.asarray([getspeed(r, key) for r in results]).astype('float')
+        b = np.asarray([getspeed(r) for r in results]).astype('float')
+        plt.scatter(np.arange(len(a)),
+                a / b + .01 * np.random.rand(),
+                label=key, c=col, marker=marker)
+        #gmean = np.exp( np.log(a/b).mean())
+        #plt.axhline(gmean, c=col)
 
     plt.xlabel('amount of training data')
     plt.ylabel('speed up over reference')
-    plt.legend()
+    #plt.legend(loc='lower right')
     plt.show()
 
 

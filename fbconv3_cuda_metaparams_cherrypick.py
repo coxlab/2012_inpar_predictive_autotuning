@@ -86,5 +86,3 @@ metaparams_list = [
 
     ]
 
-print metaparams_list
-print len(metaparams_list)
