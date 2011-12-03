@@ -614,7 +614,7 @@ class Timing(object):
             for i in xrange(N):
                 self.measure_1(fop, in_, out_, fb_, in_data, fb_data)
 
-def quick_winner(new_timing, timing, device):
+def quick_winner(new_timing, timing, device, finding):
     in_data, fb_data, out_dat = new_timing.get_sample_data()
     with CudaContext(device) as context:
         try:
@@ -630,12 +630,13 @@ def quick_winner(new_timing, timing, device):
                 break
             new_timing.measure_1(fop, in_, out_, fb_, in_data, fb_data)
             i += 1
+    finding['qw_%i' % len(finding)] = new_timing
     if new_timing.valid and new_timing.speed() > timing.speed():
         return new_timing
     else:
         return timing
 
-def gcg_grid_autotune(timing, device):
+def gcg_grid_autotune(timing, device, finding):
     import fbconv3_cuda_metaparams_cherrypick
     metaparams_list = fbconv3_cuda_metaparams_cherrypick.metaparams_list
 
@@ -643,18 +644,18 @@ def gcg_grid_autotune(timing, device):
     for mp in metaparams_list:
         op_spec = OpSpec(use_fast_math=False, **mp)
         new_timing = Timing(timing.prob_spec, op_spec)
-        timing = quick_winner(new_timing, timing, device)
+        timing = quick_winner(new_timing, timing, device, finding)
     return timing
 
 
-def genetic_step(timing, device, mutation_rate, rng):
+def genetic_step(timing, device, mutation_rate, rng, finding):
     assert timing.valid
     candidate = random_op_cross(
             timing.op_spec,
             random_op_spec(rng),
             rng, mutation_rate)
     new_timing = Timing(timing.prob_spec, candidate)
-    return quick_winner(new_timing, timing, device)
+    return quick_winner(new_timing, timing, device, finding)
 
 
 def tree_step(timing, device, rng, wisdom, ref_speed, N, mutation_rate):

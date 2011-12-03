@@ -168,7 +168,8 @@ def main_step():
             gen_timing = timing
             for ii in xrange(TOPN):
                 gen_timing = wisdom.genetic_step(
-                        gen_timing, device, mutation_rate=0.25, rng=rng)
+                        gen_timing, device, mutation_rate=0.25, rng=rng,
+                        finding=finding)
                 if ii == 1 - 1:
                     add_finding('gen1', gen_timing)
                 if ii == 25 - 1:
@@ -179,7 +180,7 @@ def main_step():
                     add_finding('gen75', gen_timing)
 
         if 1:
-            grid_timing = wisdom.gcg_grid_autotune(timing, device)
+            grid_timing = wisdom.gcg_grid_autotune(timing, device, finding)
             add_finding('grid', grid_timing)
 
         results.append(finding)
