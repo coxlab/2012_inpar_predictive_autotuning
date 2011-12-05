@@ -1,0 +1,37 @@
+\documentclass{article}
+\begin{document}
+\title{Machine Learning for Auto-Auto-Tuning}
+\begin{abstract}
+Each generation of GPU hardware presents unique programming challenges.
+It is difficult to write software that obtains good performance on a range of hardware.
+
+Auto-tuning is an effective technique for adapting a parametrized
+GPU code template to current hardware.
+
+Autotuning, however, is a relatively expensive kernel-selection mechanism - it
+works by actually running the desired GPU computation in tens or hundreds of
+ways before selecting the best implementation strategy for a particular
+machine.
+
+Futhermore library abstraction boundaries provide operations such as image
+filtering and matrix multiplication, which actually correspond to a large set
+of possible computations: for example the convolution of 1 large image with 1
+small filters is  quite a different computational problem than the convolution
+of 100 small images with 10 large filters.
+This paper considers (XXX) strategies for using previous auto-tuning
+measurements from similar problems to short-circuit computationally
+expensive auto-tuning on a new problem of interest.
+
+This paper presents a machine learning approach to generalized auto-tuning, in
+which features of
+(a) the current hardware platform,
+(b) the kernel configuration
+and (c) the problem instance are used to fit a regression model that predicts
+how fast an implementation is (XXX).
+We argue that autotuning using this surrogate model can be effective, while
+being much faster than normal auto-tuning.
+
+Whereas auto-tuning on problem XXX takes XXX seconds, our approach obtains
+(XXX) of the speed in (XXX) of the time.
+\end{abstract}
+\end{document}
