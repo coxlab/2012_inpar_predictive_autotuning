@@ -35,6 +35,28 @@ def init_cuda(dev_id):
 #       time? (Should it be more important to tune the more expensive calls? I
 #       think yes)
 
+def main_count_problem_space_size():
+    n_valid = 0
+    for iheight in (256, 512, 1024, 2048, 4096):
+        for depth in (1, 4, 8, 16, 32, 64, 128, 256):
+            for n_filters in (1, 4, 8, 16, 32, 64, 128, 256):
+                for fsize in (3, 5, 7, 9, 11):
+                    prob_spec = wisdom.ProblemSpec(
+                            n_imgs=1,
+                            height=iheight,
+                            width=iheight,
+                            depth=depth,
+                            n_filters=n_filters,
+                            filter_height=fsize,
+                            filter_width=fsize,
+                            img_strides=None,
+                            filter_strides=None,
+                            border_mode='valid')
+                    if 1 < prob_spec.gflops() < 50:
+                        if prob_spec.is_valid():
+                            n_valid += 1
+    print n_valid
+
 def problem_generator(rng):
     # TODO: sample fbcorr parameters from within LFW models
     space = rSON2(
@@ -188,6 +210,190 @@ def main_step():
         cPickle.dump((wdb, results, rng), ofile)
         ofile.close()
 
+def main_dump_logspeedup_dataset():
+    timings = {}
+    refspeed = {}
+    try:
+        ofile = open(sys.argv[2])
+        print 'Please remove output file manually:', sys.argv[2]
+        return
+    except IOError:
+        pass
+    for pklfile in sys.argv[3:]:
+        assert len(sys.argv) == 4  # XXX: platformfeatures are not implemented
+        print "Loading data from ", pklfile
+        wdb, results, rng = cPickle.load(open(pklfile))
+        for ii, finding in enumerate(results):
+            ref = finding['ref']
+            ref_orig = finding['ref_orig']
+            key_ii = (ref.prob_spec, pklfile)
+
+            refspeed.setdefault(key_ii,
+                    np.mean([ref.speed(), ref_orig.speed()]))
+            timings.setdefault((ref.prob_spec, pklfile), [])
+
+            for k, t in finding.iteritems():
+                if not t.valid:
+                    continue
+                if not k.startswith('ref'):
+                    t.src = dict(srcfile=pklfile, pos=ii, key=k)
+                    timings[key_ii].append(t)
+
+        print "Out of %i results" % len(results)
+        print "Loaded timings for %i problem specs" % len(timings)
+
+    n_keys = len(timings)
+    train_keys = timings.keys()[:int(.75 * n_keys)]
+    test_keys = timings.keys()[int(.75 * n_keys):]
+
+    def to_xy(keys):
+        x = []
+        y = []
+        prob_specs = []
+        refspeeds = []
+        for k in keys:
+            for t in timings[k]:
+                x.append(t.prob_spec.feature_values() + t.op_spec.feature_values())
+                y.append(np.log(t.speed() / refspeed[k]))
+                prob_specs.append(t.prob_spec)
+                refspeeds.append(refspeed[k])
+        return x, y, prob_specs, refspeeds
+
+    train_data = to_xy(train_keys)
+    test_data = to_xy(test_keys)
+
+    ofile = open(sys.argv[2], 'w')
+    cPickle.dump(train_data, ofile)
+    cPickle.dump(test_data, ofile)
+
+
+def main_train():
+    _python, _cmd, dsetfile, dev_id_str = sys.argv
+    ifile = open(dsetfile)
+    train_x, train_y, train_pspec, train_refspeeds = cPickle.load(ifile)
+    test_x, test_y, test_pspec, test_refspeeds = cPickle.load(ifile)
+    ifile.close()
+
+    train_x = np.asarray(train_x)
+    train_y = np.asarray(train_y)
+    test_x = np.asarray(test_x)
+    test_y = np.asarray(test_y)
+    test_refspeeds = np.asarray(test_refspeeds)
+
+    pspec_idxs = {}
+    for i, pspec in enumerate(test_pspec):
+        pspec_idxs.setdefault(pspec, []).append(i)
+    too_short = [pspec for pspec, idxs in pspec_idxs.iteritems()
+            if len(idxs) < 10]
+    print "deleting", len(too_short), "test pspecs"
+    for pspec in too_short:
+        del pspec_idxs[pspec]
+
+    print "Loaded", len(train_x), "training examples"
+    print "Loaded", len(test_x), "testing examples",
+    print "with ", len(pspec_idxs), "sufficiently populated pspecs"
+
+    import sklearn.tree
+    import scipy.stats
+
+    print "VAR: ", np.var(test_y)
+    for d in range(13, 14):
+        mdl = sklearn.tree.DecisionTreeRegressor(
+                max_depth=d,
+                min_split=10,
+                )
+        mdl.fit(train_x, train_y)
+        pred_y = mdl.predict(test_x)
+        rcorr = [scipy.stats.spearmanr(pred_y[idxs], test_y[idxs])[0]
+            for pspec, idxs in pspec_idxs.items()]
+        print rcorr
+        print "%i: MSE: %3.3f  MRC: %3.3f" % (
+                d,
+                np.mean((pred_y - test_y) ** 2),
+                np.mean(rcorr))
+
+    print "Validating Model against actual hardware"
+    device = init_cuda(int(dev_id_str))
+    rng = np.random.RandomState(123)
+
+    mdl_timings = {}
+
+    for pspec, idxs in pspec_idxs.iteritems():
+        t0 = time.time()
+        pfeatures = pspec.feature_values()
+        op_spec = wisdom.reference_op_spec()
+        xii = pfeatures + op_spec.feature_values()
+        best_score = mdl.predict(np.asarray(xii))
+        for ii in xrange(75):
+            op_candidate = wisdom.resample_some_coords(
+                    op_spec, rng, rate=.25)
+            xii = pfeatures + op_candidate.feature_values()
+            score = mdl.predict(np.asarray(xii))
+            if score > best_score:
+                op_spec = op_candidate
+                best_score = score
+        print 'search took', time.time() - t0
+        timing = wisdom.Timing(pspec, op_spec)
+        timing.measure(device)
+        mdl_timings[pspec] = timing
+        if timing.valid:
+            assert np.var(test_refspeeds[idxs]) < 1e-8, test_refspeeds[idxs]
+            print "Guessed timing:", timing.speed()
+            print "Ref timing:", test_refspeeds[idxs[0]]
+            print "This log-speedup:", np.log(timing.speed() /
+                    test_refspeeds[idxs[0]])
+            print "Best log-speedup:", np.max(test_y[idxs])
+        else:
+            print "Model-based optimization recommended un-runnable config"
+    cPickle.dump(mdl_timings, open(sys.argv[2]+'.train_results', 'w'))
+
+def main_figtrain():
+    _python, _cmd, wisdomfile, train_result = sys.argv
+    wdb, results, rng = cPickle.load(open(wisdomfile))
+    mdl_timings = cPickle.load(open(train_result))
+    def getpspecspeed(pspec, k):
+        for r in results:
+            if k in r and r[k].prob_spec == pspec:
+                if r[k].valid:
+                    return r[k].speed()
+                else:
+                    return None
+    import matplotlib.pyplot as plt
+    print "n. timings: %i   n. valid timings: %i" % (
+            len(mdl_timings),
+            len([t for p, t in mdl_timings.iteritems() if t.valid]))
+    tree_data = [t.speed() / getpspecspeed(p, 'ref')
+        for p, t in mdl_timings.iteritems() if t.valid]
+    hc_data = [getpspecspeed(p, 'gen75') / getpspecspeed(p, 'ref')
+        for p, t in mdl_timings.iteritems() if t.valid]
+    grid_data = [getpspecspeed(p, 'grid') / getpspecspeed(p, 'ref')
+        for p, t in mdl_timings.iteritems() if t.valid]
+
+    plt.hist([tree_data, hc_data, grid_data],
+        label=[
+            'hill climbing (model)',
+            'hill climbing (actual)',
+            'grid (actual)'],
+        color=['b', 'g', 'r'])
+
+    plt.axvline(np.exp(np.mean(np.log(tree_data))),
+            c='b', ls='--', lw=2)
+    plt.axvline(np.exp(np.mean(np.log(tree_data + [1]* 33))),
+            c='b', ls='--', lw=2)
+    plt.axvline(np.exp(np.mean(np.log(hc_data))),
+            c='g', ls='--', lw=2)
+    plt.axvline(np.exp(np.mean(np.log(grid_data))),
+            c='r', ls='--', lw=2)
+
+    plt.legend(loc='upper right')
+    plt.xlabel('Speed multiplier over reference kernel')
+    plt.ylabel('Number of test problems')
+    if 0:
+        plt.show()
+    else:
+        plt.savefig('speedup_295.pdf')
+
+
 def main_fig1():
     _python, _cmd, wisdomfile = sys.argv
     wdb, results, rng = cPickle.load(open(wisdomfile))
@@ -223,8 +429,8 @@ def main_fig1():
         plt.scatter(np.arange(len(a))+.25,
                 a_orig / b + .01 * np.random.rand(),
                 c=col, marker=marker)
-        #gmean = np.exp( np.log(a/b).mean())
-        #plt.axhline(gmean, c=col)
+        gmean = np.exp( np.log(a/(b+1e-4)).mean())
+        plt.axhline(gmean, c=col)
 
     plt.xlabel('random trial')
     plt.ylabel('speed up over reference')
@@ -318,6 +524,9 @@ def main_fig_time():
     plt.ylabel('time')
     plt.legend(loc='lower left')
     plt.show()
+
+
+
 
 
 if __name__ == '__main__':

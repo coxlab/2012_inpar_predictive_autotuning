@@ -108,6 +108,10 @@ def random_op_cross(op1, op2, rng, r=.5):
             op1.use_fast_math if rng.rand() < r else op2.use_fast_math,
             )
 
+def resample_some_coords(op, rng, rate=.5):
+    rop = random_op_spec(rng)
+    return random_op_cross(rop, op, rng, rate)
+
 
 def reference_op_spec():
     return OpSpec(block_w=8,
@@ -149,20 +153,34 @@ class ProblemSpec(object):
         else:
             raise ValueError(self.border_mode)
 
+        if img_strides is not None:
+            # XXX add to features
+            raise NotImplementedError()
+
+        if filter_strides is not None:
+            # XXX add to features
+            raise NotImplementedError()
+
         if n_imgs != 1:
+            # XXX add to features
             raise NotImplementedError()
         if border_mode != 'valid':
+            # XXX add to features
             raise NotImplementedError()
 
-    def is_valid(self):
-        return self.out_height > 0 and self.out_width > 0
+    def __repr__(self):
+        assigns = ['%s=%s' % (n, v) for v, n in self.feature_pairs()]
+        return "ProblemSpec(%s)" % ", ".join(assigns)
 
-    def gflops(self):
-        return (self.n_imgs
-                * self.out_height * self.out_width * self.n_filters
-                * self.filter_height * self.filter_width * self.depth
-                * 2  # mul and add
-                / (1000.**3.)) #return as giga float ops
+    def __eq__(self, other):
+        return (type(self) == type(other)
+                and (self.feature_pairs() == other.feature_pairs()))
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash((type(self),) + tuple(self.feature_pairs()))
 
     # relevant hand-designed features of problem specification
     def feature_pairs(self):
@@ -185,13 +203,16 @@ class ProblemSpec(object):
         # filters flipped vertically (conv vs. corr)
         # filters flipped horizontally (conv vs. corr)
         names = [
-            'n_imgs',
+            #'n_imgs',
             'height',
             'width',
             'depth',
             'n_filters',
             'filter_height',
             'filter_width',
+            #'img_strides',
+            #'filter_strides',
+            #'border_mode',
             ]
         return [(getattr(self, name), name) for name in names]
 
@@ -202,9 +223,15 @@ class ProblemSpec(object):
         return map(float, zip(*self.feature_pairs())[0])
 
 
-    def __repr__(self):
-        assigns = ['%s=%s' % (n, v) for v, n in self.feature_pairs()]
-        return "ProblemSpec(%s)" % ", ".join(assigns)
+    def is_valid(self):
+        return self.out_height > 0 and self.out_width > 0
+
+    def gflops(self):
+        return (self.n_imgs
+                * self.out_height * self.out_width * self.n_filters
+                * self.filter_height * self.filter_width * self.depth
+                * 2  # mul and add
+                / (1000.**3.)) #return as giga float ops
 
     def image_shape(self):
         return (self.height, self.width, self.depth)
@@ -650,10 +677,7 @@ def gcg_grid_autotune(timing, device, finding):
 
 def genetic_step(timing, device, mutation_rate, rng, finding):
     assert timing.valid
-    candidate = random_op_cross(
-            timing.op_spec,
-            random_op_spec(rng),
-            rng, mutation_rate)
+    candidate = resample_some_coords(timing.op_spec, rng, mutation_rate)
     new_timing = Timing(timing.prob_spec, candidate)
     return quick_winner(new_timing, timing, device, finding)
 
@@ -666,20 +690,14 @@ def tree_step(timing, device, rng, wisdom, ref_speed, N, mutation_rate):
     #wisdom.print_dtree()
     #print 'searching for candidate'
     if wisdom._dtree is None:
-        candidate = random_op_cross(
-                timing.op_spec,
-                random_op_spec(rng),
-                rng, mutation_rate)
+        candidate = resample_some_coords(timing.op_spec, rng, mutation_rate)
     else:
         candidate = timing.op_spec
         candidate_score = wisdom.predict(
                 timing.prob_spec,
                 candidate)
         for i in range(N):
-            candidate2 = random_op_cross(
-                    candidate,
-                    random_op_spec(rng),
-                    rng, mutation_rate)
+            candidate2 = resample_some_coords(candidate, rng, mutation_rate)
             candidate2_score = wisdom.predict(
                     timing.prob_spec,
                     candidate2)
@@ -757,9 +775,7 @@ def plan(self, patience=0.0, wisdom=None, approx_n_uses=1000, verbose=0,
     #      - randomly perturb and hillclimb from the encumbent
     #      - run some other kind of optimization strategy here
     while (time.time() - t_start) < patience:
-        candidate = random_op_cross(encumbent,
-                random_op_spec(rng),
-                rng, .75) # XXX: local search should be parametrized somehow
+        candidate = resample_some_coords(encumbent, rng, .25)
         candidate_speed = clock_candidate()
         if candidate_speed > 0:
             if candidate_speed > encumbent_speed:
