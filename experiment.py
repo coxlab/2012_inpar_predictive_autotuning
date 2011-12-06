@@ -384,24 +384,34 @@ def main_figtrain():
         logscale_x = False
     elif '480' in train_result:
         logscale_x = True
+    elif '1060' in train_result:
+        logscale_x = False
 
     def maybe_log(x):
         if logscale_x:
             return np.log(x)
         else:
             return x
+    def use_this(p, t):
+        return t.valid and getpspecspeed(p, 'ref') is not None
+
+    print 'Tree Avg GFLOP/s', np.mean([t.speed() for p, t in mdl_timings.items()])
+    print 'HC Avg GFLOP/s', np.mean([getpspecspeed(p, 'gen75') for p, t in mdl_timings.items() if use_this(p, t)])
+    print 'Grid Avg GFLOP/s', np.mean([getpspecspeed(p, 'grid') for p, t in mdl_timings.items() if use_this(p, t)])
+    print 'Ref Avg GFLOP/s', np.mean([getpspecspeed(p, 'ref') for p, t in mdl_timings.items() if use_this(p, t)])
+
     tree_data = [maybe_log(t.speed() / getpspecspeed(p, 'ref'))
-        for p, t in mdl_timings.iteritems() if t.valid]
+        for p, t in mdl_timings.iteritems() if use_this(p, t)]
     hc_data = [maybe_log(getpspecspeed(p, 'gen75') / getpspecspeed(p, 'ref'))
-        for p, t in mdl_timings.iteritems() if t.valid]
+        for p, t in mdl_timings.iteritems() if use_this(p, t)]
     grid_data = [maybe_log(getpspecspeed(p, 'grid') / getpspecspeed(p, 'ref'))
-        for p, t in mdl_timings.iteritems() if t.valid]
+        for p, t in mdl_timings.iteritems() if use_this(p, t)]
 
     plt.hist([tree_data, hc_data, grid_data],
         label=[
-            'hill climbing (model)',
-            'hill climbing (actual)',
-            'grid (actual)'],
+            'Hill Climbing (model)',
+            'Hill Climbing (real)',
+            'Grid (real)'],
         color=['b', 'g', 'r'],
         bins=20,
         )
@@ -427,8 +437,19 @@ def main_figtrain():
             vline(np.exp(np.mean(np.log(tree_data))), 'b', 1.2, 17)
             vline(np.exp(np.mean(np.log(hc_data))), 'g', 1.55, 18)
             vline(np.exp(np.mean(np.log(grid_data))), 'r', 1.55, 16)
-        plt.xlabel('Speed multiplier over reference kernel (Nvidia GTX 295)')
+        plt.xlabel('Speed multiplier over reference kernel (GTX 295)')
         savefig_filename = 'speedup_295.pdf'
+    if '1060' in train_result:
+        if logscale_x:
+            vline(np.mean(tree_data), 'b', 1.2, 20)
+            vline(np.mean(hc_data), 'g', 1.55, 21)
+            vline(np.mean(grid_data), 'r', 1.55, 19)
+        else:
+            vline(np.exp(np.mean(np.log(tree_data))), 'b', 1.2, 17)
+            vline(np.exp(np.mean(np.log(hc_data))), 'g', 1.55, 18)
+            vline(np.exp(np.mean(np.log(grid_data))), 'r', 1.55, 16)
+        plt.xlabel('Speed multiplier over reference kernel (Tesla C1060)')
+        savefig_filename = 'speedup_1060.pdf'
     elif '480' in train_result:
         assert logscale_x
         vline(np.mean(tree_data), 'b', 0.75, 23)
@@ -438,12 +459,12 @@ def main_figtrain():
                     10 + 10 * np.arange(0, 2)])
         newlabels = [str(i) for i in newticks]
         plt.xticks( np.log(newticks), newlabels )
-        plt.xlabel('Speed multiplier over reference kernel (Nvidia GTX 480)')
+        plt.xlabel('Speed multiplier over reference kernel (GTX 480)')
         savefig_filename = 'speedup_480.pdf'
 
     plt.legend(loc='upper right')
     plt.ylabel('Number of test problems')
-    if 0:
+    if 1:
         plt.show()
     else:
         plt.savefig(savefig_filename)
