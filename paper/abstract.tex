@@ -4,7 +4,10 @@
 \usepackage{amssymb}
 
 
-\title{Boosted Regression Trees for Model-Free Auto-Tuning}
+\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
+% Automatic
+% of GPU Code
+% Just-In-Time Code Specialization
 
 \numberofauthors{3}
 
@@ -32,14 +35,14 @@
 \maketitle
 
 \begin{abstract}
-
-Autotuning is a widely used and effective technique for optimizing a
+Auto-tuning is a widely used and effective technique for optimizing a
 parametrized GPU code template for a particular type of computation on
 particular hardware.
-Its drawback is that exhaustive or even thorough autotuning can be very slow.
+Its drawback is that thorough or exhaustive auto-tuning requires compiling
+many kernels, and calling each one many times; this process is slow.
 Furthermore, library abstraction boundaries provide operations such as image
 filtering and matrix multiplication, which actually correspond to a large set
-of potential problem configurations, with a potentially wide variety of memory
+of potential problem configurations with a wide variety of memory
 access patterns and computational bottlenecks.
 How can we draw on data from previous auto-tuning of related problems on related hardware to make a
 good decision on a novel problem?
@@ -49,12 +52,13 @@ which features of
 (b) the kernel configuration
 and (c) the problem instance are used to fit a regression model (boosted regression trees) that predicts
 how much faster an implementation will be than a reference baseline.
-Combinatorial optimization strategies that would normally be applied for autotuning can be applied to the regression model to find an implementation much more quickly.
-We validate our approach using the filterbank correlation kernel described in [XXX].
-We find that 0.05 seconds of a hill climbing on the regression model can achieve 80\% of the improvement brought by 120 seconds of real autotuning.
-Our approach is not specific to filterbank correlation, or even to GPU autotuning: the approach of using a non-linear regression model on top of simple features applies to a variety of problem types, kernel types, and platforms.
-A detailed model of the platform can provide useful features for cross-platform autotuning, but such a model is not necessary for same-platform autotuning.
-
+Combinatorial optimization strategies that would normally be applied for auto-tuning can be applied to the regression model to find an implementation much more quickly.
+We validate our approach using the filterbank correlation kernel described in [anon].
+We find that 0.05 seconds of hill climbing on the regression model can achieve
+80\% of the improvement brought by 120 seconds of real auto-tuning.
+Our approach is not specific to filterbank correlation, or even to GPU auto-tuning: the approach of using a non-linear regression model on top of simple features applies to a variety of problem types, kernel types, and platforms.
+A detailed platform model can provide useful features for
+cross-platform auto-tuning, but such a model is not necessary for same-platform autotuning.
 \end{abstract}
 
 

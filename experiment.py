@@ -57,6 +57,7 @@ def main_count_problem_space_size():
                             n_valid += 1
     print n_valid
 
+
 def problem_generator(rng):
     # TODO: sample fbcorr parameters from within LFW models
     space = rSON2(
@@ -83,6 +84,7 @@ def problem_generator(rng):
         if 1 < prob_spec.gflops() < 50:
             if prob_spec.is_valid():
                 yield prob_spec
+
 
 def main_step():
     _python, _cmd, dev_id_str, wisdomfile = sys.argv
@@ -210,6 +212,7 @@ def main_step():
         cPickle.dump((wdb, results, rng), ofile)
         ofile.close()
 
+
 def main_dump_logspeedup_dataset():
     timings = {}
     refspeed = {}
@@ -297,20 +300,30 @@ def main_train():
     import scipy.stats
 
     print "VAR: ", np.var(test_y)
-    for d in range(13, 14):
+    cur_train_y = train_y
+    cur_pred_y = np.zeros_like(test_y)
+    mdls = []
+    weak_depth = 4
+    for boosting_iter in range(100):
         mdl = sklearn.tree.DecisionTreeRegressor(
-                max_depth=d,
+                max_depth=weak_depth,
                 min_split=10,
                 )
-        mdl.fit(train_x, train_y)
-        pred_y = mdl.predict(test_x)
-        rcorr = [scipy.stats.spearmanr(pred_y[idxs], test_y[idxs])[0]
+        mdl.fit(train_x, cur_train_y)
+        cur_train_y -= mdl.predict(train_x)
+        cur_pred_y += mdl.predict(test_x)
+        rcorr = [scipy.stats.spearmanr(cur_pred_y[idxs], test_y[idxs])[0]
             for pspec, idxs in pspec_idxs.items()]
-        print rcorr
-        print "%i: MSE: %3.3f  MRC: %3.3f" % (
-                d,
-                np.mean((pred_y - test_y) ** 2),
+        #print rcorr
+        print "%i: TRAINMSE: %3.3f TESTMSE: %3.3f MRC: %3.3f" % (
+                boosting_iter,
+                np.mean(cur_train_y ** 2),
+                np.mean((cur_pred_y - test_y) ** 2),
                 np.mean(rcorr))
+        mdls.append(mdl)
+
+    def predict_one(x):
+        return np.sum([mdl.predict(x) for mdl in mdls])
 
     print "Validating Model against actual hardware"
     device = init_cuda(int(dev_id_str))
@@ -321,31 +334,36 @@ def main_train():
     for pspec, idxs in pspec_idxs.iteritems():
         t0 = time.time()
         pfeatures = pspec.feature_values()
-        op_spec = wisdom.reference_op_spec()
-        xii = pfeatures + op_spec.feature_values()
+        op_specs = [wisdom.reference_op_spec()]
+        xii = pfeatures + op_specs[-1].feature_values()
         best_score = mdl.predict(np.asarray(xii))
         for ii in xrange(75):
             op_candidate = wisdom.resample_some_coords(
-                    op_spec, rng, rate=.25)
+                    op_specs[-1], rng, rate=.25)
             xii = pfeatures + op_candidate.feature_values()
-            score = mdl.predict(np.asarray(xii))
+            score = predict_one(np.asarray(xii))
             if score > best_score:
-                op_spec = op_candidate
+                op_specs.append(op_candidate)
                 best_score = score
-        print 'search took', time.time() - t0
-        timing = wisdom.Timing(pspec, op_spec)
-        timing.measure(device)
+        print 'search took', time.time() - t0, len(op_specs)
+        t1 = time.time()
+        timing = None
+        while timing is None:
+            timing = wisdom.Timing(pspec, op_specs.pop())
+            timing.measure(device)
+            if not timing.valid:
+                timing = None
+        print 'backtrack took', time.time() - t1, len(op_specs)
+
         mdl_timings[pspec] = timing
-        if timing.valid:
-            assert np.var(test_refspeeds[idxs]) < 1e-8, test_refspeeds[idxs]
-            print "Guessed timing:", timing.speed()
-            print "Ref timing:", test_refspeeds[idxs[0]]
-            print "This log-speedup:", np.log(timing.speed() /
-                    test_refspeeds[idxs[0]])
-            print "Best log-speedup:", np.max(test_y[idxs])
-        else:
-            print "Model-based optimization recommended un-runnable config"
+        assert np.var(test_refspeeds[idxs]) < 1e-8, test_refspeeds[idxs]
+        print 'Tree: %3.3f  Ref: %3.3f  lsm: %.3f  best lsm %.3f' % (
+                timing.speed(),
+                test_refspeeds[idxs[0]],
+                np.log(timing.speed() / test_refspeeds[idxs[0]]),
+                np.max(test_y[idxs]))
     cPickle.dump(mdl_timings, open(sys.argv[2]+'.train_results', 'w'))
+
 
 def main_figtrain():
     _python, _cmd, wisdomfile, train_result = sys.argv
@@ -362,11 +380,21 @@ def main_figtrain():
     print "n. timings: %i   n. valid timings: %i" % (
             len(mdl_timings),
             len([t for p, t in mdl_timings.iteritems() if t.valid]))
-    tree_data = [t.speed() / getpspecspeed(p, 'ref')
+    if '295' in train_result:
+        logscale_x = False
+    elif '480' in train_result:
+        logscale_x = True
+
+    def maybe_log(x):
+        if logscale_x:
+            return np.log(x)
+        else:
+            return x
+    tree_data = [maybe_log(t.speed() / getpspecspeed(p, 'ref'))
         for p, t in mdl_timings.iteritems() if t.valid]
-    hc_data = [getpspecspeed(p, 'gen75') / getpspecspeed(p, 'ref')
+    hc_data = [maybe_log(getpspecspeed(p, 'gen75') / getpspecspeed(p, 'ref'))
         for p, t in mdl_timings.iteritems() if t.valid]
-    grid_data = [getpspecspeed(p, 'grid') / getpspecspeed(p, 'ref')
+    grid_data = [maybe_log(getpspecspeed(p, 'grid') / getpspecspeed(p, 'ref'))
         for p, t in mdl_timings.iteritems() if t.valid]
 
     plt.hist([tree_data, hc_data, grid_data],
@@ -374,24 +402,51 @@ def main_figtrain():
             'hill climbing (model)',
             'hill climbing (actual)',
             'grid (actual)'],
-        color=['b', 'g', 'r'])
+        color=['b', 'g', 'r'],
+        bins=20,
+        )
 
-    plt.axvline(np.exp(np.mean(np.log(tree_data))),
-            c='b', ls='--', lw=2)
-    plt.axvline(np.exp(np.mean(np.log(tree_data + [1]* 33))),
-            c='b', ls='--', lw=2)
-    plt.axvline(np.exp(np.mean(np.log(hc_data))),
-            c='g', ls='--', lw=2)
-    plt.axvline(np.exp(np.mean(np.log(grid_data))),
-            c='r', ls='--', lw=2)
+    def vline(val, col, xloc, yloc):
+        plt.axvline(val, c=col, ls='--', lw=2)
+        plt.annotate('%1.2f' % (np.exp(val) if logscale_x else val),
+                xy=(val, yloc),
+                xytext=(xloc, yloc),
+                arrowprops=dict(
+                    width=1,
+                    frac=.3,
+                    headwidth=5,
+                    shrink=.05,
+                    color='k',
+                    ))
+    if '295' in train_result:
+        if logscale_x:
+            vline(np.mean(tree_data), 'b', 1.2, 20)
+            vline(np.mean(hc_data), 'g', 1.55, 21)
+            vline(np.mean(grid_data), 'r', 1.55, 19)
+        else:
+            vline(np.exp(np.mean(np.log(tree_data))), 'b', 1.2, 17)
+            vline(np.exp(np.mean(np.log(hc_data))), 'g', 1.55, 18)
+            vline(np.exp(np.mean(np.log(grid_data))), 'r', 1.55, 16)
+        plt.xlabel('Speed multiplier over reference kernel (Nvidia GTX 295)')
+        savefig_filename = 'speedup_295.pdf'
+    elif '480' in train_result:
+        assert logscale_x
+        vline(np.mean(tree_data), 'b', 0.75, 23)
+        vline(np.mean(hc_data),   'g', 0.75, 21)
+        vline(np.mean(grid_data), 'r', 0.75, 19)
+        newticks = np.concatenate([np.arange(1, 10),
+                    10 + 10 * np.arange(0, 2)])
+        newlabels = [str(i) for i in newticks]
+        plt.xticks( np.log(newticks), newlabels )
+        plt.xlabel('Speed multiplier over reference kernel (Nvidia GTX 480)')
+        savefig_filename = 'speedup_480.pdf'
 
     plt.legend(loc='upper right')
-    plt.xlabel('Speed multiplier over reference kernel')
     plt.ylabel('Number of test problems')
     if 0:
         plt.show()
     else:
-        plt.savefig('speedup_295.pdf')
+        plt.savefig(savefig_filename)
 
 
 def main_fig1():

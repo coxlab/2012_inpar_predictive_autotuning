@@ -4,7 +4,7 @@
 \usepackage{amssymb}
 
 
-\title{Model-Based Auto-Tuning}
+\title{Boosted Regression Trees for Model-Free Auto-Tuning}
 
 \numberofauthors{3}
 
@@ -32,43 +32,29 @@
 \maketitle
 
 \begin{abstract}
-Each generation of GPU hardware presents unique programming challenges.
-It is difficult to write software that obtains good performance on a range of hardware.
-
-Auto-tuning is an effective technique for adapting a parametrized
-GPU code template to current hardware.
-
-Autotuning, however, is a relatively expensive kernel-selection mechanism - it
-works by actually running the desired GPU computation in tens or hundreds of
-ways before selecting the best implementation strategy for a particular
-machine.
-
-Futhermore library abstraction boundaries provide operations such as image
+Autotuning is a widely used and effective technique for optimizing a
+parametrized GPU code template for a particular type of computation on
+particular hardware.
+Its drawback is that thorough or exhaustive auto-tuning can be very slow.
+Furthermore, library abstraction boundaries provide operations such as image
 filtering and matrix multiplication, which actually correspond to a large set
-of possible computations: for example the correlation of 1 large image with 1
-small filters is  quite a different computational problem than the correlation
-of 100 small images with 10 large filters.
-This paper considers (XXX) strategies for using previous auto-tuning
-measurements from similar problems to short-circuit computationally
-expensive auto-tuning on a new problem of interest.
-
-This paper presents a machine learning approach to generalized auto-tuning, in
+of potential problem configurations with a wide variety of memory
+access patterns and computational bottlenecks.
+How can we draw on data from previous auto-tuning of related problems on related hardware to make a
+good decision on a novel problem?
+This paper presents a machine learning approach to auto-tuning, in
 which features of
 (a) the current hardware platform,
 (b) the kernel configuration
-and (c) the problem instance are used to fit a regression model that predicts
-how fast an implementation is (XXX).
-We argue that autotuning using this surrogate model can be effective, while
-being much faster than normal auto-tuning.
-
-Whereas auto-tuning on problem XXX takes XXX seconds, our approach obtains
-(XXX) of the speed in (XXX) of the time.
-
-
-XXX: Hill-climbing (HC) search is effective alternative to grid.
-XXX: How is HC search affected by mutation rate?
-XXX: Purely random search is not an effective alternative to grid.
-
+and (c) the problem instance are used to fit a regression model (boosted regression trees) that predicts
+how much faster an implementation will be than a reference baseline.
+Combinatorial optimization strategies that would normally be applied for auto-tuning can be applied to the regression model to find an implementation much more quickly.
+We validate our approach using the filterbank correlation kernel described in [anon].
+We find that 0.05 seconds of hill climbing on the regression model can achieve
+80\% of the improvement brought by 120 seconds of real auto-tuning.
+Our approach is not specific to filterbank correlation, or even to GPU auto-tuning: the approach of using a non-linear regression model on top of simple features applies to a variety of problem types, kernel types, and platforms.
+A detailed platform model can provide useful features for
+cross-platform auto-tuning, but such a model is not necessary for same-platform autotuning.
 \end{abstract}
 
 
@@ -238,8 +224,10 @@ TL;DR: Hill-climbing is a good way to search the implementation space, can
 search the full space and do about as well as grid search in the more
 restricted space.
 
-\begin{figure}
-\includegraphics[scale=.5]{speedup_295.pdf}
+\begin{figure*}
+\centering
+\includegraphics[scale=.42]{speedup_295.pdf}
+\includegraphics[scale=.42]{speedup_480.pdf}
 \caption{Speedup of various auto-tuning strategies over a good reference
 implementation.
 Each strategy was evaluated the same set of 83 problem configurations, which
@@ -253,7 +241,7 @@ The model-based approach tested 0 configuration evaluations, and took 0.05
 seconds on average, even with a naive Python implementation.
 }
 \label{fig:speedup_295}
-\end{figure}
+\end{figure*}
 
 
 \subsection{Model-based Autotuning}
