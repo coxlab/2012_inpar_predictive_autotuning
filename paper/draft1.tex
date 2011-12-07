@@ -4,7 +4,7 @@
 \usepackage{amssymb}
 
 
-\title{Boosted Regression Trees for Model-Free Auto-Tuning}
+\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
 
 \numberofauthors{3}
 
@@ -32,31 +32,31 @@
 \maketitle
 
 \begin{abstract}
-Autotuning is a widely used and effective technique for optimizing a
-parametrized GPU code template for a particular type of computation on
-particular hardware.
-Its drawback is that thorough or exhaustive auto-tuning can be very slow.
+Auto-tuning is a widely used and effective technique for optimizing a
+parametrized GPU code template for a particular computation on particular
+hardware.  Its drawback is that thorough or exhaustive auto-tuning requires
+compiling many kernels and calling each one many times; this process is slow.
 Furthermore, library abstraction boundaries provide operations such as image
 filtering and matrix multiplication, which actually correspond to a large set
-of potential problem configurations with a wide variety of memory
-access patterns and computational bottlenecks.
-How can we draw on data from previous auto-tuning of related problems on related hardware to make a
-good decision on a novel problem?
-This paper presents a machine learning approach to auto-tuning, in
-which features of
-(a) the current hardware platform,
-(b) the kernel configuration
-and (c) the problem instance are used to fit a regression model (boosted regression trees) that predicts
-how much faster an implementation will be than a reference baseline.
-Combinatorial optimization strategies that would normally be applied for auto-tuning can be applied to the regression model to find an implementation much more quickly.
-We validate our approach using the filterbank correlation kernel described in [anon].
-We find that 0.05 seconds of hill climbing on the regression model can achieve
-80\% of the improvement brought by 120 seconds of real auto-tuning.
-Our approach is not specific to filterbank correlation, or even to GPU auto-tuning: the approach of using a non-linear regression model on top of simple features applies to a variety of problem types, kernel types, and platforms.
-A detailed platform model can provide useful features for
-cross-platform auto-tuning, but such a model is not necessary for same-platform autotuning.
+of potential problem configurations with a wide variety of memory access
+patterns and computational bottlenecks.  How can we draw on data from previous
+empirical auto-tuning of related problems on related hardware to make a just-in-time
+implementation decision for a novel problem?  This paper presents a machine
+learning approach to auto-tuning, in which features of (a) the current
+hardware platform, (b) the kernel configuration and (c) the problem instance
+are passed to a regression model (boosted regression trees) which predicts how
+much faster this kernel will be than a reference baseline.  Combinatorial
+optimization strategies that would normally implement auto-tuning by
+evaluating kernel configurations on the real hardware are orders of magnitude
+faster when evaluating the regression model instead.  We validate our approach
+using the filterbank correlation kernel described in [XXX], where we find
+that 0.1 seconds (XXX) of hill climbing on the regression model can achieve an
+average of 95\% of the speed brought by 120 seconds of true auto-tuning XXX.  Our
+approach is not specific to filterbank correlation, or even to GPU
+auto-tuning: the approach of using a non-linear regression model on top of
+simple features applies to a variety of problem types, kernel types, and
+platforms.
 \end{abstract}
-
 
 \section{Introduction}
 
@@ -89,23 +89,25 @@ routine.
 
 
 
-\subsection{Problem Space: Filter-bank Correlation}
+\section{Filter-bank Correlation}
 
-Our experiments on automatic auto-tuning will be focused on filterbank
+Following [XXX], the experiments in this paper will focus on filterbank
 correlation.  Mathematically, we define filterbank correlation in terms of an
 image $x$ and a filterbank $f$.
 The image $x$ has $R$ rows, $C$ columns, and $D$ channels (e.g. color
 channels) that we call its {\em depth}. We index $x$ like $\mathbf{x}[i,j,d]$
-where $1 \leq i \leq R$ and $1 \leq j \leq C$.
-The filterbank $f$ has $K$ square filters of side-length $W$, each one of
-which has $D$ channels.
+where $0 \leq i < R$, $0 \leq j < C$, and $0 \leq d < D$.
+The filterbank $f$ has $F$ filters that are like little images: each has a
+height $H$, a width $W$, and $D$ channels.
+We will restrict ourselves to what are called {\em valid} correlations, in
+which the image is larger in both rows and columns than the filters.
 The result of filterbank correlation of $x$ with $f$ is an image-like array
-$z$ with $R-W+1$ rows, $C-W+1$ columns, and depth $K$, whose elements are
+$z$ with $R-H+1$ rows, $C-W+1$ columns, and depth $F$, whose elements are
 defined according to Equation~\ref{eq:z}:
 
 \begin{equation}
-    \mathbf{z}[i,j,k] = \sum_{u=1}^{W} \sum_{v=1}^{W} \sum_{d=1}^D
-        \mathbf{x}[i+u, j+v, d]~ \mathbf{f}[k, u, v, d].
+    \mathbf{z}[r,c,k] = \sum_{w=0}^{W-1} \sum_{h=0}^{H-1} \sum_{d=0}^{D-1}
+        \mathbf{x}[r+h, c+h, d]~ \mathbf{f}[k, h, w, d].
         \label{eq:z}
 \end{equation}
 
@@ -114,28 +116,26 @@ where it is often the computational bottleneck.
 GPUs are well-suited to computing filterbank correlations, although the
 optimal strategy for doing so often depends on the shape of the problem, i.e.
 the choices of $R$, $C$, $D$, $F$, and $W$.
+The computation of filterbank correlation on GPUs was recently treated by
+XXX, which serves as the basis for the present work.
+
+
+\section{Problem Configuration}
+
 
 We randomly sampled problem specifications from the following space:
-\begin{figure}
-\begin{center}
-\begin{minipage}{.4\textwidth}
-\begin{verbatim}
-R : one_of(256, 512, 1024, 2048, 4096)
-D : one_of(1, 4, 8, 16, 32, 64, 128, 256)
-F : one_of(1, 4, 8, 16, 32, 64, 128, 256)
-W : one_of(3, 5, 7, 9, 11)
-\end{verbatim}
-\end{minipage}
-\end{center}
-\caption{The full configuration space for filterbank correlation included a
-total of 1600 elements, but we restricted our experiments to problems that
+\begin{align*}
+R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
+H = W & \in \{ 3, 5, 7, 9, 11 \} \\
+D &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \} \\
+F &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \}
+\end{align*}
+The problem configuration space used in our experiments. The product space
+includes 1600 elements, but we restricted our experiments to problems that
 represented between 1 and 50 gigaflops. Our problem space included 602
 configurations. In a full application in which all image and filter sizes are
 valid, the number of configurations would be effectively infinite.
-XXX: define R, D, F, W here
-}
-\label{fig:probspace}
-\end{figure}
+
 % Problems were considered invalid if the filters were larger than the images.
 % but in the new setting with iheight >= 256 this never happened.
 Problems were tested if they represented between 1 and 50 gigaflops.  Problems
@@ -159,30 +159,24 @@ auto-tuning is a promising approach.
 
 \subsection{Kernel Space: Metaprogramming}
 
-\begin{figure}
-\begin{center}
-\begin{minipage}{.43\textwidth}
-\begin{verbatim}
-block_w   : one_of(4, 8, 16, 32, 64, 128)
-block_h   : one_of(4, 8, 16, 32, 64, 128)
-n_filter_r: one_of(1, 2)
-n_output4s: one_of("all", 1, 2)
-spill     : one_of(False, True)
-imul_fast : one_of(False, True)
-pad_shared: one_of(False, True)
-use_tex1d : one_of(False, True)
-maxrreg   : one_of(8, 16, 20, 24, 28, 32, inf)
-fast_math : one_of(False, True)
-\end{verbatim}
-\end{minipage}
-\end{center}
-\caption{The kernel used to perform
+\begin{align*}
+\mathrm{block\_w}    & \in (4, 8, 16, 32, 64, 128) \\
+\mathrm{block\_h}    & \in (4, 8, 16, 32, 64, 128) \\
+\mathrm{n\_filter\_r} & \in (1, 2) \\
+\mathrm{n\_output4s} & \in (\mathrm{all}, 1, 2) \\
+\mathrm{spill}      & \in (False, True) \\
+\mathrm{imul\_fast}  & \in (False, True) \\
+\mathrm{pad\_shared} & \in (False, True) \\
+\mathrm{use\_tex1d}  & \in (False, True) \\
+\mathrm{maxrreg}    & \in (8, 16, 20, 24, 28, 32, \infty) \\
+\mathrm{fast\_math}  & \in (False, True)
+\end{align*}
+
+The kernel used to perform
 filterbank correlation was parametrized by 10 parameters, some of which
 were binary and others of which were integer-valued. The full configuration
 space included 12000 kernels.
 XXX: how to make sense of these paramters without code listing?
-}
-\end{figure}
 
 XXX: What to all the parameters mean?
 XXX: Point to github / GCG for full code listing.
@@ -240,9 +234,43 @@ seconds on average.
 The model-based approach tested 0 configuration evaluations, and took 0.05
 seconds on average, even with a naive Python implementation.
 }
-\label{fig:speedup_295}
+\label{fig:speedup}
 \end{figure*}
 
+
+\begin{figure*}
+\centering
+\includegraphics[scale=.42]{fig_ntrain_295.pdf}
+\includegraphics[scale=.42]{fig_ntrain_480.pdf}
+\caption{The effect of the invalid configuration score ($a$) and training set
+size on simulated auto-tuning.
+All candidates timed during the grid and
+hill-climbing search procedures were used as training points, so the training
+set sizes ranged from an average of 1500 (10 problem configurations) to 30
+thousand (200 problem configurations).
+Training on 10 or 25 configurations was useful (higher mean than the reference),
+but not as useful as training on 50 or more configurations.
+The results on the GTX 295 suggest that
+moderate values of $a$ between $0.25$ and $0.75$ might be
+best, but $a$ had no significant effect on the GTX 480.
+}
+\label{fig:fig_ntrain}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\includegraphics[scale=.42]{fig_gflop_scatter_295.pdf}
+\includegraphics[scale=.42]{fig_gflop_scatter_480.pdf}
+\caption{Computation speed for novel problem configurations using predictive
+vs. empirical code specialization.
+The scatterplots are roughly symmetric about the axis of equality (main diagonal)
+with occasional outliers, indicating that for most problem configurations the
+predictive approach gives as good a solution as the empirical approach.
+The predictive approach typically requires about 0.1 seconds to suggest an
+implementation, whereas the empirical approach requires about 2 minutes.
+}
+\label{fig:fig_gflop_scatter}
+\end{figure*}
 
 \subsection{Model-based Autotuning}
 
@@ -265,5 +293,20 @@ between the various kinds of memory, and how much of various kinds of memory
 is present.  With these features a model-assisted auto-tuning approach
 might be able to make very good guesses on hardware for which no auto-tuning
 has ever been done.
+
+In a complete implementation of Eq.~\ref{eq:z}, there would be parameters
+related to the physical layout (e.g. strides) of $x$, $f$ and $z$ arrays in
+addition to the mathematical parameters of heights and widths and so on,
+so the total number of filterbank correlation computations that a user might
+be able to demand is astronomical.
+A typical coping mechanism would be to cast an arbitrary problem configuration into a more
+standardized form, such as by copying inputs into aligned memory buffers with
+appropriate padding, and then choosing an appropriate blocking strategy for
+the computation. At that point, auto-tuning efforts can be focussed on the
+kernel for each blocked strategy. However, on GPU hardware, the cost of
+aligning the inputs can be relatively large.  In future work we hope to apply
+our model-based technique to auto-tune in full problem configuration space, so
+that we can optimize as much of the computation as possible within the
+predictive auto-tuning framework (XXX name).
 
 \end{document}
