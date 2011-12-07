@@ -641,6 +641,7 @@ class Timing(object):
             for i in xrange(N):
                 self.measure_1(fop, in_, out_, fb_, in_data, fb_data)
 
+
 def quick_winner(new_timing, timing, device, finding):
     in_data, fb_data, out_dat = new_timing.get_sample_data()
     with CudaContext(device) as context:
@@ -662,6 +663,7 @@ def quick_winner(new_timing, timing, device, finding):
         return new_timing
     else:
         return timing
+
 
 def gcg_grid_autotune(timing, device, finding):
     import fbconv3_cuda_metaparams_cherrypick

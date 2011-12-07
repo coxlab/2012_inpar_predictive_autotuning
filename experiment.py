@@ -213,41 +213,32 @@ def main_step():
         ofile.close()
 
 
-def main_dump_logspeedup_dataset():
+def build_logspeed_dataset(wisdomfile, invalid_multiplier, n_train):
     timings = {}
     refspeed = {}
-    try:
-        ofile = open(sys.argv[2])
-        print 'Please remove output file manually:', sys.argv[2]
-        return
-    except IOError:
-        pass
-    for pklfile in sys.argv[3:]:
-        assert len(sys.argv) == 4  # XXX: platformfeatures are not implemented
-        print "Loading data from ", pklfile
-        wdb, results, rng = cPickle.load(open(pklfile))
-        for ii, finding in enumerate(results):
-            ref = finding['ref']
-            ref_orig = finding['ref_orig']
-            key_ii = (ref.prob_spec, pklfile)
 
-            refspeed.setdefault(key_ii,
-                    np.mean([ref.speed(), ref_orig.speed()]))
-            timings.setdefault((ref.prob_spec, pklfile), [])
+    print "Loading data from ", wisdomfile
+    wdb, results, rng = cPickle.load(open(wisdomfile))
+    for ii, finding in enumerate(results):
+        ref = finding['ref']
+        ref_orig = finding['ref_orig']
+        key_ii = (ref.prob_spec, wisdomfile)
 
-            for k, t in finding.iteritems():
-                if not t.valid:
-                    continue
-                if not k.startswith('ref'):
-                    t.src = dict(srcfile=pklfile, pos=ii, key=k)
-                    timings[key_ii].append(t)
+        refspeed.setdefault(key_ii,
+                np.mean([ref.speed(), ref_orig.speed()]))
+        timings.setdefault((ref.prob_spec, wisdomfile), [])
 
-        print "Out of %i results" % len(results)
-        print "Loaded timings for %i problem specs" % len(timings)
+        for k, t in finding.iteritems():
+            if not k.startswith('ref'):
+                t.src = dict(srcfile=wisdomfile, pos=ii, key=k)
+                timings[key_ii].append(t)
 
-    n_keys = len(timings)
-    train_keys = timings.keys()[:int(.75 * n_keys)]
-    test_keys = timings.keys()[int(.75 * n_keys):]
+    print "Out of %i results" % len(results)
+    print "Loaded timings for %i problem specs" % len(timings)
+
+    assert n_train + 100 < len(timings)
+    train_keys = timings.keys()[:n_train]
+    test_keys = timings.keys()[-100:]
 
     def to_xy(keys):
         x = []
@@ -257,7 +248,10 @@ def main_dump_logspeedup_dataset():
         for k in keys:
             for t in timings[k]:
                 x.append(t.prob_spec.feature_values() + t.op_spec.feature_values())
-                y.append(np.log(t.speed() / refspeed[k]))
+                if t.valid:
+                    y.append(np.log(t.speed() / refspeed[k]))
+                else:
+                    y.append(np.log(invalid_multiplier))
                 prob_specs.append(t.prob_spec)
                 refspeeds.append(refspeed[k])
         return x, y, prob_specs, refspeeds
@@ -265,17 +259,15 @@ def main_dump_logspeedup_dataset():
     train_data = to_xy(train_keys)
     test_data = to_xy(test_keys)
 
-    ofile = open(sys.argv[2], 'w')
-    cPickle.dump(train_data, ofile)
-    cPickle.dump(test_data, ofile)
+    return train_data, test_data
 
 
 def main_train():
-    _python, _cmd, dsetfile, dev_id_str = sys.argv
-    ifile = open(dsetfile)
-    train_x, train_y, train_pspec, train_refspeeds = cPickle.load(ifile)
-    test_x, test_y, test_pspec, test_refspeeds = cPickle.load(ifile)
-    ifile.close()
+    _python, _cmd, wisdomfile, dev_id_str, inv_mult, n_train = sys.argv
+    train_data, test_data = build_logspeed_dataset(wisdomfile,
+            float(inv_mult), int(n_train))
+    train_x, train_y, train_pspec, train_refspeeds = train_data
+    test_x, test_y, test_pspec, test_refspeeds = test_data
 
     train_x = np.asarray(train_x)
     train_y = np.asarray(train_y)
@@ -331,6 +323,8 @@ def main_train():
 
     mdl_timings = {}
 
+    LSMs = []
+
     for pspec, idxs in pspec_idxs.iteritems():
         t0 = time.time()
         pfeatures = pspec.feature_values()
@@ -356,17 +350,22 @@ def main_train():
         print 'backtrack took', time.time() - t1, len(op_specs)
 
         mdl_timings[pspec] = timing
+        LSMs.append(np.log(timing.speed() / test_refspeeds[idxs[0]]))
         assert np.var(test_refspeeds[idxs]) < 1e-8, test_refspeeds[idxs]
-        print 'Tree: %3.3f  Ref: %3.3f  lsm: %.3f  best lsm %.3f' % (
+        print 'Tree: %3.3f  Ref: %3.3f  lsm: %.3f  best lsm %.3f  running: %.3f (%s, %s, %i)' % (
                 timing.speed(),
                 test_refspeeds[idxs[0]],
                 np.log(timing.speed() / test_refspeeds[idxs[0]]),
-                np.max(test_y[idxs]))
-    cPickle.dump(mdl_timings, open(sys.argv[2]+'.train_results', 'w'))
+                np.max(test_y[idxs]),
+                np.exp(np.mean(LSMs)),
+                inv_mult, n_train, len(LSMs)
+                )
+    cPickle.dump(mdl_timings, open('train_results_%s_%s_%s' % (wisdomfile, inv_mult, n_train), 'w'))
 
 
 def main_figtrain():
-    _python, _cmd, wisdomfile, train_result = sys.argv
+    _python, _cmd, wisdomfile, inv_mult = sys.argv
+    train_result = 'train_results_%s_%s' % (wisdomfile, inv_mult)
     wdb, results, rng = cPickle.load(open(wisdomfile))
     mdl_timings = cPickle.load(open(train_result))
     def getpspecspeed(pspec, k):
@@ -514,47 +513,46 @@ def main_fig1():
     plt.show()
 
 
-def main_fig_gflops():
-    _python, _cmd, wisdomfile = sys.argv
-    wdb, results, rng = cPickle.load(open(wisdomfile))
+def main_fig_gflop_scatter():
+    _python, _cmd, wisdomfile, inv_mult = sys.argv
     import matplotlib.pyplot as plt
-    for key, col, marker in [
-            ('rand25', (.50, 0, 0), '+'),
-            ('rand50', (.75, 0, 0), '+'),
-            ('rand75', (.99, 0, 0), '+'),
-            ('gen25',  (0, .50, 0), '+'),
-            ('gen50',  (0, .75, 0), '+'),
-            ('gen75',  (0, .99, 0), '+'),
-            ('tree25', (0, 0, .50), '+'),
-            ('tree50', (0, 0, .75), '+'),
-            ('tree75', (0, 0, .99), '+'),
-            ('wise25', (0, .50, .50), '+'),
-            ('wise50', (0, .75, .75), '+'),
-            ('wise75', (0, .99, .99), '+'),
-            ('grid',   (0,  0, 0), '+'),
-            ]:
-        def getspeed(r, k='ref'):
-            if k in r:
-                return r[k].speed()
-            else:
-                return None
-        a = np.asarray([getspeed(r, key) for r in results]).astype('float')
-        a_orig = np.asarray([getspeed(r, key + '_orig')
-            for r in results]).astype('float')
-        if 0:
-            plt.scatter(np.arange(len(a)).astype('float'),
-                    a,
-                    label=key, c=col, marker=marker)
-        plt.scatter(np.arange(len(a)).astype('float')+.25,
-                a_orig,
-                #label=key,
-                c=col, marker=marker)
-        #gmean = np.exp( np.log(a/b).mean())
-        #plt.axhline(gmean, c=col)
+    train_result = 'train_results_%s_%s' % (wisdomfile, inv_mult)
+    wdb, results, rng = cPickle.load(open(wisdomfile))
+    mdl_timings = cPickle.load(open(train_result))
 
-    plt.xlabel('random trial')
-    plt.ylabel('speed')
-    plt.legend(loc='lower left')
+    def getpspecspeed(pspec, k):
+        for r in results:
+            if k in r and r[k].prob_spec == pspec:
+                if r[k].valid:
+                    return r[k].speed()
+                else:
+                    return None
+    def use_this(p, t):
+        return t.valid and getpspecspeed(p, 'ref') is not None
+    hc_speeds = [getpspecspeed(p, 'gen75') for p, t in mdl_timings.items() if use_this(p, t)]
+    tree_speeds = [t.speed() for p, t in mdl_timings.items()]
+    grid_speeds = [getpspecspeed(p, 'grid') for p, t in mdl_timings.items() if use_this(p, t)]
+    ref_speeds = [getpspecspeed(p, 'ref') for p, t in mdl_timings.items() if use_this(p, t)]
+
+    plt.scatter(hc_speeds, tree_speeds, c='b')
+    #plt.scatter(ref_speeds, tree_speeds, c='r')
+
+    if '295' in wisdomfile:
+        ubound =  350
+    elif '1060' in wisdomfile:
+        ubound =  350
+    elif '480' in wisdomfile:
+        ubound =  850
+    elif '8600' in wisdomfile:
+        ubound =  100
+
+    plt.plot([0, ubound], [0, ubound], c='k', ls='-')
+    plt.plot([0, ubound], [0, ubound / 2.0], c='k', ls='--')
+    plt.plot([0, ubound/2.0], [0, ubound], c='k', ls='--')
+
+    plt.xlabel('GFLOP/s of empirical auto-tuning')
+    plt.ylabel('GFLOP/s of model-based auto-tuning ')
+    #plt.legend(loc='lower left')
     plt.show()
 
 
