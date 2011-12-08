@@ -2,6 +2,10 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{natbib}
+\usepackage{myAlgorithm}
+
+\bibliographystyle{abbrvnat}
 
 
 \title{Boosted Regression Trees for Data-Driven Auto-Tuning}
@@ -49,7 +53,7 @@ much faster this kernel will be than a reference baseline.  Combinatorial
 optimization strategies that would normally implement auto-tuning by
 evaluating kernel configurations on the real hardware are orders of magnitude
 faster when evaluating the regression model instead.  We validate our approach
-using the filterbank correlation kernel described in [XXX], where we find
+using the filterbank correlation kernel described in \citet{pinto+cox:2011gcg}, where we find
 that 0.1 seconds (XXX) of hill climbing on the regression model can achieve an
 average of 95\% of the speed brought by 120 seconds of true auto-tuning XXX.  Our
 approach is not specific to filterbank correlation, or even to GPU
@@ -65,7 +69,7 @@ problem space x implementation space x platform space to runtime:
 how much wall time elapses on the given platform when solving the given
 problem with the given implementation.
 
-Autotuning is a family of empirical techniques for finding the implementation
+Auto-tuning is a family of empirical techniques for finding the implementation
 that minimizes that runtime function, when the platform and the problem
 configuration are given.
 
@@ -87,9 +91,11 @@ Model-based autotuning makes it possible to simulate auto-tuning quickly and
 accurately enough to be used within a single library call of the computational
 routine.
 
+\cite{volkov+demmel:2008}
+\cite{vuduc:2003} % has some stuff about ML for autotuning in ch. 9
 
 
-\section{Filter-bank Correlation}
+\subsection{Filter-bank Correlation}
 
 Following [XXX], the experiments in this paper will focus on filterbank
 correlation.  Mathematically, we define filterbank correlation in terms of an
@@ -117,12 +123,32 @@ GPUs are well-suited to computing filterbank correlations, although the
 optimal strategy for doing so often depends on the shape of the problem, i.e.
 the choices of $R$, $C$, $D$, $F$, and $W$.
 The computation of filterbank correlation on GPUs was recently treated by
-XXX, which serves as the basis for the present work.
+\citet{pinto+cox:2011gcg}, which serves as the basis for the present work.
+
+XXX: TYPICAL OF STENCIL COMPUTATIONS.
+
+``Although the auto-tuning strategy has been successfully applied to libraries,
+generalized stencil kernels are not amenable to packaging as libraries.''
+\cite{kamil+etal:2009}
 
 
-\section{Problem Configuration}
+\cite{datta:2009}
 
 
+\section{Configuration Spaces}
+
+Recall from the introduction (Eq.~\ref{eq:condopt}) that we are addressing a
+conditional optimization problem, in which we condition on a problem
+configuration ($P$) and a system specification ($S$), and search for the best
+implementation $I$ for addressing problem $P$ on system $S$.
+This section describes the configuration spaces we used in our tests,
+which are described later in Section XXX.
+
+
+\subsection{Problem Description Space}
+
+Mathematically, filterbank correlation is an operation on an $R \times C \times
+D$ image and a $F \times H \times W \times D$ filterbank.
 We randomly sampled problem specifications from the following space:
 \begin{align*}
 R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
@@ -130,17 +156,19 @@ H = W & \in \{ 3, 5, 7, 9, 11 \} \\
 D &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \} \\
 F &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \}
 \end{align*}
-The problem configuration space used in our experiments. The product space
+The product space
 includes 1600 elements, but we restricted our experiments to problems that
 represented between 1 and 50 gigaflops. Our problem space included 602
-configurations. In a full application in which all image and filter sizes are
-valid, the number of configurations would be effectively infinite.
+configurations. A library implementation that must support all image and
+filter sizes must handle on the order of $2^{50}$ forseable
+problem configurations (not even including variations due to strided memory
+layouts).
 
 % Problems were considered invalid if the filters were larger than the images.
 % but in the new setting with iheight >= 256 this never happened.
 Problems were tested if they represented between 1 and 50 gigaflops.  Problems
 that were smaller do not fully utilize the hardware, and are handled equally
-well by many kernel settings, including the reference (XXX cite GCG).
+well by many kernel settings.
 Problems that were larger take so long to evaluate that there is negligible
 inefficiency in implementing them via multiple calls with smaller images and fewer filters.
 The configuration space described in Figure~\ref{fig:probspace} included 602
@@ -152,18 +180,64 @@ arbitrary integer depth and filter shapes, and also support a variety of
 physical input layouts via strides.  These additional options would make our
 approach of automatic auto-tuning even more important, because there would be
 a greater variety in the kinds of computations and memory transfers to
-perform.  In our experiments, we only consider the problem variations
-described in Figure ~\ref{tbl:}, which already suffice to show that automatic
-auto-tuning is a promising approach.
+perform.
 
 
-\subsection{Kernel Space: Metaprogramming}
+\subsection{Implementation Description Space}
+
+The strategy we use for computing filterbank correlation on the GPU
+using CUDA follows \citet{pinto+cox:2011gcg}.
+The overall strategy is to load the filterbank into some relatively fast
+memory (constant or texture), and then launch a grid of blocks that each
+computes some local piece of the output image $z$.
+Each thread computes $4 \times n\_output\_4s$ channels for some column and row of $z$.
+Each block computes a subrectangle of the output $z$,
+and the grid is used to tile the whole output image with blocks.
+Some filterbanks are too large to fit into the fast memory.
+For large filterbanks our approach permits splitting the filterbanks along
+the number-of-filters dimension ($F$) and the number-of-rows dimension ($H$).
+All the filterbanks in our study are small enough that at least half of each
+filter can always fit into the constant or texture memory.
+When splitting the filterbank in this way we must use several kernel
+executions, each of which increments the output buffer by a partial result.
+Pseudo-code for the kernel is given in Figure~\ref{fig:kernel}.
+
+\begin{figure}[!ht]
+\centerline{
+\begin{algorithm}{$\Algo{fbcorr}\big(gX, cF, gZ \big)$}
+\Aitem shared $sX \setto$ all channels of region ($\beta$) of $gX$
+\Aitem $x, y \setto$ position of this thread in output image
+\Aitem \_\_syncthreads()
+\Aitem $v[0:N] \setto 0$, for $N=4\times n\_output\_4s$
+\Aitem for $d \setto 0$~\To~$D$,
+\Aitem ~ for $h \setto 0$~\To~$H / n\_filter\_r$,
+\Aitem ~ ~ for $w \setto 0$~\To~$W$,
+\Aitem ~ ~ ~ $u \setto sX[x+h, y+w, d]$
+\Aitem ~ ~ ~ for $n \setto 0$~\To~$n\_output\_4s - 1$,
+\Aitem ~ ~ ~ ~  $v[n] \setto v[n] + cF[n, h, w, d]$
+\Aitem for $n \setto 0$~\To~$n\_output\_4s - 1$,
+\Aitem ~  gZ[x][y][4n:4n+n] = v[4n:4n+n], (float4)
+\end{algorithm}
+}
+\caption{Kernel pseudo-code for filterbank correlation.
+Input $gX$ is a pointer to $x$ in global memory, input $cF$ is a pointer to
+$f$ in either constant or texture memory, and output $gZ$ is a pointer to $z$
+in global memory.
+Each block of threads modifies $4 \times n\_output\_4s$ channels of a
+rectangle (called $\beta$ in code listing) within $z$. A grid of blocks covers all rows and columns of $z$.
+Multiple calls can be used to apply all filters of a large filterbank $f$ to
+$x$.
+}
+\label{fig:kernel}
+\end{figure}
+
+
 
 \begin{align*}
 \mathrm{block\_w}    & \in (4, 8, 16, 32, 64, 128) \\
 \mathrm{block\_h}    & \in (4, 8, 16, 32, 64, 128) \\
 \mathrm{n\_filter\_r} & \in (1, 2) \\
-\mathrm{n\_output4s} & \in (\mathrm{all}, 1, 2) \\
+\mathrm{n\_output\_4s} & \in (\mathrm{all}, 1, 2) \\
 \mathrm{spill}      & \in (False, True) \\
 \mathrm{imul\_fast}  & \in (False, True) \\
 \mathrm{pad\_shared} & \in (False, True) \\
@@ -185,17 +259,21 @@ XXX: how many configurations are in the configuration space
 
 XXX: what was the reference kernel, and how was it chosen?
 
-\iffalse
-\subsection{Platform Space: XXX}
+Meta-programming was implemented in Python using
+Cheetah for string processing~\citep{cheetah}
+and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel compilation.
 
-XXX: GCG chapter pg 13 notes that among the grid search, the best parameter
-setting is different for the various platforms.
+XXX: analysis of READ traffic, WRITE traffic, DATA re-use and CACHEing
+strategies. FLOPS per write etc.
 
-XXX: so far we only tried 3 cards... so we're using a 1-of-N feature.
-\fi
+XXX: Why not use FFT: convolution in spectral domain?
+
+\subsection{System Description Space}
+
+ XXXX Leave for future work?
 
 
-\section{Results}
+\section{Auto-Tuning by Hill Climbing}
 
 \subsection{Random, Grid, and Hill-Climbing Search}
 
@@ -309,4 +387,15 @@ our model-based technique to auto-tune in full problem configuration space, so
 that we can optimize as much of the computation as possible within the
 predictive auto-tuning framework (XXX name).
 
+Platform Space: XXX
+
+XXX: GCG chapter pg 13 notes that among the grid search, the best parameter
+setting is different for the various platforms.
+
+XXX: so far we only tried 3 cards... so we're using a 1-of-N feature.
+
+
+%\renewcommand{\bibsection}{\section*{Bibliography}}
+%\setlength{\bibsep}{5pt}
+\bibliography{local}
 \end{document}

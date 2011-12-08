@@ -638,49 +638,95 @@ def main_fig_ntrain():
         plt.savefig(figfile)
 
 
-def main_fig_time():
-    _python, _cmd, wisdomfile = sys.argv
-    wdb, results, rng = cPickle.load(open(wisdomfile))
+def main_fig_gflop_scatter_theano():
+    #
+    # This script, if it runs on the 295 shows that theano is about 1/3 the
+    # speed on average. On the 480 Theano is more like 1/5 the speed.
+    #
+    _python, _cmd, wisdomfile, Nstr = sys.argv
     import matplotlib.pyplot as plt
-    for key, col, marker in [
-            ('rand25', (.50, 0, 0), '+'),
-            ('rand50', (.75, 0, 0), '+'),
-            ('rand75', (.99, 0, 0), '+'),
-            ('gen25',  (0, .50, 0), '+'),
-            ('gen50',  (0, .75, 0), '+'),
-            ('gen75',  (0, .99, 0), '+'),
-            ('tree25', (0, 0, .50), '+'),
-            ('tree50', (0, 0, .75), '+'),
-            ('tree75', (0, 0, .99), '+'),
-            ('wise25', (0, .50, .50), '+'),
-            ('wise50', (0, .75, .75), '+'),
-            ('wise75', (0, .99, .99), '+'),
-            ('grid',   (0,  0, 0), '+'),
-            ]:
-        def getspeed(r, k='ref'):
-            if k in r:
-                return r[k].prob_spec.gflops() / r[k].speed()
-            else:
-                return None
-        a = np.asarray([getspeed(r, key) for r in results]).astype('float')
-        a_orig = np.asarray([getspeed(r, key + '_orig')
-            for r in results]).astype('float')
-        plt.scatter(np.arange(len(a)).astype('float'),
-                a,
-                label=key, c=col, marker=marker)
-        if 0:
-            plt.scatter(np.arange(len(a)).astype('float')+.25,
-                    a_orig,
-                    #label=key,
-                    c=col, marker=marker)
-        #gmean = np.exp( np.log(a/b).mean())
-        #plt.axhline(gmean, c=col)
+    import bandit
+    wdb, results, rng = cPickle.load(open(wisdomfile))
 
-    plt.xlabel('random trial')
-    plt.ylabel('time')
-    plt.legend(loc='lower left')
-    plt.show()
+    ref_speeds = []
+    gen75_speeds = []
+    theano_speeds = []
+    grid_speeds = []
 
+    for ii, result in enumerate(results):
+        if len(ref_speeds) == int(Nstr):
+            break
+        if 'ref' in result and result['ref']:
+            ref_speed = result['ref'].speed()
+        else:
+            break
+        if 'gen75' in result and result['gen75']:
+            gen75_speed = result['gen75'].speed()
+        else:
+            break
+        if 'grid' in result and result['grid']:
+            grid_speed = result['grid'].speed()
+        else:
+            break
+        prob_spec = result['ref'].prob_spec
+        if prob_spec.height > 512:
+            continue
+        if prob_spec.n_filters > 256:
+            continue
+        if prob_spec.depth > 256:
+            continue
+        foo = bandit.FBCorr3Bandit(
+                prob_spec.n_imgs,
+                prob_spec.height,
+                prob_spec.width,
+                prob_spec.depth,
+                prob_spec.n_filters,
+                prob_spec.filter_height,
+                )
+        theano_speed = foo.vs_theano()
+        print '-' * 80
+        print prob_spec
+        print prob_spec.gflops()
+        print ref_speed, gen75_speed, theano_speed
+
+        ref_speeds.append(ref_speed)
+        gen75_speeds.append(gen75_speed)
+        grid_speeds.append(grid_speed)
+        theano_speeds.append(theano_speed)
+
+    plt.scatter(ref_speeds, gen75_speeds, c='b')
+    plt.scatter(ref_speeds, grid_speeds, c='r')
+    plt.scatter(ref_speeds, theano_speeds, c='g')
+
+    if 1:
+        plt.show()
+    else:
+        plt.savefig(figname)
+
+def main_theano_conv_slow_so_sad():
+    import bandit
+    prob_spec = wisdom.ProblemSpec(
+            n_imgs=1,
+            height=32 ,
+            width=32 ,
+            depth=32,
+            n_filters=64,
+            filter_height=5,
+            filter_width=5,
+            img_strides=None,
+            filter_strides=None,
+            border_mode='valid')
+    prob_spec.n_imgs = 64
+    print prob_spec.gflops()
+    foo = bandit.FBCorr3Bandit(
+            prob_spec.n_imgs,
+            prob_spec.height,
+            prob_spec.width,
+            prob_spec.depth,
+            prob_spec.n_filters,
+            prob_spec.filter_height,
+            )
+    print foo.vs_theano()
 
 
 

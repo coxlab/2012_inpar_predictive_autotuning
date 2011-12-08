@@ -44,15 +44,18 @@ class FBCorr3Bandit(Bandit):
         x = theano.tensor.nnet.conv.conv2d(imgs, filts,
                 img_shp, k_shp, border_mode='valid')
         f = theano.function([], [], updates=[(outs, x)])
-        for i in range(3):
+        dt = float('inf')
+        for i in range(5):
             t = time.time()
             f()
-            dt = time.time() - t
+            dt = min(dt, time.time() - t)
 
         fsize = probspec['fsize']
         depth = probspec['depth']
         gflop = outs.get_value(borrow=True).size * (fsize * fsize * depth * 2) / (1000.**3.)
-        print 'GFLOP/S', gflop / dt
+        rval =  gflop / dt
+        print 'GFLOP/S', rval
+        return rval
 
 
     @classmethod

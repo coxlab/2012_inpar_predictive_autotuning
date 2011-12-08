@@ -82,7 +82,7 @@ def random_op_spec(rng):
     dct = rSON2(
         "block_w" , one_of(4, 8, 16, 32, 64, 128),
         "block_h" , one_of(4, 8, 16, 32, 64, 128),
-        "n_filter_rows" , one_of(1, 2),
+        "n_filter_rows" , one_of(1, 2), #XXX: turns out this can be "all" as well
         "n_output4s" , one_of("all", 1, 2),
         "spill" , one_of(False, True),
         "imul_fast" , one_of(False, True),
