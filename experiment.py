@@ -16,7 +16,7 @@ from hyperopt.ht_dist2 import one_of, rSON2
 import fbconv3_cuda
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 from pycuda import driver
 def init_cuda(dev_id):
@@ -107,6 +107,7 @@ def main_step():
         print prob_spec
         wdb.build_dtree(rng=rng, force=True)
         wdb.print_dtree()
+        print>> sys.stderr,  "ASDF"
 
         finding = {}
         def add_finding(k, timing):
@@ -126,7 +127,9 @@ def main_step():
                     print "ERROR: INVALID TEST TIMING", k
 
         # don't reuse test_timing, it would be cheating
+        print>> sys.stderr,  "NEW TIMING"
         timing = wisdom.Timing(prob_spec, wisdom.reference_op_spec())
+        print>> sys.stderr,  "MEASURE"
         timing.measure(device)
         if not timing.valid:
             continue
@@ -709,14 +712,14 @@ def main_theano_conv_slow_so_sad():
             n_imgs=1,
             height=32 ,
             width=32 ,
-            depth=32,
-            n_filters=64,
+            depth=4,
+            n_filters=8,
             filter_height=5,
             filter_width=5,
             img_strides=None,
             filter_strides=None,
             border_mode='valid')
-    prob_spec.n_imgs = 64
+    prob_spec.n_imgs = 1
     print prob_spec.gflops()
     foo = bandit.FBCorr3Bandit(
             prob_spec.n_imgs,

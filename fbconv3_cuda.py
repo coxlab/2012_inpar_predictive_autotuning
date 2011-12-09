@@ -8,7 +8,7 @@ import os
 import numpy as np
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.WARN)
+log.setLevel(logging.DEBUG)
 
 # CUDA
 from pycuda import driver, gpuarray, compiler, tools
@@ -337,7 +337,10 @@ class Input(object):
         except driver.MemoryError, err:
             raise InvalidConfig(err)
 
-        self._garr_tmp = driver.pagelocked_empty(self._garr_l[0].shape, self.dtype)
+        if 0: # DEBUG XXX
+            self._garr_tmp = driver.pagelocked_empty(self._garr_l[0].shape, self.dtype)
+        else:
+            self._garr_tmp = np.empty(self._garr_l[0].shape, self.dtype)
         self._arr_tmp = np.empty((ngarrs,)+self._padded_shape[:2]+(self._garr_l[0].shape[-1],), dtype='float32')
 
     # -------------------------------------------------------------------------

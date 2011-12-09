@@ -97,7 +97,7 @@ XXX \vspace{12pt}
 This work shows that online auto-tuning can be accelerated by orders of
 magnitude by using a regression model built offline as a surrogate for actual
 computations on the real hardware.
-We use a powerful non-linear regression model (boosted decision trees)
+We use a powerful non-linear regression model (boosted regression trees)
 to approximate the empirical relationship between three sets of variables ($\mathcal{A},
 \mathcal{B}, \mathcal{C}$) and the observed speed-up over a
 reference implementation:
@@ -516,9 +516,16 @@ implementation, whereas the empirical approach requires about 2 minutes.
 \label{fig:fig_gflop_scatter}
 \end{figure*}
 
+
+\section{Boosted Regression Trees}
+
+The regression tree is a piece-wise constant function 
+
+Boosted regression trees are
+
 \subsection{Model-based Autotuning}
 
-On the GTX 295, a single decision-tree fit to the log-speed-multiplier
+On the GTX 295, a single regression-tree fit to the log-speed-multiplier
 (LSM) function (XXX: how many problem configurations, how much vs. what
 kind of training data) achieves an average Spearman correlation of 0.9 on
 held-out test data (XXX: what kind of test data).

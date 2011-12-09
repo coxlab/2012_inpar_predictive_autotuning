@@ -1,3 +1,4 @@
+import sys
 import logging
 import time
 import fbconv3_cuda
@@ -7,7 +8,7 @@ from hyperopt.ht_dist2 import one_of, rSON2
 import pycuda.driver
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 class CudaContext(object):
     def __init__(self, device):
@@ -564,6 +565,8 @@ class Timing(object):
 
     def measure_1(self, fop, in_, out_, fb_, in_data, fb_data, dotransfer=True):
         # -- upload data
+        print "FOOO"
+        sys.stdout.flush()
         try:
             start = time.time()
             if dotransfer:
@@ -616,26 +619,34 @@ class Timing(object):
         return in_data, fb_data, out_data
 
     def measure_setup(self, context):
+        print>> sys.stderr,  "FOOO AAA "
         img_shp = self.prob_spec.image_shape()
         ker_shp = self.prob_spec.filters_shape()
         out_shp = self.prob_spec.output_shape()
 
+        print>> sys.stderr,  "FOOO INPUT STUFF"
         in_ = fbconv3_cuda.Input(*img_shp)
         fb_ = fbconv3_cuda.Filterbank(*ker_shp)
         out_ = fbconv3_cuda.Output(*out_shp)
 
         # -- set-up operation (i.e. compilation)
         fb_[:] = 0
+        print>> sys.stderr,  "FOOO FilterOp "
         fop = self.op_spec.FilterOp(in_, fb_, out_, ctxt=context)
+        print>> sys.stderr,  "FOOO FilterOp  RETURNED"
         return fop, in_, fb_, out_
 
     def measure(self, device, N=8):
         """
         Add N timing measurements to self.timings
         """
+        print>> sys.stderr,  "pre sample "
         in_data, fb_data, out_dat = self.get_sample_data()
+        print>> sys.stderr,  "post sample"
+        import pdb; pdb.set_trace()
 
         with CudaContext(device) as context:
+            print>> sys.stderr,  "GOT contextlD"
             try:
                 fop, in_, fb_, out_ = self.measure_setup(context)
             except (fbconv3_cuda.InvalidConfig,
