@@ -53,12 +53,14 @@ are passed to a regression model (boosted regression trees) which predicts how
 much faster this kernel will be than a reference baseline.  Combinatorial
 optimization strategies that would normally implement auto-tuning by
 evaluating kernel configurations on the real hardware are orders of magnitude
-faster when evaluating the regression model instead.  We validate our approach
+faster when evaluating the surrogate regression model instead.  We validate our approach
 using the filterbank correlation kernel described in \citet{pinto+cox:2011gcg}, where we find
-that 0.1 seconds (XXX) of hill climbing on the regression model can achieve an
-average of 95\% of the speed brought by 120 seconds of true auto-tuning XXX.  Our
+that 0.1 seconds (XXX) of hill climbing on the regression model ({\em
+predictive}
+auto-tuning) can achieve an
+average of 95\% of the speed brought by 120 seconds of empirical auto-tuning XXX.  Our
 approach is not specific to filterbank correlation, or even to GPU
-auto-tuning: the approach of using a non-linear regression model on top of
+kernel auto-tuning: the approach of using a non-linear regression model on top of
 simple features applies to a variety of problem types, kernel types, and
 platforms.
 \end{abstract}
@@ -125,6 +127,30 @@ optimal strategy for doing so often depends on the shape of the problem, i.e.
 the choices of $R$, $C$, $D$, $F$, and $W$.
 The computation of filterbank correlation on GPUs was recently treated by
 \citet{pinto+cox:2011gcg}, which serves as the basis for the present work.
+
+In terms of floating point operations, a filterbank correlation requires the
+inner sums to be computed for each output pixel, yielding the quantity in
+Eq.~\ref{eq:flops}:
+\begin{equation}
+\mathrm{FLOPS} = 2  K  H  W  D  (R - H + 1)( C- W + 1)
+\label{eq:flops}
+\end{equation}
+The multiplicative factor of 2 arises because we must multiply an element of
+$x$ with an element of $f$ and then add the result to an element of $z$.
+
+In terms of bandwidth, if we were to assume (optimistically) that the entire
+filterbank fit into the GPU's so-called constant memory, then the bandwidth
+required for a filterbank correlation would be the size of the filterbank,
+plus the size of the input image, plus the size of the output image. This sum
+is expressed in terms of configuration parameters in Eq.~\ref{eq:bytes}:
+\begin{align}
+\mathrm{Bytes} = 4&RCD \nonumber \\
+& + 4KHWD \nonumber \\
+& + 4(R-H+1)(C-W+1)K
+\label{eq:bytes}
+\end{align}
+We will see the bandwidth requirements of a more realistic analysis in
+Section~XXX.
 
 XXX: TYPICAL OF STENCIL COMPUTATIONS.
 
@@ -218,7 +244,7 @@ Pseudo-code for the kernel is given in Figure~\ref{fig:kernel}.
 \Aitem ~ ~ ~ for $n \setto 0$~\To~$n\_output\_4s - 1$,
 \Aitem ~ ~ ~ ~  $v[n] \setto v[n] + cF[n, h, w, d]$
 \Aitem for $n \setto 0$~\To~$n\_output\_4s - 1$,
-\Aitem ~  gZ[x][y][4n:4n+n] = v[4n:4n+n], (float4)
+\Aitem ~  gZ[x][y][4n:4n+n] += v[4n:4n+n], (float4)
 \end{algorithm}
 }
 \caption{Kernel pseudo-code for filterbank correlation.
@@ -247,10 +273,51 @@ The kernel is parametrized by 10 parameters:
 \mathrm{fast\_math}  & \in (False, True)
 \end{align*}
 
-The block height (block\_h) and block width (block\_w) parameters control the
-number of threads that run on each multiprocessor.
-The number of filter rows (n\_filter\_r) is how many rows of each filter is
-loaded
+The block height (``block\_h'') and block width (``block\_w'') parameters control the
+number of threads that run within each block.
+Each kernel call loads some number of filter rows (``n\_filter\_r'') into
+constant memory and processes the correlation of the image with just those
+rows, incrementing the output buffer.
+Each thread can compute several output elements
+at once, in multiples (``n\_output\_4s'') of 4;
+this increases the efficiency of each thread, but can lead to lower occupancy.
+Registers are a precious commodity on the GPU, and this kernel accumulates
+elements of $z$ in registers.
+The ``spill'' parameter controls whether the current thread's output position in
+$z$ is stored in a register (faster access) or in shared memory (frees up
+a register).
+The ``imul\_fast'' parameter controls whether integer multiplication is done
+in 24-bit (True) or 32-bit (False) precision.
+The ``pad\_shared'' parameter controls whether the $sX$ shared memory buffer
+is padded, which wastes space in shared memory but reduces bank conflicts.
+The ``use\_tex1d'' parameter controls whether the image is loaded into shared
+memory with global pointer dereferences or texture fetches.
+The ``maxrreg'' and ``fast\_math'' parameters are passed to the nvcc compiler to limit
+the number of registers available to each thread, and to enable XXX,
+respectively.
+%XXX: what effect does fast-math have here?
+
+
+
+Often however, the entire filterbank often does not fit into the GPU's
+constant memory and so $P$ passes are necessary to compute $z$. In such cases,
+the number of bytes moved is scaled almost linearly in $P$:
+\begin{align}
+\mathrm{Bytes} = 4&RCDP \nonumber \\
+& + 4KHWD \nonumber \\
+& + 8(R-H+1)(C-W+1)KP
+% XXX: incrementing requires reading and writing $z$ right? so actually the 4
+% above should be an 8? (see related ticket on github for potential
+% optimization about this)
+\label{eq:bytesP}
+\end{align}
+
+Filterbank correlation represents a difficult code-optimization problem
+because of the number of interacting constraints: a large value of $P$ reduces
+arithmetic density, but a small value of $P$ requires that each thread do more
+work, and makes global memory access latency harder to hide. (XXX: is there a
+better reason?)
+
 
 The kernel used to perform
 filterbank correlation was parametrized by 10 parameters, some of which
