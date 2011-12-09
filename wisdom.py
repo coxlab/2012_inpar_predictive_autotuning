@@ -562,14 +562,15 @@ class Timing(object):
             }
         return gflops_cuda[key]
 
-    def measure_1(self, fop, in_, out_, fb_, in_data, fb_data):
+    def measure_1(self, fop, in_, out_, fb_, in_data, fb_data, dotransfer=True):
         # -- upload data
         try:
             start = time.time()
-            in_[:] = in_data
-            # XXX: is writing a 0 here important for correctness?
-            out_[:] = 0
-            fb_[:] = fb_data
+            if dotransfer:
+                in_[:] = in_data
+                # XXX: writing 0 here is important for correctness!
+                out_[:] = 0
+                fb_[:] = fb_data
             end = time.time()
             t_upload = end - start
 
@@ -586,7 +587,10 @@ class Timing(object):
             t_process = end - start
 
             start = time.time()
-            out_data = out_[:]
+            if dotransfer:
+                out_data = out_[:]
+            else:
+                out_data = None
             end = time.time()
             t_download = end - start
 
@@ -658,7 +662,8 @@ def quick_winner(new_timing, timing, device, finding):
         while i < 10 and new_timing.valid:
             if i >= 3 and new_timing.speed('max') < .5 * timing.speed():
                 break
-            new_timing.measure_1(fop, in_, out_, fb_, in_data, fb_data)
+            new_timing.measure_1(fop, in_, out_, fb_, in_data, fb_data,
+                    dotransfer=(i == 0))
             i += 1
     finding['qw_%i' % len(finding)] = new_timing
     if new_timing.valid and new_timing.speed() > timing.speed():
