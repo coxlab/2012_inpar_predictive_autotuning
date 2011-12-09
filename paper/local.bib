@@ -1,0 +1,97 @@
+
+@incollection{pinto+cox:2011gcg,
+    author={N. Pinto and D. D. Cox},
+    title={{GPU} Metaprogramming: A Case Study in Biologically Inspired Machine
+        Vision},
+    booktitle={GPU Computing Gems},
+    publisher={Morgan Kauffmann},
+    year={2012},
+    volume=2,
+    note={to appear},
+}
+
+@misc{klochner+etal:2009,
+    author={A. Kl{\"o}ckner and N. Pinto and Y. Lee and B. C. Catanzaro and P.
+        Ivanov and A. Fasih},
+    title={{PyCUDA}: {GPU} Run-Time Code Generation for High-Performance Computing},
+    year=2009,
+    howpublished={arXiv},
+    pages={0911.3456v2}
+}
+
+@phdthesis{datta:2009,
+    author={K. Datta},
+    title={Auto-tuning Stencil Codes for Cache-Based Multicore Platforms},
+    year=2009,
+    school={Computer Science Division, U.C. Berkeley},
+    month=dec,
+}
+@phdthesis{vuduc:2003,
+    author={R. Vuduc},
+    title={Automatic Performance Tuning of Sparse Matrix Kernels},
+    year=2003,
+    school={Computer Science Division, U.C. Berkeley},
+    month=dec,
+    annote={Ch 9 has good stuff about ML and auto-tuning, including a good
+        survey of statistical methods in auto-tuning circa 2003.}
+}
+
+@inproceedings{volkov+demmel:2008,
+    author={V. Volkov and J. Demmel},
+    title={Benchmarking {GPU}s to Tune Dense Linear Algebra},
+    booktitle={Supercomputing 2008},
+    year=2008,
+    month=nov,
+    annote={walks through benchmarking strategies, optimization techniques and
+        reasoning patterns that explain how to get fast GEMM and factorization
+        on GPU.}
+}
+
+@inproceedings{kamil+etal:2009,
+    title={A Generalized Framework for Auto-tuning Stencil Computations},
+    author={S. Kamil and C. Chan and S. Williams and L. Oliker and J. Shalf
+        and M. Howison and E. W. Bethel, Prabhat},
+    booktitle={Cray User Group Conference},
+    month=may,
+    year=2009,
+    annote={In support of generic auto-tuning, that uses meta-programming to
+        generate auto-tuning candidates automatically. Good results on
+        multicore processors. Uses lisp and ECL as intermediate representation},
+}
+
+@inproceedings{ganapathi+datta+fox+patterson:2009,
+    author={A. Ganapathi and K. Datta and A. Fox and D. Patterson},
+    title={A Case for Machine Learning to Optimize Multicore Performance},
+    booktitle={First USENIX Workshop on Hot Topics in Parallelism (HotPar
+            ’09)},
+    month=mar,
+    year=2009,
+    annote={Kernel Canonical Correlation Analysis for connecting configuration
+        parameters to multiple metrics. Uses genetic algorithm to optimize
+            within model.}
+}
+
+Brewer 95?
+
+Cavazos et al. (yr?) used logistic regression to select compiler flags
+
+Self-Adapting Linear Algebra Algorithms and Software
+(Proceedings of the IEEE, Special Issue on Program Generation, Optimization,
+ and Adaptation, 93(2), February 2005)
+    James Demmel, Jack Dongarra, Victor Eijkhout, Erika Fuentes, Antoine
+    Petitet, Richard Vuduc, R. Clint Whaley, and Katherine Yelick.
+
+
+R. C. Whaley, A. Petitet, and J. Dongarra. Automated Empirical
+Optimization of Software and the ATLAS project.
+Parallel Computing, 27(1-2):3–35, 2001.
+
+
+R. Vuduc, J. Demmel, and K. Yelick. OSKI: A
+library of
+automatically tuned sparse matrix kernels. In
+Proc. of SciDAC 2005, J. of Physics: Conference
+Series. Institute of
+Physics Publishing, June 2005.
+
+

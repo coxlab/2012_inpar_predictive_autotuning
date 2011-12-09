@@ -729,7 +729,24 @@ def main_theano_conv_slow_so_sad():
     print foo.vs_theano()
 
 
+def main_for_memcheck():
+    _python, _cmd, dev_id_str = sys.argv
+    device = init_cuda(int(dev_id_str))
+    rng = np.random.RandomState()
+    pgen = problem_generator(rng)
+    while True:
+        prob_spec = pgen.next()
+        print prob_spec
 
+        timing = wisdom.Timing(prob_spec, wisdom.reference_op_spec())
+        timing.measure(device)
+        if not timing.valid:
+            continue
+
+        timing = wisdom.Timing(prob_spec, wisdom.random_op_spec(rng))
+        timing.measure(device)
+        if not timing.valid:
+            continue
 
 if __name__ == '__main__':
     cmd = sys.argv[1]

@@ -93,6 +93,8 @@ def random_op_spec(rng):
         ).sample(rng)
     return OpSpec(**dct)
 
+# XXX: n_output4s should offer more choices!
+# XXX: maxrregcount should go higher: 64? 128?
 
 def random_op_cross(op1, op2, rng, r=.5):
     return OpSpec(

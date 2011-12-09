@@ -8,6 +8,7 @@
 \bibliographystyle{abbrvnat}
 
 
+%XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
 \title{Boosted Regression Trees for Data-Driven Auto-Tuning}
 
 \numberofauthors{3}
@@ -164,6 +165,8 @@ filter sizes must handle on the order of $2^{50}$ forseable
 problem configurations (not even including variations due to strided memory
 layouts).
 
+%XXX: DIAGRAM OF IMAGE, FILTERBANK, OUTPUT
+
 % Problems were considered invalid if the filters were larger than the images.
 % but in the new setting with iheight >= 256 this never happened.
 Problems were tested if they represented between 1 and 50 gigaflops.  Problems
@@ -187,19 +190,18 @@ perform.
 
 The strategy we use for computing filterbank correlation on the GPU
 using CUDA follows \citet{pinto+cox:2011gcg}.
-The overall strategy is to load the filterbank into some relatively fast
-memory (constant or texture), and then launch a grid of blocks that each
-computes some local piece of the output image $z$.
+The overall strategy is to load the filterbank into constant memory, which is
+relatively fast and visible to all threads, and then launch a grid of blocks
+that tiles the output image.
 Each thread computes $4 \times n\_output\_4s$ channels for some column and row of $z$.
-Each block computes a subrectangle of the output $z$,
-and the grid is used to tile the whole output image with blocks.
-Some filterbanks are too large to fit into the fast memory.
-For large filterbanks our approach permits splitting the filterbanks along
-the number-of-filters dimension ($F$) and the number-of-rows dimension ($H$).
-All the filterbanks in our study are small enough that at least half of each
-filter can always fit into the constant or texture memory.
-When splitting the filterbank in this way we must use several kernel
-executions, each of which increments the output buffer by a partial result.
+Each block computes $4 \times n\_output\_4s$ channels for a subrectangle of the output image ($z$).
+When there are more than $4 \times n\_output\_4s$ channels in $z$, or if the
+filterbank is too large to fit into constant memory, then multiple
+kernel executions perform the full computation.
+Our approach permits splitting the filterbank along
+the number-of-filters dimension ($F$) and the height dimension ($H$).
+All the filterbanks in our study are small enough that
+at least one row of a single filter can fit into constant memory.
 Pseudo-code for the kernel is given in Figure~\ref{fig:kernel}.
 
 \begin{figure}[!ht]
@@ -231,11 +233,10 @@ $x$.
 \label{fig:kernel}
 \end{figure}
 
-
-
+The kernel is parametrized by 10 parameters:
 \begin{align*}
-\mathrm{block\_w}    & \in (4, 8, 16, 32, 64, 128) \\
 \mathrm{block\_h}    & \in (4, 8, 16, 32, 64, 128) \\
+\mathrm{block\_w}    & \in (4, 8, 16, 32, 64, 128) \\
 \mathrm{n\_filter\_r} & \in (1, 2) \\
 \mathrm{n\_output\_4s} & \in (\mathrm{all}, 1, 2) \\
 \mathrm{spill}      & \in (False, True) \\
@@ -245,6 +246,11 @@ $x$.
 \mathrm{maxrreg}    & \in (8, 16, 20, 24, 28, 32, \infty) \\
 \mathrm{fast\_math}  & \in (False, True)
 \end{align*}
+
+The block height (block\_h) and block width (block\_w) parameters control the
+number of threads that run on each multiprocessor.
+The number of filter rows (n\_filter\_r) is how many rows of each filter is
+loaded
 
 The kernel used to perform
 filterbank correlation was parametrized by 10 parameters, some of which
@@ -267,6 +273,10 @@ XXX: analysis of READ traffic, WRITE traffic, DATA re-use and CACHEing
 strategies. FLOPS per write etc.
 
 XXX: Why not use FFT: convolution in spectral domain?
+
+XXXX: Talk about memory transfer requirements vs. speed vs. copy... 
+
+
 
 \subsection{System Description Space}
 
