@@ -12,7 +12,9 @@
 
 
 %XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
-\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
+%\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
+\title{Machine Learning for Predictive Auto-Tuning}
+%XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
 
 \numberofauthors{3}
 
@@ -210,17 +212,39 @@ related stencil operations XXX, it is challenging to provide an implementation
 or even an implementation strategy that provides satisfactory performance
 across the range of inputs (shapes, physical layouts) that occur in
 typical usage.
-
-
-XXX: TYPICAL OF STENCIL COMPUTATIONS.
-
+\citet{kamil+etal:2009} summarize a related situation related to general stencil computations in their abstract:
 ``Although the auto-tuning strategy has been successfully applied to libraries,
 generalized stencil kernels are not amenable to packaging as libraries.''
-\cite{kamil+etal:2009}
+% XXX: out of context?
 
-\cite{datta:2009}
+XXX \cite{datta:2009}
 
-\subsection{GPU Implementation}
+This paper contributes a model-based approach to auto-tuning in which the model
+is determined almost entirely using machine learning rather than domain
+knowledge.  We show that even though our timing model has no built-in knowledge of GPU
+devices, or our kernel, or filterbank correlation, it is able to provide fast
+and accurate timing estimates.
+We show that a model built by boosting regression trees
+is fast and accurate enough to be used profitably
+in the algorithm schema shown at the bottom of
+Figure~\ref{fig:general_autotune}, which permits doing on-demand auto-tuning
+for novel (not already auto-tuned) argument combinations.
+We call this approach {\em predictive auto-tuning}.
+
+The paper is organized as follows:
+Section~\ref{sec:kernel} describes the sort of kernel we employ for our benchmarking,
+Section~\ref{sec:exp} presents the results of our benchmarking experiments, which
+compare a reference implementation to a) empirical auto-tuning over a domain-specific grid,
+b) empirical auto-tuning over a hill-climbing search, and
+c) predictive autotuning.
+%Section~\ref{sec:discussion}.
+Section~\ref{sec:previous} summarizes previous and related work involving  machine learning with performance auto-tuning.
+Section~\ref{sec:conclusion} summarizes our findings and outlines directions for future work.
+
+
+
+\section{GPU Implementation}
+\label{sec:kernel}
 
 The strategy we use for computing filterbank correlation on the GPU
 using CUDA follows \citet{pinto+cox:2011gcg}.
@@ -326,11 +350,22 @@ These passes make the I/O requirements increase quadratically in $F$ and $H$.
 At the same time, the total number of floating-point operations (Eq.~\ref{eq:flops})
 is quadratic in $H$ and $W$. In our experiments, we only considered square
 filters so in our setting the total number of flops is proportional to $H^4$.
-% XXX WHERE IS ALL THIS GOING?
 
-Meta-programming was implemented in Python using
+XXX
+Arithmetic density with passes.
+
+Critically:
+The arithmetic intensity, shared storage, and register requirements
+of this kernel change significantly and in a complicated platform-dependent way
+with the argument parameters ($R, C, D, F, H, W$) and with the implementation parameters,
+especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
+
+This kernel was implemented in the meta-programming style advocated
+in \citet{pinto+cox:2011gcg} in Python using
 Cheetah for string processing~\citep{cheetah}
-and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel compilation.
+and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
+compilation and interfacing with CUDA.
+
 
 \section{Experiments}
 
