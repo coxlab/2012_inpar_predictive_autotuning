@@ -400,14 +400,8 @@ of this kernel change significantly and in a complicated platform-dependent way
 with the argument parameters ($R, C, D, F, H, W$) and with the implementation parameters,
 especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
 
-This kernel was implemented in the meta-programming style advocated
-in \citet{pinto+cox:2011gcg} in Python using
-Cheetah for string processing~\citep{cheetah}
-and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
-compilation and interfacing with CUDA.
 
-
-\section{Experiments}
+\section{Experiment Setup}
 
 Recall from the introduction (Eq.~\ref{eq:condopt}) that auto-tuning can be seen
 as a conditional optimization problem in whic we seek an implementation ($b \in \mathcal{B}$) that minimizes runtime or some other scalar-valued cost function
@@ -465,31 +459,45 @@ performance on a variety of GPUs from older-generation cards such as the
 8600GT all the way to
 current high-end cards such as the GTX 580 and C2070.
 We call this configuration the {\em reference} implementation.
+% XXX: what is reference?  Why was it chosen?
 
 Additionally, \cite{cox+pinto:2011gcg} advocate a particular grid search over
 the most promising part of the configuration space. This grid iterates over all
 combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
+The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
+XXX: isn't 73 prime?? explain this so-called ``grid''.
 
-In this work, we consider a third search algorithm based on a local search heuristic.  This {\em hill-climing} algorithm starts from the reference implementation and randomly resamples $25\%$ of the implementation parameters randomly
+In this work, we also consider a third search algorithm based on a local search
+heuristic.  This {\em hill-climing} (HC) algorithm starts from the reference
+implementation and resamples each of the parameters
+of the current best implementation randomly with 
+probability $0.25$ (keeping the current best setting with probability $0.75$).
+On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
+We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
 
-XXX: Histogram (over problems) of gigaflops/sec of random, grid, random,
-hill-climbing for each/selected platform.
-This shows that our implementations and problems are stressing the cards,
-that our implementation is pretty good, and that different problem sizes pose
-different computational challenges.
+\subsection{Platforms and Implementation}
 
-XXX: Scatterplot of gigaflops vs. gigaflops / second (of best grid point)
-should show that it's not just problem size that makes it possible to go fast.
+This kernel was implemented in the meta-programming style advocated
+in \citet{pinto+cox:2011gcg} in Python using
+Cheetah for string processing~\citep{cheetah}
+and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
+compilation and interfacing with CUDA.
+
+We evaluated our approach on several GPU devices:
+XXX.
+
+XXX Table showing theoretical peak FLOPS, theoretical peak bandwidth, core count, shared memory size, register size, etc.
 
 
-XXX: histogram of speedups of grid, random, hill-climbing over reference, for
-several hardware platforms. (GET ANOTHER -- macbook??)
-Sometimes the reference implementation is optimal, in many cases it is far
-from optimal: Which cases? What's wrong with the reference?
+\section{Results}
 
-TL;DR: Hill-climbing is a good way to search the implementation space, can
-search the full space and do about as well as grid search in the more
-restricted space.
+Figure~\ref{fig:speedup} shows the effectiveness of empirical auto-tuning is in this setting.  Averaging across the range of problem configurations in our study,
+implementations discovered by empirical auto-tuning are on average about 50\% (XXX check) faster than the reference implementation.
+XXX: recalculate with simpler mean speedup formula.
+On the GTX 295 speedups over the reference implementation ranged from XXX to XXX with mean XXX.
+On the GTX 480 speedups over the reference implementation ranged from XXX to XXX with mean XXX.
+XXX: Consider table for these numbers.
+XXX: Put in some timings of mixed \& matched all-stars to show that indeed the reference was a good general baseline, and in fact the auto-tuned models are special-purpose.
 
 \begin{figure}
 \centering
@@ -511,7 +519,22 @@ seconds on average, even with a naive Python implementation.
 \end{figure}
 
 
-\begin{figure*}
+Figure~\ref{fig:speedup} also shows that random hill-climbing is at least
+competitive and often better than the hand-chosen grid approach of ~\citet{pinto+cox:2011gcg}.  Figure~\ref{fig:hcX} shows how the number of hill-climbing iterations
+affects the quality of the auto-tuned model.
+The quicker HC25 approach is clearly inferior but the quality of the 75 iteration search (HC75) is statistically similar to the shorter HC50, suggesting that XXX.
+Still, HC75 is not always better than the grid, so evidently neither search algorithm is perfect.
+
+The previous figures establish that auto-tuning on a problem-by-problem basis can achieve good performance improvements over a high-quality reference baseline, but they do not show how long it takes to find these implementations.  A search of 75 iterations took an average of about 120 seconds XXX on a fast computer, because it requires compiling 75 CUDA kernels, and evaluating up to 750 filterbank correlations to get reliable timing information for each candidate implementation.
+
+Our contrib
+
+TL;DR: Hill-climbing is a good way to search the implementation space, can
+search the full space and do about as well as grid search in the more
+restricted space.
+
+
+\begin{figure}
 \centering
 \includegraphics[scale=.42]{fig_ntrain_295.pdf}
 \includegraphics[scale=.42]{fig_ntrain_480.pdf}
@@ -528,9 +551,9 @@ moderate values of $a$ between $0.25$ and $0.75$ might be
 best, but $a$ had no significant effect on the GTX 480.
 }
 \label{fig:fig_ntrain}
-\end{figure*}
+\end{figure}
 
-\begin{figure*}
+\begin{figure}
 \centering
 \includegraphics[scale=.42]{fig_gflop_scatter_295.pdf}
 \includegraphics[scale=.42]{fig_gflop_scatter_480.pdf}
@@ -543,7 +566,7 @@ The predictive approach typically requires about 0.1 seconds to suggest an
 implementation, whereas the empirical approach requires about 2 minutes.
 }
 \label{fig:fig_gflop_scatter}
-\end{figure*}
+\end{figure}
 
 
 \subsection{Model-based Autotuning}
