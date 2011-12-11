@@ -70,44 +70,20 @@ platforms.
 
 \section{Introduction}
 
-Filterbank correlation is a simple spatial image filtering operation that is
-an important subroutine in many image processing applications. It has a relatively
-high arithmetic intensity which makes it a natural fit for GPU platforms.
-One might expect then, that it would be easy to implement a library providing
-this operation -- this hypothetical library could have quite a simple interface
-following the spirit of FFTW or a BLAS routine:
-\begin{verbatim}
-    gpu_fbcorr(
-        img_shape, filters_shape,
-        img, filters, output)
-\end{verbatim}
-However, as shown in \citet{pinto+cox:2011gcg} and numerous articles on
-related stencil operations XXX, it is challenging to provide an implementation
-or even an implementation strategy that provides satisfactory performance
-across the range of inputs (shapes, physical layouts) that occur even in
-typical usage.
+Current languages and software engineering practices have conspired to make it difficult
+to provide high-performance libraries for general mathematical operations on GPU devices.
+The dominant approach to implementing high-performance GPU codes has been auto-tuning,
+which is fundamentally slow. Compilation with auto-tunin requires running a large number of
+sub-compilations and representative computations to actually {\em measure} which
+of several possible implementations is fastest. General-purpose libraries such
+as CUBLAS and CUFFT XXX hide this overhead by auto-tuning offline and using
+intimate knowledge of the mathematical problem being solved as well as the
+kernel implementations to heuristically choose a good computation strategy quickly when a
+user asks for e.g. a matrix product of particular arguments.
+Designing and testing libraries of this form is time-consuming, difficult, and provides little
+reusable infrastructure to assist in the implementation of different computations.
+Libraries for stencil computations and sparse matrix operations must start from scratch.
 
-Current state-of-the art is to do empirical auto-tuning.
-XXX \vspace{12pt}
-
-Increasingly, machine learning and statistical inference strategies are
-finding application in compiler technology.
-XXX \vspace{12pt}
-
-This work shows that online auto-tuning can be accelerated by orders of
-magnitude by using a regression model built offline as a surrogate for actual
-computations on the real hardware.
-We use a powerful non-linear regression model (boosted regression trees)
-to approximate the empirical relationship between three sets of variables ($\mathcal{A},
-\mathcal{B}, \mathcal{C}$) and the observed speed-up over a
-reference implementation:
-\begin{description}
-\item[$\mathcal{A}$:] task description (e.g. shapes, physical layout)
-\item[$\mathcal{B}$:] algorithm description (i.e. auto-tuning parameters)
-\item[$\mathcal{C}$:] platform description (e.g. micro-benchmarks)
-\end{description}
-Ideally, \texttt{gpu\_fbcorr} would apply the best
-available implementation 
 
 \begin{figure}[!ht]
 \centerline{
@@ -133,8 +109,61 @@ because dynamically-generated code must be compiled and run on a number of actua
 Predictive auto-tuning (below) can be orders of magnitude faster. We show that it can
 also be accurate.
 }
-\label{fig:argmin}
+\label{fig:general_autotune}
 \end{figure}
+
+This work shows that auto-tuning can be accelerated by orders of
+magnitude by using a regression model built offline as a surrogate for actual
+computations on the real hardware.
+The general form of an auto-tuning based library routine is illustrated in Figure~\ref{fig:general_autotune} (top).
+We will use filterbank correlation (Section~\ref{sec:fbcorr}) as our running example, but the approach is both general and powerful.
+An auto-tuning based routine must operate on three sets of variables:
+\begin{description}
+\item[$\mathcal{A}$:] task description (argument shapes, physical layout)
+\item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
+\item[$\mathcal{C}$:] platform description (compute capability, micro-benchmarks)
+\end{description}
+The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune} 
+might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
+so it would be all but unusable as a normal library routine.
+However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
+if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
+then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~{\ref:fig:general_autotune}, bottom).
+
+Our contribution of the present work is to show that boosted regression tree models,
+a powerful machine learning technique for function approximation, can meet the
+requirements of this application.
+We call this approach {\em predictive} auto-tuning to contrast it with the standard measurement-based approach which we will call {\em empirical} auto-tuning.
+We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning. XXX numbers:
+how good, how fast can prediction be done how much training data is necessary?
+
+
+\section{Filterbank Correlation}
+\label{sec:fbcorr}
+
+Filterbank correlation is a simple spatial image filtering operation that is
+an important subroutine in many image processing applications. It has a relatively
+high arithmetic intensity which makes it a natural fit for GPU platforms.
+One might expect then, that it would be easy to implement a library providing
+this operation -- this hypothetical library could have quite a simple interface
+following the spirit of FFTW or a BLAS routine:
+\begin{verbatim}
+    gpu_fbcorr(
+        img_shape, filters_shape,
+        img, filters, output)
+\end{verbatim}
+However, as shown in \citet{pinto+cox:2011gcg} and numerous articles on
+related stencil operations XXX, it is challenging to provide an implementation
+or even an implementation strategy that provides satisfactory performance
+across the range of inputs (shapes, physical layouts) that occur even in
+typical usage.
+
+Current state-of-the art is to do empirical auto-tuning.
+XXX \vspace{12pt}
+
+Increasingly, machine learning and statistical inference strategies are
+finding application in compiler technology.
+XXX \vspace{12pt}
 
 machine learning
 
