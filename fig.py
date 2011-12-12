@@ -99,9 +99,9 @@ def main_gflop_scatter():
 
 
 def main_ntrain():
-    _python, _cmd, wisdomfile = sys.argv
-    import matplotlib.pyplot as plt
-    wdb, results, rng = cPickle.load(open(wisdomfile))
+    _python, _cmd, hostname, devicename = sys.argv
+    results = step_timings(hostname, devicename)
+
     def getpspecspeed(pspec, k):
         for r in results:
             if k in r and r[k].prob_spec == pspec:
@@ -123,9 +123,10 @@ def main_ntrain():
         yy = []
         yy_v = []
         for n_train in '10', '25', '50', '100', '200':
-            train_result = 'train_results_%s_%s_%s' % (wisdomfile, inv_mult, n_train)
+            train_result = test_timings(hostname, devicename, inv_mult,
+                    n_train)
             mdl_timings = [(p, t)
-                    for (p, t) in cPickle.load(open(train_result)).iteritems()
+                    for (p, t) in train_result.iteritems()
                     if use_this(p, t)]
             tree_speeds = [t.speed() for p, t in mdl_timings]
             hc_speeds = [getpspecspeed(p, 'gen75') for p, t in mdl_timings]
@@ -147,22 +148,24 @@ def main_ntrain():
 
     if '295'  == devicename:
         plt.title('GTX 295')
-        figfile = 'fig_ntrain_295.pdf'
     elif '480'  == devicename:
         plt.title('GTX 480')
-        figfile = 'fig_ntrain_480.pdf'
+    elif '580'  == devicename:
+        plt.title('GTX 580')
     elif '1060'  == devicename:
         plt.title('Tesla C1060')
-        figfile = 'fig_ntrain_1060.pdf'
+    elif '2070'  == devicename:
+        plt.title('Tesla C2070')
     elif '8600'  == devicename:
         plt.title('8600GT')
-        figfile = 'fig_ntrain_8600.pdf'
+    figfile = 'fig_ntrain_%s_%s.pdf' % (hostname, devicename,)
     plt.xlabel('N. auto-tuned problem configurations used for training')
     plt.ylabel('GFLOP/s')
     plt.legend(loc='lower right')
     if 0:
         plt.show()
     else:
+        print 'saving figure', figfile
         plt.savefig(figfile)
 
 
