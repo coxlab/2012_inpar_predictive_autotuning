@@ -14,6 +14,7 @@
 %XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
 %\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
 \title{Machine Learning for Predictive Auto-Tuning}
+% NP: I like this title !
 %XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
 
 \numberofauthors{3}
@@ -76,9 +77,9 @@ platforms.  \end{abstract}
 
 Due to power consumption and heat dissipation concerns, scientific applications
 have shifted from computing platforms where performance had been primarily
-driven by rises in the clock frequency of a single ‘’heavy-weight’’ processor
+driven by rises in the clock frequency of a single ''heavy-weight'' processor
 (with complex out-of-order control and cache structures) to a platform with
-ever increasing numbers of ‘’light-weight’’ cores. Interestingly, this shift is
+ever increasing numbers of ''light-weight'' cores. Interestingly, this shift is
 now not only relevant to computational sciences but to the development of all
 computer systems: from ubiquitous consumer-facing devices (e.g. phones) to
 high-end computer farms for web-scale applications (e.g. social networks).
@@ -99,12 +100,12 @@ diversity of low-level architectural features to write high-performance
 \emph{and} portable code.
 
 % 1.1 Motivation
-% Better tools: motivation (compilers/tools/libs can’t keep up, it’s too difficult)
+% Better tools: motivation (compilers/tools/libs can't keep up, it's too difficult)
 
 In this rapidly evolving landscape, the construction of \emph{general}
 development tools and libraries that \emph{fully utilize} system resources
 remains a daunting task \cite{?}. Even within specialized architectures from
-the \emph{same} vendor, like NVIDIA’s Graphics Processing Units (GPUs) and the
+the \emph{same} vendor, like NVIDIA's Graphics Processing Units (GPUs) and the
 Compute Unified Device Architecture (CUDA) \cite{CUDA}, many developers default
 to massive amounts of manual labor to optimize CUDA code to specific input
 domains. In addition, hand-tuning rarely generalizes well to new hardware
@@ -114,14 +115,14 @@ optimization spaces \cite{K. Datta et al. Stencil computation optimization and
 auto-tuning on state-of-the-art multicore architectures}. The problem is
 further compounded by the fact that these spaces can be highly discontinuous
 \cite{RyooHwuCGO2008}, difficult to explore and holding quasi-optimal solutions
-at the edge of ‘’performance cliffs’’ (in part due to hard resource
+at the edge of ''performance cliffs'' (in part due to hard resource
 restrictions, like the register file size).
 
 % 1.2 related work
 % auto-tuning is an answer
 
 One of the strategies for addressing these challenges is to use automatic
-methods called ‘’auto-tuning’’. The literature on auto-tuning is extensive (see
+methods called ''auto-tuning''. The literature on auto-tuning is extensive (see
 surveys in \cite{XXX}. Two different approaches to auto-tuning have emerged:
 model-driven optimization and empirical optimization.
 
