@@ -50,57 +50,96 @@ Furthermore, library abstraction boundaries provide operations such as image
 filtering and matrix multiplication, which actually correspond to a large set
 of potential problem configurations with a wide variety of memory access
 patterns and computational bottlenecks.  How can we draw on data from previous
-empirical auto-tuning of related problems on related hardware to make a just-in-time
-implementation decision for a novel problem?  This paper presents a machine
-learning approach to auto-tuning, in which features of (a) the current
-hardware platform, (b) the kernel configuration and (c) the problem instance
-are passed to a regression model (boosted regression trees) which predicts how
-much faster this kernel will be than a reference baseline.  Combinatorial
-optimization strategies that would normally implement auto-tuning by
-evaluating kernel configurations on the real hardware are orders of magnitude
-faster when evaluating the surrogate regression model instead.  We validate our approach
-using the filterbank correlation kernel described in \citet{pinto+cox:2011gcg}, where we find
-that 0.1 seconds (XXX) of hill climbing on the regression model ({\em
-predictive}
-auto-tuning) can achieve an
-average of 95\% of the speed brought by 120 seconds of empirical auto-tuning XXX.  Our
-approach is not specific to filterbank correlation, or even to GPU
-kernel auto-tuning: the approach of using a non-linear regression model on top of
-simple features applies to a variety of problem types, kernel types, and
-platforms.
-\end{abstract}
+empirical auto-tuning of related problems on related hardware to make a
+just-in-time implementation decision for a novel problem?  This paper presents
+a machine learning approach to auto-tuning, in which features of (a) the
+current hardware platform, (b) the kernel configuration and (c) the problem
+instance are passed to a regression model (boosted regression trees) which
+predicts how much faster this kernel will be than a reference baseline.
+Combinatorial optimization strategies that would normally implement auto-tuning
+by evaluating kernel configurations on the real hardware are orders of
+magnitude faster when evaluating the surrogate regression model instead.  We
+validate our approach using the filterbank correlation kernel described in
+\citet{pinto+cox:2011gcg}, where we find that 0.1 seconds (XXX) of hill
+climbing on the regression model ({\em predictive} auto-tuning) can achieve an
+average of 95\% of the speed brought by 120 seconds of empirical auto-tuning
+XXX.  Our approach is not specific to filterbank correlation, or even to GPU
+kernel auto-tuning: the approach of using a non-linear regression model on top
+of simple features applies to a variety of problem types, kernel types, and
+platforms.  \end{abstract}
 
 \section{Introduction}
+
+% 1 Introduction
 
 % HPC Landscape: from single proc to multi-cores
 
 Due to power consumption and heat dissipation concerns, scientific applications
 have shifted from computing platforms where performance had been primarily
-driven by rises in the clock frequency of a single ''heavy-weight'' processor
+driven by rises in the clock frequency of a single ‘’heavy-weight’’ processor
 (with complex out-of-order control and cache structures) to a platform with
-ever increasing numbers of ''light-weight'' cores. Interestingly, this shift is
+ever increasing numbers of ‘’light-weight’’ cores. Interestingly, this shift is
 now not only relevant to computational sciences but to the development of all
 computer systems: from ubiquitous consumer-facing devices (e.g. phones) to
 high-end computer farms for web-scale applications (e.g. social networks).
 
-% HPC Landscape: large diversity of architectures, no consensus => push to
-% flexibility => push to sw
+% HPC Landscape: large diversity of architectures, no consensus => push to flexibility => push to sw
 
-Even though the future lies in low-power multi-core hardware designs, the field
+Although the future lies in low-power multi-core hardware designs, the field
 lacks meaningful consensus on exactly how the different subsystems (memory,
 communication and computation) should be efficiently integrated, modelled and
-programmed. As a consequence, these systems have been increasingly relying on
-flexible but low-level software-controlled cache management and parallelism
-\cite{BerkeleyViewOfHPC} in order to better control and understand the various
-trade-offs among (e.g.) performance, reliability, energy efficiency, production
-costs, etc. This evolution has profoundly altered the landscape of software
-development: application programmers are now facing a large diversity of
-low-level architectural features while being left with rapidly evolving tools
-and techniques to write high-performance \emph{and} portable code.
+programmed. These systems have exhibited varying degrees of memory hierarchy
+and multi-threading complexity and, as a consequence, they have been
+increasingly relying on flexible but low-level software-controlled cache
+management and parallelism \cite{BerkeleyViewOfHPC} in order to better control
+and understand the various trade-offs among performance, reliability, energy
+efficiency, production costs, etc. This evolution has profoundly altered the
+landscape of application development: programmers are now facing a wide
+diversity of low-level architectural features to write high-performance
+\emph{and} portable code.
 
-% Better tools: motivation
+% 1.1 Motivation
+% Better tools: motivation (compilers/tools/libs can’t keep up, it’s too difficult)
 
-% XXX
+In this rapidly evolving landscape, the construction of \emph{general}
+development tools and libraries that \emph{fully utilize} system resources
+remains a daunting task \cite{?}. Even within specialized architectures from
+the \emph{same} vendor, like NVIDIA’s Graphics Processing Units (GPUs) and the
+Compute Unified Device Architecture (CUDA) \cite{CUDA}, many developers default
+to massive amounts of manual labor to optimize CUDA code to specific input
+domains. In addition, hand-tuning rarely generalizes well to new hardware
+generations or different input domains, and it can also be error-prone or far
+from optimal. One of the reason is that kernels can produce staggeringly large
+optimization spaces \cite{K. Datta et al. Stencil computation optimization and
+auto-tuning on state-of-the-art multicore architectures}. The problem is
+further compounded by the fact that these spaces can be highly discontinuous
+\cite{RyooHwuCGO2008}, difficult to explore and holding quasi-optimal solutions
+at the edge of ‘’performance cliffs’’ (in part due to hard resource
+restrictions, like the register file size).
+
+% 1.2 related work
+% auto-tuning is an answer
+
+One of the strategies for addressing these challenges is to use automatic
+methods called ‘’auto-tuning’’. The literature on auto-tuning is extensive (see
+surveys in \cite{XXX}. Two different approaches to auto-tuning have emerged:
+model-driven optimization and empirical optimization.
+
+The model-driven optimization approach uses analytical abstractions to model
+the hardware architectures, the possible code transformations and their complex
+interactions \cite{XXX}. Even though highly-accurate analytical models are
+generally intractable to build, this approach has been quite successful in the
+past at accelerating serial code \cite{XXX} with simplified but general
+abstractions. However, large speed-ups for parallel code require more accurate
+high-dimensional models and since this approach is bound by the quality and
+scalability of its abstraction, it has been less suited for highly-specialized
+kernels. This approach has been dominant in the compiler community \cite{XXX}.
+As a result, it has generally been applied at compile-time where important
+run-time characteristics such as input domains are missing. These drawbacks
+render the model-driven optimization approach less attractive for
+high-performance library developers.
+
+% XXX: see gdoc and merge this below
 
 \subsection{Case Study}
 Current languages and software engineering practices have conspired to make it difficult
@@ -156,7 +195,7 @@ An auto-tuning based routine must operate on three sets of variables:
 \item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
 \item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
 \end{description}
-The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune} 
+The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
 might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
 so it would be all but unusable as a normal library routine.
 However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
@@ -473,7 +512,7 @@ represented between 1 and 50 gigaflops of arithmetic.
 Smaller problems do not fully utilize GPU hardware and are handled equally well by many kernel settings.
 Larger take so long to evaluate that there is negligible
 inefficiency in implementing them via multiple calls with smaller images and fewer filters.
-With the gigaflops restriction, the argument space 
+With the gigaflops restriction, the argument space
 included 602 configurations with between 1 and 50 gigaflops.
 
 For the implementation features $b$, we directly used the integer and binary values (block\_w, block\_h, etc.) that parametrized the kernels.
@@ -501,7 +540,7 @@ XXX: isn't 73 prime?? explain this so-called ``grid''.
 In this work, we also consider a third search algorithm based on a local search
 heuristic.  This {\em hill-climing} (HC) algorithm starts from the reference
 implementation and resamples each of the parameters
-of the current best implementation randomly with 
+of the current best implementation randomly with
 probability $0.25$ (keeping the current best setting with probability $0.75$).
 On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
 We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
@@ -737,6 +776,6 @@ strategies. FLOPS per write etc.
 
 XXX: Why not use FFT: convolution in spectral domain?
 
-XXXX: Talk about memory transfer requirements vs. speed vs. copy... 
+XXXX: Talk about memory transfer requirements vs. speed vs. copy...
 
 
