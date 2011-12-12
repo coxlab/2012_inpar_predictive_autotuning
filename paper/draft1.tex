@@ -72,6 +72,37 @@ platforms.
 
 \section{Introduction}
 
+% HPC Landscape: from single proc to multi-cores
+
+Due to power consumption and heat dissipation concerns, scientific applications
+have shifted from computing platforms where performance had been primarily
+driven by rises in the clock frequency of a single “heavy-weight” processor
+(with complex out-of-order control and cache structures) to a platform with
+ever increasing numbers of “light-weight” cores. Interestingly, this shift is
+now not only relevant to computational sciences but to the development of all
+computer systems: from ubiquitous consumer-facing devices (e.g. phones) to
+high-end computer farms for web-scale applications (e.g. social networks).
+
+% HPC Landscape: large diversity of architectures, no consensus => push to
+% flexibility => push to sw
+
+Even though the future lies in low-power multi-core hardware designs, the field
+lacks meaningful consensus on exactly how the different subsystems (memory,
+communication and computation) should be efficiently integrated, modelled and
+programmed. As a consequence, these systems have been increasingly relying on
+flexible but low-level software-controlled cache management and parallelism
+\cite{BerkeleyViewOfHPC} in order to better control and understand the various
+trade-offs among (e.g.) performance, reliability, energy efficiency, production
+costs, etc. This evolution has profoundly altered the landscape of software
+development: application programmers are now facing a large diversity of
+low-level architectural features while being left with rapidly evolving tools
+and techniques to write high-performance \emph{and} portable code.
+
+% Better tools: motivation
+
+% XXX
+
+\subsection{Case Study}
 Current languages and software engineering practices have conspired to make it difficult
 to provide high-performance libraries for general mathematical operations on GPU devices.
 The dominant approach to implementing high-performance GPU codes has been auto-tuning,
