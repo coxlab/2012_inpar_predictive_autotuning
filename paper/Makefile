@@ -5,3 +5,6 @@ draft1.pdf: draft1.tex
 
 abstract.pdf: abstract.tex
 	pdflatex abstract
+
+view: draft1.pdf
+	open $^
