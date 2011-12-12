@@ -12,7 +12,10 @@
 
 
 %XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
-\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
+%\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
+\title{Machine Learning for Predictive Auto-Tuning}
+% NP: I like this title !
+%XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
 
 \numberofauthors{3}
 
@@ -48,70 +51,129 @@ Furthermore, library abstraction boundaries provide operations such as image
 filtering and matrix multiplication, which actually correspond to a large set
 of potential problem configurations with a wide variety of memory access
 patterns and computational bottlenecks.  How can we draw on data from previous
-empirical auto-tuning of related problems on related hardware to make a just-in-time
-implementation decision for a novel problem?  This paper presents a machine
-learning approach to auto-tuning, in which features of (a) the current
-hardware platform, (b) the kernel configuration and (c) the problem instance
-are passed to a regression model (boosted regression trees) which predicts how
-much faster this kernel will be than a reference baseline.  Combinatorial
-optimization strategies that would normally implement auto-tuning by
-evaluating kernel configurations on the real hardware are orders of magnitude
-faster when evaluating the surrogate regression model instead.  We validate our approach
-using the filterbank correlation kernel described in \citet{pinto+cox:2011gcg}, where we find
-that 0.1 seconds (XXX) of hill climbing on the regression model ({\em
-predictive}
-auto-tuning) can achieve an
-average of 95\% of the speed brought by 120 seconds of empirical auto-tuning XXX.  Our
-approach is not specific to filterbank correlation, or even to GPU
-kernel auto-tuning: the approach of using a non-linear regression model on top of
-simple features applies to a variety of problem types, kernel types, and
-platforms.
-\end{abstract}
+empirical auto-tuning of related problems on related hardware to make a
+just-in-time implementation decision for a novel problem?  This paper presents
+a machine learning approach to auto-tuning, in which features of (a) the
+current hardware platform, (b) the kernel configuration and (c) the problem
+instance are passed to a regression model (boosted regression trees) which
+predicts how much faster this kernel will be than a reference baseline.
+Combinatorial optimization strategies that would normally implement auto-tuning
+by evaluating kernel configurations on the real hardware are orders of
+magnitude faster when evaluating the surrogate regression model instead.  We
+validate our approach using the filterbank correlation kernel described in
+\citet{pinto+cox:2011gcg}, where we find that 0.1 seconds (XXX) of hill
+climbing on the regression model ({\em predictive} auto-tuning) can achieve an
+average of 95\% of the speed brought by 120 seconds of empirical auto-tuning
+XXX.  Our approach is not specific to filterbank correlation, or even to GPU
+kernel auto-tuning: the approach of using a non-linear regression model on top
+of simple features applies to a variety of problem types, kernel types, and
+platforms.  \end{abstract}
 
 \section{Introduction}
 
-Filterbank correlation is a simple spatial image filtering operation that is
-an important subroutine in many image processing applications. It has a relatively
-high arithmetic intensity which makes it a natural fit for GPU platforms.
-One might expect then, that it would be easy to implement a library providing
-this operation -- this hypothetical library could have quite a simple interface
-following the spirit of FFTW or a BLAS routine:
-\begin{verbatim}
-    gpu_fbcorr(
-        img_shape, filters_shape,
-        img, filters, output)
-\end{verbatim}
-However, as shown in \citet{pinto+cox:2011gcg} and numerous articles on
-related stencil operations XXX, it is challenging to provide an implementation
-or even an implementation strategy that provides satisfactory performance
-across the range of inputs (shapes, physical layouts) that occur even in
-typical usage.
+% 1 Introduction
 
-Current state-of-the art is to do empirical auto-tuning.
-XXX \vspace{12pt}
+% HPC Landscape: from single proc to multi-cores
 
-Increasingly, machine learning and statistical inference strategies are
-finding application in compiler technology.
-XXX \vspace{12pt}
+Due to power consumption and heat dissipation concerns, scientific applications
+have shifted from computing platforms where performance had been primarily
+driven by rises in the clock frequency of a single ''heavy-weight'' processor
+(with complex out-of-order control and cache structures) to a platform with
+ever increasing numbers of ''light-weight'' cores. Interestingly, this shift is
+now not only relevant to computational sciences but to the development of all
+computer systems: from ubiquitous consumer-facing devices (e.g. phones) to
+high-end computer farms for web-scale applications (e.g. social networks).
 
-This work shows that online auto-tuning can be accelerated by orders of
-magnitude by using a regression model built offline as a surrogate for actual
-computations on the real hardware.
-We use a powerful non-linear regression model (boosted regression trees)
-to approximate the empirical relationship between three sets of variables ($\mathcal{A},
-\mathcal{B}, \mathcal{C}$) and the observed speed-up over a
-reference implementation:
-\begin{description}
-\item[$\mathcal{A}$:] task description (e.g. shapes, physical layout)
-\item[$\mathcal{B}$:] algorithm description (i.e. auto-tuning parameters)
-\item[$\mathcal{C}$:] platform description (e.g. micro-benchmarks)
-\end{description}
-Ideally, \texttt{gpu\_fbcorr} would apply the best
-available implementation 
+% HPC Landscape: large diversity of architectures, no consensus => push to flexibility => push to sw
+
+Although the future lies in low-power multi-core hardware designs, the field
+lacks meaningful consensus on exactly how the different subsystems (memory,
+communication and computation) should be efficiently integrated, modelled and
+programmed. These systems have exhibited varying degrees of memory hierarchy
+and multi-threading complexity and, as a consequence, they have been
+increasingly relying on flexible but low-level software-controlled cache
+management and parallelism \cite{BerkeleyViewOfHPC} in order to better control
+and understand the various trade-offs among performance, reliability, energy
+efficiency, production costs, etc. This evolution has profoundly altered the
+landscape of application development: programmers are now facing a wide
+diversity of low-level architectural features to write high-performance
+\emph{and} portable code.
+
+% 1.1 Motivation
+% Better tools: motivation (compilers/tools/libs can't keep up, it's too difficult)
+
+In this rapidly evolving landscape, the construction of \emph{general}
+development tools and libraries that \emph{fully utilize} system resources
+remains a daunting task \cite{?}. Even within specialized architectures from
+the \emph{same} vendor, like NVIDIA's Graphics Processing Units (GPUs) and the
+Compute Unified Device Architecture (CUDA) \cite{CUDA}, many developers default
+to massive amounts of manual labor to optimize CUDA code to specific input
+domains. In addition, hand-tuning rarely generalizes well to new hardware
+generations or different input domains, and it can also be error-prone or far
+from optimal. One of the reason is that kernels can produce staggeringly large
+optimization spaces \cite{K. Datta et al. Stencil computation optimization and
+auto-tuning on state-of-the-art multicore architectures}. The problem is
+further compounded by the fact that these spaces can be highly discontinuous
+\cite{RyooHwuCGO2008}, difficult to explore and holding quasi-optimal solutions
+at the edge of ''performance cliffs'' (in part due to hard resource
+restrictions, like the register file size).
+
+\section{Auto-Tuning}
+
+% 1.2 related work
+% auto-tuning is an answer
+
+One of the strategies for addressing these challenges is to use automatic
+methods called ''auto-tuning''. The literature on auto-tuning is extensive (see
+surveys in \cite{XXX}. Two different approaches to auto-tuning have emerged:
+model-driven optimization and empirical optimization.
+
+The model-driven optimization approach uses analytical abstractions to model
+the hardware architectures, the possible code transformations and their complex
+interactions \cite{XXX}. Even though highly-accurate analytical models are
+generally intractable to build, this approach has been quite successful in the
+past at accelerating serial code \cite{XXX} with simplified but general
+abstractions. However, large speed-ups for parallel code require more accurate
+high-dimensional models and since this approach is bound by the quality and
+scalability of its abstraction, it has been less suited for highly-specialized
+kernels. This approach has been dominant in the compiler community \cite{XXX}.
+As a result, it has generally been applied at compile-time where important
+run-time characteristics such as input domains are missing. These drawbacks
+render the model-driven optimization approach less attractive for
+high-performance library developers.
+
+% XXX: * empirical optimization: intro / advantages
+% XXX: * empirical optimization: disadvantages
+% XXX: * hybrid optimization (to counter disadvantages) ?
+% XXX: * empirical optimization: w/ ML @ compile time (another way to “fix” empirical)
+% XXX: * empirical optimization: ML @ runtime, especially for libs
+% XXX: * empirical optimization: ML @ runtime for GPU libs why ? (w/ rtcg jit, rel. to pycuda, etc)
+
+% XXX: our contributions
+% XXX: WIIFY
+% XXX: organisation of the paper
+
+% XXX: see gdoc and merge this below
+
+\subsection{Case Study}
+Current languages and software engineering practices have conspired to make it difficult
+to provide high-performance libraries for general mathematical operations on GPU devices.
+The dominant approach to implementing high-performance GPU codes has been auto-tuning,
+which is fundamentally slow. Auto-tuning requires running a large number of
+sub-compilations and representative computations to actually {\em measure} which
+of several possible implementations is fastest. General-purpose libraries such
+as CUBLAS and CUFFT XXX hide this overhead by auto-tuning offline and using
+intimate knowledge of the mathematical problem being solved as well as the
+kernel implementations to heuristically choose a good computation strategy quickly when a
+user asks for e.g. a matrix product of particular arguments.
+Designing and testing libraries of this form is time-consuming, difficult, and provides little
+reusable infrastructure to assist in the implementation of different computations.
+Libraries for stencil computations and sparse matrix operations must start from scratch.
+
 
 \begin{figure}[!ht]
 \centerline{
-\begin{algorithm}{$\Algo{\color{darkred}{gpu\_fbcorr\_empirical}}\big(shapes, strides \big)$}
+\begin{algorithm}{$\Algo{\color{darkred}{autotune\_empirical}}\big(shapes, strides \big)$}
 \Aitem $a \setto TaskFeatures(shapes, strides)$
 \Aitem $c \setto PlatformFeatures()$
 \Aitem $b^* \setto \operatorname*{argmin}_{b \in \mathcal{B}} MeasureTime(a, b, c)$
@@ -119,7 +181,7 @@ available implementation
 \Aitem \Return $b^*$
 \end{algorithm}
 }
-\begin{algorithm}{$\Algo{\color{darkred}{gpu\_fbcorr\_predictive}}\big(shapes, strides \big)$}
+\begin{algorithm}{$\Algo{\color{darkred}{autotune\_predictive}}\big(shapes, strides \big)$}
 \Aitem $a \setto TaskFeatures(shapes, strides)$
 \Aitem $c \setto PlatformFeatures()$
 \Aitem $f \setto LoadTimingModel()$
@@ -127,55 +189,52 @@ available implementation
 \algoremark{\color{darkred}{fast}}
 \Aitem \Return $b^*$
 \end{algorithm}
-\caption{Pseudo-code template for an auto-tuning implementation of
-$\texttt{gpu\_fbcorr}$. Empirical auto-tuning (above) is inevitably slow
+\caption{Pseudo-code template for on-demand auto-tuning.
+Empirical auto-tuning (above) is inevitably slow
 because dynamically-generated code must be compiled and run on a number of actual-size inputs.
 Predictive auto-tuning (below) can be orders of magnitude faster. We show that it can
 also be accurate.
 }
-\label{fig:argmin}
+\label{fig:general_autotune}
 \end{figure}
 
-machine learning
+This work shows that auto-tuning can be accelerated by orders of
+magnitude by using a regression model built offline as a surrogate for actual
+computations on the real hardware.
+The general form of an auto-tuning based library routine is illustrated in Figure~\ref{fig:general_autotune} (top).
+We will use filterbank correlation (Section~\ref{sec:fbcorr}) as our running example, but the approach is both general and powerful.
+An auto-tuning based routine must operate on three sets of variables:
+\begin{description}
+\item[$\mathcal{A}$:] task description (argument shapes, physical layout)
+\item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
+\item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
+\end{description}
+The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
+might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
+so it would be all but unusable as a normal library routine.
+However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
+if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
+then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
 
-This paper shows that a kernel with several  boosted
+Our contribution of the present work is to show that boosted regression tree models,
+a powerful machine learning technique for function approximation, can meet the
+requirements of this application.
+We call this approach {\em predictive} auto-tuning to contrast it with the standard measurement-based approach which we will call {\em empirical} auto-tuning.
+XXX: We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
 
-
-There is a natural function from
-problem space x implementation space x platform space to runtime:
-how much wall time elapses on the given platform when solving the given
-problem with the given implementation.
-
-Auto-tuning is a family of empirical techniques for finding the implementation
-that minimizes that runtime function, when the platform and the problem
-configuration are given.
-
-XXX: some math, or possibly a picture with the three boxes that was on Pinto's
-whiteboard.
-
-This paper is about different ways of doing the minimization.
-For a particular problem (filterbank correlation) we
-look at a parameterized kernel implementation (from GCG)
-and a few hardware platforms, and compare
-random search, grid search, and a hill-climbing strategy with a good, but
-generic, reference implementation.
-Then we show that we can model the LSM function with a regression tree
-well enough to usefully perform the argmin of Equation~\ref{eq:lsm_argmin}
-on the model rather than the actual system. Whereas it may take several
-minutes to perform a hill-climbing or grid search in the original system,
-a hill-climbing search in the model requires a small fraction of a second.
-Model-based autotuning makes it possible to simulate auto-tuning quickly and
-accurately enough to be used within a single library call of the computational
-routine.
 
 \cite{volkov+demmel:2008}
 \cite{vuduc:2003} % has some stuff about ML for autotuning in ch. 9
 
 
-\subsection{Filter-bank Correlation}
+\subsection{Filterbank Correlation}
+\label{sec:fbcorr}
 
-Following \citet{pinto+cox:2011gcg}, the experiments in this paper will focus on filterbank
-correlation.  Mathematically, we define filterbank correlation in terms of an
+Filterbank correlation is a simple spatial image filtering operation that is
+an important subroutine in many image processing applications. It has a relatively
+high arithmetic intensity which makes it a natural fit for GPU platforms~\citep{pinto+cox:2011gcg}. XXX cite some computer vision papers.
+
+Mathematically, we define filterbank correlation in terms of an
 image $x$ and a filterbank $f$.
 The image $x$ has $R$ rows, $C$ columns, and $D$ channels (e.g. color
 channels) that we call its {\em depth}. We index $x$ like $\mathbf{x}[i,j,d]$
@@ -194,104 +253,122 @@ defined according to Equation~\ref{eq:z}:
         \label{eq:z}
 \end{equation}
 
-Filterbank correlation is used extensively in image and video processing,
-where it is often the computational bottleneck.
-GPUs are well-suited to computing filterbank correlations, although the
-optimal strategy for doing so often depends on the shape of the problem, i.e.
-the values of $R$, $C$, $D$, $F$, and $W$.
-
 In terms of floating point operations, a filterbank correlation requires the
 inner sums to be computed for each output pixel, yielding the quantity in
 Eq.~\ref{eq:flops}:
 \begin{equation}
-\mathrm{FLOPS} = 2  K  H  W  D  (R - H + 1)( C- W + 1)
+\mathrm{FLOPS} = 2  F  H  W  D  (R - H + 1)( C- W + 1)
 \label{eq:flops}
 \end{equation}
-The multiplicative factor of 2 arises because we must multiply an element of
+The multiplicative factor of 2 arises because we must first multiply an element of
 $x$ with an element of $f$ and then add the result to an element of $z$.
 
-In terms of bandwidth, if we were to assume (optimistically) that the entire
-filterbank fit into the GPU's so-called constant memory, then the bandwidth
-required for a filterbank correlation would be the size of the filterbank,
-plus the size of the input image, plus the size of the output image. This sum
-is expressed in terms of configuration parameters in Eq.~\ref{eq:bytes}:
+The memory transfer requirements of filterbank correlation are more difficult to quantify.
+Assuming three kinds of non-register memory -- constant, shared, and global --
+and assuming optimistically that the entire filterbank fits into the GPU's constant memory,
+then we can establish a lower bound (Eq.~\ref{eq:bytes}) on the amount of
+memory that must be moved in order to store the computed result to global
+memory starting from arguments in global memory:
 \begin{align}
 \mathrm{Bytes} = 4&RCD \nonumber \\
-& + 4KHWD \nonumber \\
-& + 4(R-H+1)(C-W+1)K
+& + 4FHWD \nonumber \\
+& + 4(R-H+1)(C-W+1)F.
 \label{eq:bytes}
 \end{align}
-We will see the bandwidth requirements of a more realistic analysis in
-Section~XXX.
+In short, we must read the filterbank and image once, and store the result.
 
-In terms of artithmetic density, it's approximately
+The arithmetic intensity of filterbank correlation, assuming our lower bound on memory transfers
+is therefore approximately
 \begin{align}
-\mathrm{intensity} & \approx \frac {KDHW} {2(D+K)},
+\mathrm{intensity} & \approx \frac {FDHW} {2(D+F)},
 \end{align}
-because each $K$ output writes corresponds to approximately $D$ input reads
-and an inner product between $KDHW$ elements.
+for images that are large relative to filters.
+Each $F$ output writes corresponds to approximately $D$ input reads
+and $F$ inner products between $DHW$ elements.
 
-XXX: TYPICAL OF STENCIL COMPUTATIONS.
-
+The high potential for arithmetic intensity makes the GPU an ideal platform for computing filterbank correlations,
+and and filterbank correlation is used extensively in image and video processing,
+where it is often a computational bottleneck.
+One might expect then, that it would be easy to implement a library providing
+this operation as a simple function that takes pointers and strides for $x$, $f$, and $z$ and performs the computation.
+However, as shown in \citet{pinto+cox:2011gcg} and numerous articles on
+related stencil operations XXX, it is challenging to provide an implementation
+or even an implementation strategy that provides satisfactory performance
+across the range of inputs (shapes, physical layouts) that occur in
+typical usage.
+\citet{kamil+etal:2009} summarize a related situation related to general stencil computations in their abstract:
 ``Although the auto-tuning strategy has been successfully applied to libraries,
 generalized stencil kernels are not amenable to packaging as libraries.''
-\cite{kamil+etal:2009}
+% XXX: out of context?
+
+XXX \cite{datta:2009}
+
+This paper contributes a model-based approach to auto-tuning in which the model
+is determined almost entirely using machine learning rather than domain
+knowledge.  We show that even though our timing model has no built-in knowledge of GPU
+devices, or our kernel, or filterbank correlation, it is able to provide fast
+and accurate timing estimates.
+We show that a model built by boosting regression trees
+is fast and accurate enough to be used profitably
+in the algorithm schema shown at the bottom of
+Figure~\ref{fig:general_autotune}, which permits doing on-demand auto-tuning
+for novel (not already auto-tuned) argument combinations.
+We call this approach {\em predictive auto-tuning}.
+
+The paper is organized as follows:
+Section~\ref{sec:brtree} describes the boosted regression tree model and the procedure for fitting it to empirical timing data.
+Section~\ref{sec:kernel} describes the sort of kernel we employ for our benchmarking,
+Section~\ref{sec:exp} presents the results of our benchmarking experiments, which
+compare a reference implementation to a) empirical auto-tuning over a domain-specific grid,
+b) empirical auto-tuning over a hill-climbing search, and
+c) predictive autotuning.
+%Section~\ref{sec:discussion}.
+Section~\ref{sec:previous} summarizes previous and related work involving  machine learning with performance auto-tuning.
+Section~\ref{sec:conclusion} summarizes our findings and outlines directions for future work.
 
 
-\cite{datta:2009}
+\section{Boosted Regression Trees}
+\label{sec:brtree}
+
+A regression tree is a piece-wise constant function from one vector space to another,
+that works by recursively subdividing the input space into constant regions~\citep{breiman, textbook?}.
+They are widely used in statistics and data-mining applications because the fitting algorithm is quick and reliable, and the form of the tree can provide insight into the relevant input variables.
+We use a standard fitting procedure, which takes a set of
+$(x, y)\in \mathbb{R}^k \times \mathbb{R}$ pairs and constructs a tree with a low mean squared error.
+To construct each node of a regression tree,
+we sort the set $\mathcal{D}$ of ($x,y$) pairs along each of the $k$ features to find the best partitioning $f_{i,\gamma}$ of the input space along feature $i$ at point $\gamma$ (Eqs.~\ref{eq:figamma}, \ref{eq:treeloss}).
+\begin{align}
+    f_{i,\gamma}(x) &=
+    \begin{cases}
+        \alpha  &\text{if $x_i < \gamma$} \\
+        \beta &\text{if $x_i \geq \gamma$}
+    \end{cases}
+    \label{eq:figamma}\\
+    i^*, \gamma^* &= \operatorname*{argmin}_{i, \gamma} \mathbb{\hat E}\left[ (y - f_{i,\gamma}(x))^2 \right]
+    \label{eq:treeloss}
+\end{align}
+One disadvantage of the regression tree is that it does not make full use of broad patterns in the data -- each partition formed by the fitting procedure is fit independently in the recursive training procedure,
+so it impossible for the model to extract more than one bit of information from each training partition (XXX unclear).
+This disadvantage is mitigated to a significant extent by the practice of {\em boosting}~\citet{XXX}.
+
+Boosting is an iterative procedure for constructing an {\em ensemble} of regression trees that is coordinated to fit training examples as accurately as possible.
+In a recent empirical study of a range of machine learning regressino problems,
+boosted decision trees were found to be among the best and easiest models to apply~\cite{caruana:2010}.
+On each boosting iteration, a regression tree is fit to the residual error remaining
+after all previously-fit models have made their predictions.
+There are essentially three parameters that control the boosted regression tree
+training procedure:
+1) the depth of tree constructed on each boosting iteration,
+2) the minimum number of examples to allow at a regression tree leaf, and
+3) the number of trees constructed by boosting.
+We did not attempt a systematic study of the effect of these variables on performance.
+We chose a maximum depth of 4,
+a minimum number of examples of 10,
+and 100 iterations of boosting.
 
 
-\section{Configuration Spaces}
-
-Recall from the introduction (Eq.~\ref{eq:condopt}) that we are addressing a
-conditional optimization problem, in which we condition on a problem
-configuration ($P$) and a system specification ($S$), and search for the best
-implementation $I$ for addressing problem $P$ on system $S$.
-This section describes the configuration spaces we used in our tests,
-which are described later in Section XXX.
-
-
-\subsection{Problem Description Space}
-
-Mathematically, filterbank correlation is an operation on an $R \times C \times
-D$ image and a $F \times H \times W \times D$ filterbank.
-We randomly sampled problem specifications from the following space:
-\begin{align*}
-R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
-H = W & \in \{ 3, 5, 7, 9, 11 \} \\
-D &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \} \\
-F &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \}
-\end{align*}
-The product space
-includes 1600 elements, but we restricted our experiments to problems that
-represented between 1 and 50 gigaflops. Our problem space included 602
-configurations. A library implementation that must support all image and
-filter sizes must handle on the order of $2^{50}$ forseable
-problem configurations (not even including variations due to strided memory
-layouts).
-
-%XXX: DIAGRAM OF IMAGE, FILTERBANK, OUTPUT
-
-% Problems were considered invalid if the filters were larger than the images.
-% but in the new setting with iheight >= 256 this never happened.
-Problems were tested if they represented between 1 and 50 gigaflops.  Problems
-that were smaller do not fully utilize the hardware, and are handled equally
-well by many kernel settings.
-Problems that were larger take so long to evaluate that there is negligible
-inefficiency in implementing them via multiple calls with smaller images and fewer filters.
-The configuration space described in Figure~\ref{fig:probspace} included 602
-configurations with between 1 and 50 gigaflops.
-
-In a full, reusable, library implementation of the filter correlation
-operation, we would also provide options for arbitrary image shapes,
-arbitrary integer depth and filter shapes, and also support a variety of
-physical input layouts via strides.  These additional options would make our
-approach of automatic auto-tuning even more important, because there would be
-a greater variety in the kinds of computations and memory transfers to
-perform.
-
-
-\subsection{Implementation Description Space}
+\section{GPU Implementation}
+\label{sec:kernel}
 
 The strategy we use for computing filterbank correlation on the GPU
 using CUDA follows \citet{pinto+cox:2011gcg}.
@@ -299,7 +376,7 @@ The overall strategy is to load the filterbank into constant memory, which is
 relatively fast and visible to all threads, and then launch a grid of blocks
 that tiles the output image.
 Each thread computes $4 \times n\_output\_4s$ channels for some column and row of $z$.
-Each block computes $4 \times n\_output\_4s$ channels for a subrectangle of the output image ($z$).
+Each block of threads computes $4 \times n\_output\_4s$ channels for a subrectangle of the output image ($z$).
 When there are more than $4 \times n\_output\_4s$ channels in $z$, or if the
 filterbank is too large to fit into constant memory, then multiple
 kernel executions perform the full computation.
@@ -361,9 +438,9 @@ Each thread can compute several output elements
 at once, in multiples (``n\_output\_4s'') of 4;
 this increases the efficiency of each thread, but can lead to lower occupancy.
 Registers are a precious commodity on the GPU, and this kernel accumulates
-elements of $z$ in registers.
+elements of $v$ in registers.
 The ``spill'' parameter controls whether the current thread's output position in
-$z$ is stored in a register (faster access) or in shared memory (frees up
+$gZ$ is stored in a register (faster access) or in shared memory (frees up
 a register).
 The ``imul\_fast'' parameter controls whether integer multiplication is done
 in 24-bit (True) or 32-bit (False) precision.
@@ -378,91 +455,135 @@ respectively.
 
 
 
-When the entire filterbank often does not fit into the GPU's
-constant memory and so $$P=\frac{KH}{4 \cdot n\_output\_4s \cdot
-n\_filter\_r}$$ passes are necessary to compute $z$. In such cases,
-the number of bytes moved is actually more like:
+When the entire filterbank does not fit into the GPU's
+constant memory, $P$ passes are necessary to compute all of $z$, where
+$$P=\frac{FH}{4 \cdot n\_output\_4s \cdot n\_filter\_r}.$$
+In such cases, the number of bytes moved to and from global memory is much higher than
+the theoretical lower limit.
 \begin{align}
 \mathrm{Bytes} = 4&RCDP \nonumber \\
-& + 4KHWD \nonumber \\
-& + 8(R-H+1)(C-W+1)KP.
+& + 4FHWD \nonumber \\
+& + 8(R-H+1)(C-W+1)FP.
 \nonumber
 % XXX: incrementing requires reading and writing $z$ right? so actually the 4
 % above should be an 8? (see related ticket on github for potential
 % optimization about this)
 \label{eq:bytesP}
 \end{align}
-These passes make the I/O requirements increase quadratically in $K$ and $H$.
+These passes make the I/O requirements increase quadratically in $F$ and $H$.
 At the same time, the total number of floating-point operations (Eq.~\ref{eq:flops})
 is quadratic in $H$ and $W$. In our experiments, we only considered square
 filters so in our setting the total number of flops is proportional to $H^4$.
-% XXX WHERE IS ALL THIS GOING?
 
-Best arithmetic density
+XXX
+Arithmetic density with passes.
 
-A bandwidth analysis that takes the blocking structure into account would
-reveal that larger $H$ and $W$ require each block to read a larger input
-region, and store it in a larger shared memory region, which reduces the
-potential for high occupancy.
-
-Filterbank correlation represents a difficult code-optimization problem
-because of the number of interacting constraints: a large value of $P$ reduces
-arithmetic density, but a small value of $P$ requires that each thread do more
-work, and makes global memory access latency harder to hide. (XXX: is there a
-better reason?)
+Critically:
+The arithmetic intensity, shared storage, and register requirements
+of this kernel change significantly and in a complicated platform-dependent way
+with the argument parameters ($R, C, D, F, H, W$) and with the implementation parameters,
+especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
 
 
-The kernel used to perform
-filterbank correlation was parametrized by 10 parameters, some of which
-were binary and others of which were integer-valued. The full configuration
-space included 12000 kernels.
-XXX: how to make sense of these paramters without code listing?
+\section{Experiment Setup}
 
-XXX: What to all the parameters mean?
-XXX: Point to github / GCG for full code listing.
+Recall from the introduction (Eq.~\ref{eq:condopt}) that auto-tuning can be seen
+as a conditional optimization problem in whic we seek an implementation ($b \in \mathcal{B}$) that minimizes runtime or some other scalar-valued cost function
+for given arguments ($a \in \mathcal{A}$) on a particular platform ($c \in \mathcal{C}$).
+In order to perform predictive auto-tuning with a regression model,
+it is necessary to characterize these
+three types of variables with {\em features}.
+%In Section~\ref{sec:modeling} we see how these features are used as inputs to
+%the regression model in predictive auto-tuning.
+We describe the arguments to a filterbank correlation with the 6-tuple
+$(R, C, D, F, H, W)$.
+We randomly sampled arguments (uniformly) from the following product space:
+\begin{align*}
+R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
+H = W & \in \{ 3, 5, 7, 9, 11 \} \\
+D &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \} \\
+F &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \}
+\end{align*}
 
-XXX: how many configurations are in the configuration space
+A library implementation of this operation would ideally support all image and
+filter sizes as well as variations due
+to strided memory layouts. In such a setting would be useful to characterize
+the arguments with
+features such as whether the inputs are Fortran-style contiguous, C-style contiguous, or row-padded to various byte alignments.
+These additional options would make our
+approach of automatic auto-tuning even more important, because there would be
+a greater variety in the kinds of computations and memory transfers to
+perform.
+Our experiments consider a somewhat simplified setting in which the arguments are always stored with depth channels being contiguous in memory, followed by columns, then rows, and then filters having the largest stride.
 
-XXX: what was the reference kernel, and how was it chosen?
+%XXX: DIAGRAM OF IMAGE, FILTERBANK, OUTPUT
 
-Meta-programming was implemented in Python using
+% Problems were considered invalid if the filters were larger than the images.
+% but in the new setting with iheight >= 256 this never happened.
+The product space in our study
+includes 1600 argument combinations, but we restricted our experiments to correlations that
+represented between 1 and 50 gigaflops of arithmetic.
+Smaller problems do not fully utilize GPU hardware and are handled equally well by many kernel settings.
+Larger take so long to evaluate that there is negligible
+inefficiency in implementing them via multiple calls with smaller images and fewer filters.
+With the gigaflops restriction, the argument space
+included 602 configurations with between 1 and 50 gigaflops.
+
+For the implementation features $b$, we directly used the integer and binary values (block\_w, block\_h, etc.) that parametrized the kernels.
+We did not use platform features ($c$) in our experiments, we leave the investigation
+of cross-platform predictive auto-tuning for future work.
+
+\subsection{Search Algorithms}
+
+The core of any online auto-tuning algorithm (Fig.~\ref{fig:autotune_general}) is the search procedure used to explore the space of implementations.
+Our implementation space includes 16000 (XXX) points, too many to search exhaustively.
+\cite{cox+pinto:2011gcg} recommends a particular hyper-parameter implementation
+based on empirical autotuning on several platforms, that achieves good
+performance on a variety of GPUs from older-generation cards such as the
+8600GT all the way to
+current high-end cards such as the GTX 580 and C2070.
+We call this configuration the {\em reference} implementation.
+% XXX: what is reference?  Why was it chosen?
+
+Additionally, \cite{cox+pinto:2011gcg} advocate a particular grid search over
+the most promising part of the configuration space. This grid iterates over all
+combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
+The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
+XXX: isn't 73 prime?? explain this so-called ``grid''.
+
+In this work, we also consider a third search algorithm based on a local search
+heuristic.  This {\em hill-climing} (HC) algorithm starts from the reference
+implementation and resamples each of the parameters
+of the current best implementation randomly with
+probability $0.25$ (keeping the current best setting with probability $0.75$).
+On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
+We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
+
+\subsection{Platforms and Implementation}
+
+This kernel was implemented in the meta-programming style advocated
+in \citet{pinto+cox:2011gcg} in Python using
 Cheetah for string processing~\citep{cheetah}
-and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel compilation.
+and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
+compilation and interfacing with CUDA.
 
-XXX: analysis of READ traffic, WRITE traffic, DATA re-use and CACHEing
-strategies. FLOPS per write etc.
+We evaluated our approach on several GPU devices:
+XXX.
 
-XXX: Why not use FFT: convolution in spectral domain?
-
-XXXX: Talk about memory transfer requirements vs. speed vs. copy... 
-
+XXX Table showing theoretical peak FLOPS, theoretical peak bandwidth, core count, shared memory size, register size, etc.
 
 
+\section{Results}
 
-\section{Auto-Tuning by Hill Climbing}
+Figure~\ref{fig:speedup} shows the effectiveness of empirical auto-tuning is in this setting.  Averaging across the range of problem configurations in our study,
+implementations discovered by empirical auto-tuning are on average about 50\% (XXX check) faster than the reference implementation.
+XXX: recalculate with simpler mean speedup formula.
+On the GTX 295 speedups over the reference implementation ranged from XXX to XXX with mean XXX.
+On the GTX 480 speedups over the reference implementation ranged from XXX to XXX with mean XXX.
+XXX: Consider table for these numbers.
+XXX: Put in some timings of mixed \& matched all-stars to show that indeed the reference was a good general baseline, and in fact the auto-tuned models are special-purpose.
 
-\subsection{Random, Grid, and Hill-Climbing Search}
-
-XXX: Histogram (over problems) of gigaflops/sec of random, grid, random,
-hill-climbing for each/selected platform.
-This shows that our implementations and problems are stressing the cards,
-that our implementation is pretty good, and that different problem sizes pose
-different computational challenges.
-
-XXX: Scatterplot of gigaflops vs. gigaflops / second (of best grid point)
-should show that it's not just problem size that makes it possible to go fast.
-
-
-XXX: histogram of speedups of grid, random, hill-climbing over reference, for
-several hardware platforms. (GET ANOTHER -- macbook??)
-Sometimes the reference implementation is optimal, in many cases it is far
-from optimal: Which cases? What's wrong with the reference?
-
-TL;DR: Hill-climbing is a good way to search the implementation space, can
-search the full space and do about as well as grid search in the more
-restricted space.
-
-\begin{figure*}
+\begin{figure}
 \centering
 \includegraphics[scale=.42]{speedup_295.pdf}
 \includegraphics[scale=.42]{speedup_480.pdf}
@@ -479,10 +600,25 @@ The model-based approach tested 0 configuration evaluations, and took 0.05
 seconds on average, even with a naive Python implementation.
 }
 \label{fig:speedup}
-\end{figure*}
+\end{figure}
 
 
-\begin{figure*}
+Figure~\ref{fig:speedup} also shows that random hill-climbing is at least
+competitive and often better than the hand-chosen grid approach of ~\citet{pinto+cox:2011gcg}.  Figure~\ref{fig:hcX} shows how the number of hill-climbing iterations
+affects the quality of the auto-tuned model.
+The quicker HC25 approach is clearly inferior but the quality of the 75 iteration search (HC75) is statistically similar to the shorter HC50, suggesting that XXX.
+Still, HC75 is not always better than the grid, so evidently neither search algorithm is perfect.
+
+The previous figures establish that auto-tuning on a problem-by-problem basis can achieve good performance improvements over a high-quality reference baseline, but they do not show how long it takes to find these implementations.  A search of 75 iterations took an average of about 120 seconds XXX on a fast computer, because it requires compiling 75 CUDA kernels, and evaluating up to 750 filterbank correlations to get reliable timing information for each candidate implementation.
+
+Our contrib
+
+TL;DR: Hill-climbing is a good way to search the implementation space, can
+search the full space and do about as well as grid search in the more
+restricted space.
+
+
+\begin{figure}
 \centering
 \includegraphics[scale=.42]{fig_ntrain_295.pdf}
 \includegraphics[scale=.42]{fig_ntrain_480.pdf}
@@ -499,9 +635,9 @@ moderate values of $a$ between $0.25$ and $0.75$ might be
 best, but $a$ had no significant effect on the GTX 480.
 }
 \label{fig:fig_ntrain}
-\end{figure*}
+\end{figure}
 
-\begin{figure*}
+\begin{figure}
 \centering
 \includegraphics[scale=.42]{fig_gflop_scatter_295.pdf}
 \includegraphics[scale=.42]{fig_gflop_scatter_480.pdf}
@@ -514,14 +650,8 @@ The predictive approach typically requires about 0.1 seconds to suggest an
 implementation, whereas the empirical approach requires about 2 minutes.
 }
 \label{fig:fig_gflop_scatter}
-\end{figure*}
+\end{figure}
 
-
-\section{Boosted Regression Trees}
-
-The regression tree is a piece-wise constant function 
-
-Boosted regression trees are
 
 \subsection{Model-based Autotuning}
 
@@ -572,3 +702,94 @@ XXX: so far we only tried 3 cards... so we're using a 1-of-N feature.
 %\setlength{\bibsep}{5pt}
 \bibliography{local}
 \end{document}
+
+
+
+One might expect then, that it would be easy to implement a library providing
+this operation -- this hypothetical library could have quite a simple interface
+following the spirit of FFTW or a BLAS routine:
+\begin{verbatim}
+    gpu_fbcorr(
+        img_shape, filters_shape,
+        img, filters, output)
+\end{verbatim}
+However, as shown in \citet{pinto+cox:2011gcg} and numerous articles on
+related stencil operations XXX, it is challenging to provide an implementation
+or even an implementation strategy that provides satisfactory performance
+across the range of inputs (shapes, physical layouts) that occur even in
+typical usage.
+
+Current state-of-the art is to do empirical auto-tuning.
+XXX \vspace{12pt}
+
+Increasingly, machine learning and statistical inference strategies are
+finding application in compiler technology.
+XXX \vspace{12pt}
+
+machine learning
+
+This paper shows that a kernel with several  boosted
+
+
+There is a natural function from
+problem space x implementation space x platform space to runtime:
+how much wall time elapses on the given platform when solving the given
+problem with the given implementation.
+
+Auto-tuning is a family of empirical techniques for finding the implementation
+that minimizes that runtime function, when the platform and the problem
+configuration are given.
+
+XXX: some math, or possibly a picture with the three boxes that was on Pinto's
+whiteboard.
+
+This paper is about different ways of doing the minimization.
+For a particular problem (filterbank correlation) we
+look at a parameterized kernel implementation (from GCG)
+and a few hardware platforms, and compare
+random search, grid search, and a hill-climbing strategy with a good, but
+generic, reference implementation.
+Then we show that we can model the LSM function with a regression tree
+well enough to usefully perform the argmin of Equation~\ref{eq:lsm_argmin}
+on the model rather than the actual system. Whereas it may take several
+minutes to perform a hill-climbing or grid search in the original system,
+a hill-climbing search in the model requires a small fraction of a second.
+Model-based autotuning makes it possible to simulate auto-tuning quickly and
+accurately enough to be used within a single library call of the computational
+routine.
+
+Best arithmetic density
+
+A bandwidth analysis that takes the blocking structure into account would
+reveal that larger $H$ and $W$ require each block to read a larger input
+region, and store it in a larger shared memory region, which reduces the
+potential for high occupancy.
+
+Filterbank correlation represents a difficult code-optimization problem
+because of the number of interacting constraints: a large value of $P$ reduces
+arithmetic density, but a small value of $P$ requires that each thread do more
+work, and makes global memory access latency harder to hide. (XXX: is there a
+better reason?)
+
+
+The kernel used to perform
+filterbank correlation was parametrized by 10 parameters, some of which
+were binary and others of which were integer-valued. The full configuration
+space included 12000 kernels.
+XXX: how to make sense of these paramters without code listing?
+
+XXX: What to all the parameters mean?
+XXX: Point to github / GCG for full code listing.
+
+XXX: how many configurations are in the configuration space
+
+XXX: what was the reference kernel, and how was it chosen?
+
+XXX: analysis of READ traffic, WRITE traffic, DATA re-use and CACHEing
+strategies. FLOPS per write etc.
+
+XXX: Why not use FFT: convolution in spectral domain?
+
+XXXX: Talk about memory transfer requirements vs. speed vs. copy...
+
+
