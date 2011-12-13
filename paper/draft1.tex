@@ -284,7 +284,7 @@ We call this approach {\em predictive auto-tuning}.
 
 The heart of predictive auto-tuning is a regression model that acts as surrogate
 for a hand-written hardware model or empirical timing estimates.
-In our experiments, this regression model is fit to empirically measured timing information for {\em some} elements of the configuration space, and the regression model interpolates and extrapolates that timing across the remainder of the space.
+In our experiments this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
 To fit this model, we
 form a training set $\mathcal{X}, \mathcal{Y}$ where
 each point $x^{(i)} \in \mathcal{X}$ is a tuple $(a^{(i)}, b^{(i)}, c^{(i)})$
