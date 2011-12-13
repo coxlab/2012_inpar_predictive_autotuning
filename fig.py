@@ -26,12 +26,47 @@ def step_timings(hostname, devicename):
     wdb, results, rng = cPickle.load(open(filename))
     return results
 
+
 def test_timings(hostname, devicename, inv_mult, n_train):
     """
     Retrieve the results of predictive auto-tuning from experiment.main_train
     """
     filename = ('timings/%(hostname)s/train_results_timing1_%(devicename)s_big.pkl_%(inv_mult)s_%(n_train)s' % locals())
     return cPickle.load(open(filename))
+
+
+def main_allstars():
+    """
+    Produce a scatterplot of ref vs. mismatched auto-tuned kernels
+    """
+    _python, _cmd, wisdomfile, timingfile = sys.argv
+    assert '295' in wisdomfile # otw fix save mechanism
+    _wdb, results, _rng = cPickle.load(open(wisdomfile))
+    timings = cPickle.load(open(timingfile))
+    print "LEN TIMINGS", len(timings)
+    print "N VALID", len([t for t in timings if t.valid])
+    i = 0
+    x = []
+    y = []
+    for finding_dct in results:
+        if 'gen75' in finding_dct:
+            gen75 = finding_dct['gen75']
+            if i >= len(timings):
+                break
+            timing = timings[i]
+            if timing.valid:
+                x.append(gen75.speed())
+                y.append(timing.speed())
+            i += 1
+    print x
+    print y
+    plt.scatter(x, y)
+    plt.xlabel("GFLOPS/s of reference")
+    plt.xlabel("GFLOPS/s of random auto-tuned")
+    if 0:
+        plt.show()
+    else:
+        plt.savefig('allstars_mixup_295.pdf')
 
 
 
@@ -91,7 +126,7 @@ def main_gflop_scatter():
     plt.xlabel('GFLOP/s of empirical auto-tuning')
     plt.ylabel('GFLOP/s of predictive auto-tuning ')
     #plt.legend(loc='lower left')
-    if 0:
+    if 1:
         plt.show()
     else:
         print 'saving to ', figname

@@ -366,6 +366,29 @@ def main_train():
     cPickle.dump(mdl_timings, open('train_results_%s_%s_%s' % (wisdomfile, inv_mult, n_train), 'w'))
 
 
+def main_allstars_mixup():
+    _python, _cmd, wisdomfile, dev_id_str = sys.argv
+    wdb, results, rng = cPickle.load(open(wisdomfile))
+    pspec_generator = problem_generator(rng)
+    timings = []
+    device = init_cuda(int(dev_id_str))
+    for ii, finding_dct in enumerate(results):
+        if 'gen75' not in finding_dct:
+            continue
+        gen75 = finding_dct['gen75']
+        print gen75.speed()
+        rpspec = pspec_generator.next()
+        timing = wisdom.Timing(rpspec, gen75.op_spec)
+        timing.measure(device)
+        if timing.valid:
+            print timing.speed()
+        else:
+            print 'INVALID'
+        timings.append(timing)
+        if len(timings) == 100: break
+    cPickle.dump(timings, open('%s_allstars_mixup_timings' % (wisdomfile,), 'w'))
+
+
 def main_figtrain():
     _python, _cmd, wisdomfile, inv_mult = sys.argv
     train_result = 'train_results_%s_%s' % (wisdomfile, inv_mult)
