@@ -77,80 +77,158 @@ platforms.  \end{abstract}
 
 Due to power consumption and heat dissipation concerns, scientific applications
 have shifted from computing platforms where performance had been primarily
-driven by rises in the clock frequency of a single ''heavy-weight'' processor
+driven by rises in the clock frequency of a single ``heavy-weight'' processor
 (with complex out-of-order control and cache structures) to a platform with
-ever increasing numbers of ''light-weight'' cores. Interestingly, this shift is
+ever increasing numbers of ``light-weight'' cores. Interestingly, this shift is
 now not only relevant to computational sciences but to the development of all
-computer systems: from ubiquitous consumer-facing devices (e.g. smart phones) to
+computer systems: from ubiquitous consumer-facing devices (e.g. phones) to
 high-end computer farms for web-scale applications (e.g. social networks).
 
-% HPC Landscape: large diversity of architectures, no consensus => push to flexibility => push to sw
+% HPC Landscape: large diversity of architectures,
+% no consensus => push to flexibility => push to sw
 
 Although the future lies in low-power multi-core hardware designs, the field
 lacks meaningful consensus on exactly how the different subsystems (memory,
-communication and computation) should be efficiently integrated, modelled and
+communication and computation) should be efficiently integrated, modeled and
 programmed. These systems have exhibited varying degrees of memory hierarchy
 and multi-threading complexity and, as a consequence, they have been
 increasingly relying on flexible but low-level software-controlled cache
-management and parallelism \cite{BerkeleyViewOfHPC} in order to better control
-and understand the various trade-offs among performance, reliability, energy
-efficiency, production costs, etc. This evolution has profoundly altered the
-landscape of application development: programmers are now facing a wide
-diversity of low-level architectural features to write high-performance
-\emph{and} portable code.
+management and parallelism \citep{asanovic2006landscape} in order to better
+control and understand the various trade-offs among performance, reliability,
+energy efficiency, production costs, etc. This evolution has profoundly
+altered the landscape of application development: programmers are now
+facing a wide diversity of low-level architectural features to write
+high-performance \emph{and} portable code.
 
-% 1.1 Motivation
-% Better tools: motivation (compilers/tools/libs can't keep up, it's too difficult)
+\subsection{Motivation}
+
+% Better tools: motivation (compilers/tools/libs can’t keep up, it’s too
+% difficult)
 
 In this rapidly evolving landscape, the construction of \emph{general}
 development tools and libraries that \emph{fully utilize} system resources
-remains a daunting task \cite{?}. Even within specialized architectures from
-the \emph{same} vendor, like NVIDIA's Graphics Processing Units (GPUs) and the
-Compute Unified Device Architecture (CUDA) \cite{CUDA}, many developers default
-to massive amounts of manual labor to optimize CUDA code to specific input
-domains. In addition, hand-tuning rarely generalizes well to new hardware
-generations or different input domains, and it can also be error-prone or far
-from optimal. Kernels can produce staggeringly large
-optimization spaces \cite{K. Datta et al. Stencil computation optimization and
-auto-tuning on state-of-the-art multicore architectures}, in which performance can vary
-widely and discontinously~\citep{RyooHwuCGO2008}.
-The best kernels are often at the edge of ``performance cliffs'' induced by
-device-specific hardware limits (e.g. shared memory size, register file size, block size).
+remains a daunting task. Even within specialized architectures from the
+\emph{same} vendor, like NVIDIA's Graphics Processing Units (GPUs) and the
+Compute Unified Device Architecture (CUDA) \citep{nickolls2008scalable,
+nvidia2011cuda}, many developers default to massive amounts of manual labor
+to optimize CUDA code to specific input domains. In addition, hand-tuning
+rarely generalizes well to new hardware generations or different input
+domains, and it can also be error-prone or far from optimal. One of the
+reason is that kernels can produce staggeringly large optimization spaces
+\citep{datta2008stencil}. The problem is further compounded by the fact that
+these spaces can be highly discontinuous \citep{ryoo2008program}, difficult
+to explore and quasi-optimal solutions lie at the edge of ``performance
+cliffs'' induced by device-specific hard constraints (e.g. register file
+size and shared memory size).
 
+\subsection{Auto-Tuning}
+% Related Work instead ??
 
-% COMMENT: NP, great setup! -JB
-
-\section{Auto-Tuning}
-
-% 1.2 related work
 % auto-tuning is an answer
 
 One of the strategies for addressing these challenges is to use automatic
-methods called ''auto-tuning''. The literature on auto-tuning is extensive (see
-surveys in \cite{XXX}. Two different approaches to auto-tuning have emerged:
-model-driven optimization and empirical optimization.
+methods called ``auto-tuning''. Two major auto-tuning approaches have emerged
+in the extensive literature covering the subject (see surveys in
+\citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
+datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
+analytical model-driven optimization and empirical optimization
+\citep{yotov2003comparison}.
+
+% model-driven optimization: intro
 
 The model-driven optimization approach uses analytical abstractions to model
 the hardware architectures, the possible code transformations and their complex
-interactions \cite{XXX}. Even though highly-accurate analytical models are
-generally intractable to build, this approach has been quite successful in the
-past at accelerating serial code \cite{XXX} with simplified but general
-abstractions. However, large speed-ups for parallel code require more accurate
-high-dimensional models and since this approach is bound by the quality and
-scalability of its abstraction, it has been less suited for highly-specialized
-% XXX: the bit above is confusing
-kernels. This approach has been dominant in the compiler community \cite{XXX}.
-As a result, it has generally been applied at compile-time where important
-run-time characteristics such as input domains are missing. These drawbacks
-render the model-driven optimization approach less attractive for
-high-performance library developers.
+interactions. Even though highly-accurate analytical models are generally
+intractable to build, this approach has been quite successful in the past at
+accelerating serial code with simplified but general abstractions. However,
+large speed-ups for parallel code require more accurate high-dimensional models
+and since this approach is bound by the quality and scalability of its
+abstraction, it has been less suited for highly-specialized kernels. This
+approach has been dominant in the compiler community. As a result, it has
+generally been applied at compile-time where important run-time characteristics
+such as input domains are missing. These drawbacks render the model-driven
+optimization approach less attractive for high-performance library developers.
 
-% XXX: * empirical optimization: intro / advantages
-% XXX: * empirical optimization: disadvantages
-% XXX: * hybrid optimization (to counter disadvantages) ?
-% XXX: * empirical optimization: w/ ML @ compile time (another way to “fix” empirical)
-% XXX: * empirical optimization: ML @ runtime, especially for libs
-% XXX: * empirical optimization: ML @ runtime for GPU libs why ? (w/ rtcg jit, rel. to pycuda, etc)
+% * empirical optimization: intro / advantages
+
+The empirical optimization approach, on the contrary, seeks to find the best
+performing code configuration by automatically generating many versions of a
+parametrized kernel and benchmarking them on the actual hardware (possibly at
+runtime, when contextual information about the hardware and software stack is
+the richest). This method directly optimizes the metric(s) of interest and not
+surrogates. One of its main advantage is that it allows any metric to be
+optimized without loss of generality. It is indeed possible to formulate the
+problem as a multi-objective optimization and minimize both speed \emph{and}
+power consumption \citep{rahman2011automated}, a feat that renders the
+analytical model-driven approach even more intractable. Due to its flexibility,
+empirical auto-tuning has been successfully applied to build high-performance
+domain-specific libraries including dense linear algebra
+\citep{clint2001automated, bilmes1997optimizing}, sparse linear algebra
+\citep{vuduc2005oski}, signal processing \citep{frigo1998fftw}, sorting
+\citep{li2004dynamically}, general stencil operations \citep{kamil2010auto}, etc.
+
+Even though this ``black-box'' approach does not necessarily try to build an
+explicit model per se, it could, if care is taken, help to greatly accelerate
+our understanding of the complex interactions between the set of optimizations,
+their parameters and the hardware architectural features (XXX: that's what
+we are trying to do w/ ML-based, decision trees, etc.).
+
+% empirical optimization: disadvantages
+
+The empirical approach is very sensible to the choice of instrumented
+optimizations \emph{and} to the search method. The size of the search space is
+so large that the current best empirical auto-tuners can only consider
+highly-specialized functions with a limited set of code transformations and
+compiler options, on very few input domains \citep{ganapathi2009case}. Although
+searching for good code configurations in this highly-discontinuous space can
+be made embarrassingly parallel, it remains a very difficult and prohibitively
+expensive combinatorial optimization problem as many variants of the code must
+generated, compiled, and benchmarked on specific input domains with meaningful
+statistics (that may require multiple runs). Consequently, most proposed
+methods prune the space with hard-coded heuristics that offer little
+generalization guarantees. This has been the main drawback of the empirical
+approach compared to the model-driven approach where good code configurations
+can be directly derived from the analytical model.
+
+% hybrid optimization: the bad way
+
+To alleviate this major weakness, it seems intuitive to combine the two
+approaches by first constraining the search space with an analytical model and
+then exploring the reduced space empirically \citep{chen2005combining,
+li2009note}. Unfortunately, this hybrid approach is still bound by the quality
+of the analytical model, which remains hard to build by hand.
+
+% hybrid optimization: the ML way (note that ML-based are in essence
+% model-driven too just with an empirically learned model)
+
+In this paper, we propose to \emph{learn the model}, empirically, (XXX:
+we'll describe what this means in more details later in the paper, riiiighhht
+???) instead of deriving it analytically. By learning the model, one can
+hope to get ``the best of both approaches'' and capitalize on the large body of
+literature from the machine learning community.
+
+Although various statistical prediction techniques have been applied with
+success at compile-time for general programs on various CPU architectures
+\citep{monsifrot2002machine, stephenson2003meta, yotov2003comparison,
+kulkarni2004fast, cooper2005acme, franke2005probabilistic,
+hutter2006performance, cavazos2007rapidly, cavazos2008intelligent,
+hartono2009annotation, park2011evaluation, fursin2008milepost}, there is, to
+our knowledge, no fast predictive auto-tuning work that has tried to cover
+simultaneously: (a) more recent multi-core architectures like GPUs
+\citep{schaa2009exploring}, (b) high-performance domain-specific libraries
+\citep{nukada2009auto, li2009note, kamil2010auto}, (c) at run-time
+\citep{klockner2011pycuda, pinto+cox:2011gcg}, and (d) on \emph{many} input
+domains \citep{liu2009cross, grauer2011optimizing}.
+
+XXX WIIFY here ??? (what's in their for you) XXX in text, say what's in this paper for:
+- compiler people
+- libs people
+- ml people
+- tools people
+- cv people
+
+
+% auto-tuning is an answer
 
 % XXX: our contributions
 % XXX: WIIFY
