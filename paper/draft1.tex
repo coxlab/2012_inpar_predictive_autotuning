@@ -43,40 +43,40 @@
 \maketitle
 
 \begin{abstract}
-Auto-tuning of parameteric, instrumented code templates has proven to be a
-highly effective technique for optimizing a GPU kernel for a particular
-computation on particular
-hardware \cite{XXXX}.  
+Auto-tuning of parameteric, instrumented code has proven to be a highly
+effective technique for tailoring an optimal compute kernel for a particular
+hardware \cite{XXX}.
 % DDC: I'm still struggling with the above sentence.  Feel free to substitute your own ideas
-However, a drawback of this approach is that exhaustive, or even thorough, auto-tuning requires
-compiling many kernels and calling each one many times, and this process is slow.
-Furthermore, it is desirable to provide users with unified library abstraction
-boundaries for operations such as image
-filtering and matrix multiplication, even those these operations actually correspond to a large set
-of potential problem configurations with a wide variety of memory access
-patterns and computational bottlenecks.  How can we draw on data from previous
-empirical auto-tuning of related problems on related hardware to make a
-just-in-time implementation decision for a novel problem?  This paper presents
-a machine learning approach to auto-tuning, in which features of the
-current hardware platform, the kernel configuration and the problem
-instance are passed to a regression model (boosted regression trees) which
-predicts how much faster this kernel will be than a reference baseline.
-Combinatorial optimization strategies for auto-tuning that would normally
-require evaluating large number of kernel configurations on the real hardware, are made orders of
-magnitude faster by evaluating the surrogate regression model instead.  We
-validate our approach using the filterbank correlation kernel described in
-\citet{pinto+cox:2011gcg}, where we find that 0.1 seconds (XXX) of hill
-climbing on the regression model (which we dub ``{\em predictive} auto-tuning'') can achieve an
-average of 95\% of the speed-up brought by minutes of empirical auto-tuning
-XXX.  Our approach is not specific to filterbank correlation, nor even to GPU
-kernel auto-tuning, and can be applied to almost any templated-code
-optimization problem, spanning a wide variety of problem types, kernel types,
-and platforms.
+However, a drawback of this approach is that exhaustive, or even thorough,
+auto-tuning requires compiling many kernels and calling each one many times,
+and this process is slow.  Furthermore, it is desirable to provide users
+with unified library abstraction boundaries for operations such as image
+filtering and matrix multiplication, even those these operations actually
+correspond to a large set of potential problem configurations with a wide
+variety of memory access patterns and computational bottlenecks.  How can we
+draw on data from previous empirical auto-tuning of related problems on related
+hardware to make a just-in-time implementation decision for a novel problem?
+This paper presents a machine learning approach to auto-tuning, in which
+features of the current hardware platform, the kernel configuration and the
+problem instance are passed to a regression model (boosted regression trees)
+which predicts how much faster this kernel will be than a reference
+baseline.  Combinatorial optimization strategies for auto-tuning that would
+normally require evaluating large number of kernel configurations on the real
+hardware, are made orders of magnitude faster by evaluating the surrogate
+regression model instead.  We validate our approach using the filterbank
+correlation kernel described in \citet{pinto+cox:2011gcg}, where we find that
+0.1 seconds (XXX) of hill climbing on the regression model (which we dub ``{\em
+predictive} auto-tuning'') can achieve an average of 95\% of the
+speed-up brought by minutes of empirical auto-tuning XXX.  Our approach is not
+specific to filterbank correlation, nor even to GPU kernel auto-tuning, and can
+be applied to almost any templated-code optimization problem, spanning a wide
+variety of problem types, kernel types, and platforms.
 
 \end{abstract}
 
 XXX: use 300\% boost instead of 3x
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
 % 1 Introduction
@@ -108,6 +108,7 @@ altered the landscape of application development: programmers are now
 facing a wide diversity of low-level architectural features to write
 high-performance \emph{and} portable code.
 
+% =============================================================================
 \subsection{Motivation}
 
 % Better tools: motivation (compilers/tools/libs can’t keep up, it’s too
@@ -129,6 +130,7 @@ to explore, and quasi-optimal solutions lie at the edge of ``performance
 cliffs'' induced by hard device-specific constraints (e.g. register file
 size or low-latency cache size).
 
+% =============================================================================
 \subsection{Auto-Tuning}
 % Related Work instead ??
 % XXX: a reference to brewer1995high
@@ -254,6 +256,7 @@ Section~\ref{sec:conclusion} summarizes our findings and outlines directions for
 
 
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Predictive Auto-Tuning}
 
 This work shows that auto-tuning can be accelerated by orders of
@@ -301,6 +304,7 @@ also be accurate.
 \label{fig:general_autotune}
 \end{figure}
 
+% =============================================================================
 \subsection{Learning a Regression Model}
 
 The heart of predictive auto-tuning is a regression model that acts as surrogate
@@ -330,6 +334,7 @@ It makes sense to choose $\zeta < 0$ so that invalid configurations are treated 
 but the question of how much worse these points should be is an empirical one.
 Our experiments evaluate $\log(0.01) \leq \zeta \leq \log(.99)$.
 
+% =============================================================================
 \subsection{Regression Trees}
 \label{sec:brtree}
 
@@ -354,6 +359,7 @@ One disadvantage of the regression tree is that it does not make full use of bro
 so it impossible for the model to extract more than one bit of information from each training partition (XXX unclear).
 This disadvantage is mitigated to a significant extent by the practice of {\em boosting}~\citet{XXX}.
 
+% =============================================================================
 \subsection{Boosted Regression Trees}
 
 Boosting is an iterative procedure for constructing an {\em ensemble} of regression trees that is coordinated to fit training examples as accurately as possible.
@@ -372,10 +378,20 @@ a minimum number of examples of 10,
 and 100 iterations of boosting.
 
 
-
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Filterbank Correlation}
 
 \label{sec:fbcorr}
+
+\iffalse
+XXX: note that image processing libraries include convolutions (e.g. OpenCV ???
+even for GPU!), but only don’t exploit the _bank_ dimension of the
+_filterbank_ and thus can’t exploit parallel hardware as much.
+
+XXX: in addition, when they are optimized, it’s often for pre-defined filters
+(e.g. sobel?), and they are not suitable for encapsulation into libraries
+usable by most real-world applications (bouuuuhhhh opencv !!!).
+\iffalse
 
 Filterbank correlation is a simple spatial image filtering operation that is
 an important subroutine in many image processing applications. It has a relatively
@@ -462,6 +478,7 @@ We show that the kernel from the GCG chapter can be modeled on a variety of hard
 
 
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{GPU Implementation}
 \label{sec:kernel}
 
@@ -580,6 +597,7 @@ with the argument parameters ($R, C, D, F, H, W$) and with the implementation pa
 especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
 
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Experiment Setup}
 
 Recall from the introduction (Eq.~\ref{eq:condopt}) that auto-tuning can be seen
@@ -626,6 +644,7 @@ For the implementation features $b$, we directly used the integer and binary val
 We did not use platform features ($c$) in our experiments. We leave the investigation
 of cross-platform predictive auto-tuning for future work.
 
+% =============================================================================
 \subsection{Search Algorithms}
 
 The core of any online auto-tuning algorithm (Fig.~\ref{fig:autotune_general}) is the search procedure used to explore the space of implementations.
@@ -655,6 +674,7 @@ probability $0.25$ (keeping the current best setting with probability $0.75$).
 On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
 We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
 
+% =============================================================================
 \subsection{Platforms and Implementation}
 
 This kernel was implemented in the meta-programming style advocated
@@ -669,6 +689,7 @@ XXX.
 XXX Table showing theoretical peak FLOPS, theoretical peak bandwidth, core count, shared memory size, register size, etc.
 
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 
 Figure~\ref{fig:speedup} shows the effectiveness of empirical auto-tuning is in this setting.  Averaging across the range of problem configurations in our study,
@@ -759,6 +780,7 @@ implementation, whereas the empirical approach requires about 2 minutes.
 \label{fig:fig_gflop_scatter}
 \end{figure}
 
+% =============================================================================
 \subsection{Predictive Auto-tuning}
 
 On the GTX 295, a single regression-tree fit to the log-speed-multiplier
@@ -769,6 +791,7 @@ held-out test data (XXX: what kind of test data).
 Now: the big test is that if we use the genetic search on the model instead of
 the original function, do we get good performance?
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 
 We're characterizing hardware by a 1-of-N feature vector, simply describing
@@ -907,6 +930,7 @@ transformations, could be templated and injected in any domain-specific
 library. this will reduce the need for specialized expertise across the range
 of targetted computing systems.
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Future Work}
 
 more features (this is the hardest, and most manual part, may require
