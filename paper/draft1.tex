@@ -246,7 +246,7 @@ An important approach in implementing high-performance GPU codes has been auto-t
 which is fundamentally slow. Auto-tuning requires running a large number of
 sub-compilations and representative computations to {\em measure} which
 of several possible implementations is fastest. General-purpose libraries such
-as CUBLAS and CUFFT XXX hide this overhead by auto-tuning offline and using
+as CUBLAS and CUFFT hide this overhead by auto-tuning offline and using
 intimate knowledge of the mathematical problem being solved as well as the
 kernel implementations to heuristically choose a good computation strategy quickly when a
 user asks for e.g. a matrix product of particular arguments.
@@ -306,11 +306,8 @@ Our contribution of the present work is to show that boosted regression tree mod
 a powerful machine learning technique for function approximation, can meet the
 requirements of this application.
 We call this approach {\em predictive} auto-tuning to contrast it with the standard measurement-based approach which we will call {\em empirical} auto-tuning.
-XXX: We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
-
-
-\cite{volkov+demmel:2008}
-\cite{vuduc:2003} % has some stuff about ML for autotuning in ch. 9
+We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
+%XXX: this has no flow
 
 
 \subsection{Filterbank Correlation}
