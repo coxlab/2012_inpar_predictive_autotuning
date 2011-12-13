@@ -381,28 +381,19 @@ and 100 iterations of boosting.
 Once an accurate regression model has been fit to the data, it remains to be optimized for novel arguments (Fig.~\ref{fig:autotune_general}, bottom, step 4).
 An exhaustive search is the most reliable if it can be afforded, but in our experiments
 (as in general) an exhaustive search is prohibitively expensive.
-In our experiments we compare two strategies: (1) a hand-chosen grid provided by the authors of the kernel used in our experiments \citep{pinto+cox:2011gcg},
-and (2) a generic stochastic hill-climbing search.
-
-% XXX: what is reference?  Why was it chosen?
-% DDC: wasn't the reference implementation hand-tuned?
-% might also want to say something like:
-% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
-
-Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
-what was estimated to be the most relevant part of the configuration space. This grid iterates over all
-combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
-The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
-XXX: isn't 73 prime?? explain this so-called ``grid''.
-
-In this work, we also consider a third search algorithm based on a local search
-heuristic.  This {\em hill-climing} (HC) algorithm starts from the reference
+In our experiments we compare two strategies:
+(1)
+a generic stochastic hill-climbing search,
+and (2)
+a hand-chosen grid provided by the authors of the kernel used in our experiments \citep{pinto+cox:2011gcg}.
+The {\em hill-climing} (HC) search algorithm starts from the reference
 implementation and resamples each of the parameters
 of the current best implementation randomly with
 probability $0.25$ (keeping the current best setting with probability $0.75$).
 On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
 We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
-
+The {\em grid} algorithm is specific to the kernel used in our case study,
+the details of the grid are provided with our experimental results in Section~\ref{sec:refgrid}
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Filterbank Correlation}
@@ -623,7 +614,23 @@ with the argument parameters ($R, C, D, F, H, W$) and with the implementation pa
 especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
 
 
+\subsection{Reference and Grid}
+\label{sec:refgrid}
+The reference implementation XXX
+
+% XXX: what is reference?  Why was it chosen?
+% DDC: wasn't the reference implementation hand-tuned?
+% might also want to say something like:
+% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
+
+Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
+what was estimated to be the most relevant part of the configuration space. This grid iterates over all
+combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
+The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
+XXX: isn't 73 prime?? explain this so-called ``grid''.
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Experiment Setup}
 
 Recall from the introduction (Eq.~\ref{eq:condopt}) that auto-tuning can be seen
