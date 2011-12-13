@@ -117,9 +117,9 @@ domains, and it can also be error-prone or far from optimal. One of the
 reason is that kernels can produce staggeringly large optimization spaces
 \citep{datta2008stencil}. The problem is further compounded by the fact that
 these spaces can be highly discontinuous \citep{ryoo2008program}, difficult
-to explore and holding quasi-optimal solutions at the edge of ``performance
-cliffs'' (in part due to hard resource restrictions, like the register file
-size).
+to explore and quasi-optimal solutions lie at the edge of ``performance
+cliffs'' induced by device-specific hard constraints (e.g. register file
+size and shared memory size).
 
 \subsection{Auto-Tuning}
 % Related Work instead ??
@@ -201,38 +201,40 @@ of the analytical model, which remains hard to build by hand.
 % hybrid optimization: the ML way (note that ML-based are in essence
 % model-driven too just with an empirically learned model)
 
-In this paper, we propose to \emph{learn the model}, empirically, (XXX:
-we'll describe what this means in more details later in the paper, riiiighhht
-???) instead of deriving it analytically. By learning the model, one can
-hope to achieve elements of the best of both approaches and capitalize on the large body of
-literature from the machine learning community.
+In this paper, we propose to \emph{learn the model} using non-linear regression
+modelling techniques instead of constructing a model manually. By learning the model, one can
+hope to achieve elements of the best of both approaches: XXX.
+%and capitalize on the large body of
+%literature from the machine learning community.
 
-Although various statistical prediction techniques have been applied with
+Various statistical prediction techniques have been applied with
 success at compile-time for general programs on various CPU architectures
 \citep{monsifrot2002machine, stephenson2003meta, yotov2003comparison,
 kulkarni2004fast, cooper2005acme, franke2005probabilistic,
 hutter2006performance, cavazos2007rapidly, cavazos2008intelligent,
-hartono2009annotation, park2011evaluation, fursin2008milepost}, there is, to
-our knowledge, no fast predictive auto-tuning work that has tried to cover
-simultaneously: (a) more recent multi-core architectures like GPUs
-\citep{schaa2009exploring}, (b) high-performance domain-specific libraries
-\citep{nukada2009auto, li2009note, kamil2010auto}, (c) at run-time
-\citep{klockner2011pycuda, pinto+cox:2011gcg}, and (d) on \emph{many} input
-domains \citep{liu2009cross, grauer2011optimizing}.
+hartono2009annotation, park2011evaluation, fursin2008milepost}.
+Relative to this work our contribution is to show
+how to do fast predictive auto-tuning that satisifies the requirements to:
+(a) handle the variety of recent multi-core architectures like GPUs \citep{schaa2009exploring},
+(b) provide high-performance domain-specific libraries \citep{nukada2009auto, li2009note, kamil2010auto},
+(c) that select good implementations at run-time \citep{klockner2011pycuda, pinto+cox:2011gcg}, and
+(d) for the full input domain of a library routine \citep{liu2009cross, grauer2011optimizing}.
+% XXX: are these last references appropriate
+% XXX: there are 4 versions of the stencil work - consolidate to just the full journal version
 
+\iffalse
 XXX WIIFY here ??? (what's in their for you) XXX in text, say what's in this paper for:
 - compiler people
 - libs people
 - ml people
 - tools people
 - cv people
+\fi
 
+% XXX: organisation of the paper?
 
 % auto-tuning is an answer
 
-% XXX: our contributions
-% XXX: WIIFY
-% XXX: organisation of the paper
 
 % XXX: see gdoc and merge this below
 
@@ -243,7 +245,7 @@ An important approach in implementing high-performance GPU codes has been auto-t
 which is fundamentally slow. Auto-tuning requires running a large number of
 sub-compilations and representative computations to {\em measure} which
 of several possible implementations is fastest. General-purpose libraries such
-as CUBLAS and CUFFT XXX hide this overhead by auto-tuning offline and using
+as CUBLAS and CUFFT hide this overhead by auto-tuning offline and using
 intimate knowledge of the mathematical problem being solved as well as the
 kernel implementations to heuristically choose a good computation strategy quickly when a
 user asks for e.g. a matrix product of particular arguments.
@@ -303,11 +305,8 @@ Our contribution of the present work is to show that boosted regression tree mod
 a powerful machine learning technique for function approximation, can meet the
 requirements of this application.
 We call this approach {\em predictive} auto-tuning to contrast it with the standard measurement-based approach which we will call {\em empirical} auto-tuning.
-XXX: We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
-
-
-\cite{volkov+demmel:2008}
-\cite{vuduc:2003} % has some stuff about ML for autotuning in ch. 9
+We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
+%XXX: this has no flow
 
 
 \subsection{Filterbank Correlation}
@@ -666,29 +665,13 @@ XXX: Put in some timings of mixed \& matched all-stars to show that indeed the r
 \begin{figure}
 \centering
 \includegraphics[scale=.42]{allstars_mixup_295.pdf}
-\caption{Different arguments call for different kernels: each point corresponds to a randomly drawn argument configuration.
-The reference speed (horizontal) is completely uncorrelated to the speed of an optimal kernel for an unrelated argument configuration (trials performed on GTX 295).
-Out of 100 random confurations, 38 (not shown) could not even be run using a kernel that was auto-tuned for different arguments.
+\caption{Different arguments call for different kernels:
+{\em left} is the average argument-specific empirical auto-tuned performance across 100 random argument configurations,
+{\em middle} is the average speed of our reference implementation,
+{\em right} is the average speed of kernels auto-tuned for different argument configurations than the one being tested.
+For 38/100 random confurations, the kernel auto-tuned for another problem could not even run on the GTX 295 hardware.
+These points contributed a speed of 0, bringing down the average much lower than the reference.
 Good performance across a variety of inputs requires {\em input-dependent auto-tuning}.
-}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{speedup_295.pdf}
-\includegraphics[scale=.42]{speedup_480.pdf}
-\caption{Speedup of various auto-tuning strategies over the reference
-implementation.
-Each strategy was evaluated the same set of 83 problem configurations, which
-was disjoint from the problem configurations used to build the model for
-model-based hill-climbing.
-The vertical dashed lines are positioned at the geometric mean speedup (XXX?)
-of each strategy. The grid and hill-climbing approaches
-tested 73 and 75 configurations respectively, and took 45?? XXX
-seconds on average.
-The model-based approach tested 0 configuration evaluations, and took 0.05
-seconds on average, even with a naive Python implementation.
 }
 \label{fig:speedup}
 \end{figure}
@@ -757,29 +740,6 @@ The predictive approach typically requires about 0.1 seconds to suggest an
 implementation, whereas the empirical approach requires about 2 minutes.
 }
 \label{fig:fig_gflop_scatter}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_genX_vader_295.pdf}
-\includegraphics[scale=.42]{fig_genX_munctional0_480.pdf}
-\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_genX_munctional0_580.pdf}
-\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_genX_munctional0_1060.pdf}
-\includegraphics[scale=.42]{fig_genX_munctional0_2070.pdf}
-\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
-\label{fig:speedup}
 \end{figure}
 
 \subsection{Model-based Autotuning}
@@ -921,4 +881,47 @@ XXX: Why not use FFT: convolution in spectral domain?
 
 XXXX: Talk about memory transfer requirements vs. speed vs. copy...
 
+
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{speedup_295.pdf}
+\includegraphics[scale=.42]{speedup_480.pdf}
+\caption{Speedup of various auto-tuning strategies over the reference
+implementation.
+Each strategy was evaluated the same set of 83 problem configurations, which
+was disjoint from the problem configurations used to build the model for
+model-based hill-climbing.
+The vertical dashed lines are positioned at the geometric mean speedup (XXX?)
+of each strategy. The grid and hill-climbing approaches
+tested 73 and 75 configurations respectively, and took 45?? XXX
+seconds on average.
+The model-based approach tested 0 configuration evaluations, and took 0.05
+seconds on average, even with a naive Python implementation.
+}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{fig_genX_vader_295.pdf}
+\includegraphics[scale=.42]{fig_genX_munctional0_480.pdf}
+\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{fig_genX_munctional0_580.pdf}
+\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{fig_genX_munctional0_1060.pdf}
+\includegraphics[scale=.42]{fig_genX_munctional0_2070.pdf}
+\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
+\label{fig:speedup}
+\end{figure}
 
