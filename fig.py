@@ -16,6 +16,13 @@ import matplotlib.pyplot as plt
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+def pretty_dname(devicename):
+    if devicename == '295': return 'GTX 295'
+    if devicename == '480': return 'GTX 480'
+    if devicename == '580': return 'GTX 580'
+    if devicename == '1060': return 'Tesla C1060'
+    if devicename == '2070': return 'Tesla C2070'
+
 
 def step_timings(hostname, devicename):
     """
@@ -35,7 +42,7 @@ def test_timings(hostname, devicename, inv_mult, n_train):
     return cPickle.load(open(filename))
 
 
-def main_allstars():
+def main_allstars_mixup():
     """
     Produce a scatterplot of ref vs. mismatched auto-tuned kernels
     """
@@ -68,6 +75,42 @@ def main_allstars():
     else:
         plt.savefig('allstars_mixup_295.pdf')
 
+
+def main_genX():
+    _python, _cmd, hostname, devicename = sys.argv
+    results = step_timings(hostname, devicename)
+
+    def getel(f):
+        if not ('ref' in f and f['ref'].valid): return None
+        if not ('gen25' in f and f['gen25'].valid): return None
+        if not ('gen50' in f and f['gen50'].valid): return None
+        if not ('gen75' in f and f['gen75'].valid): return None
+        if not ('grid' in f and f['grid'].valid): return None
+        return [f[k].speed() for k in 'ref', 'gen25', 'gen50', 'gen75',
+                'grid']
+    results = [f for f in results if getel(f) is not None]
+    ref, gen25, gen50, gen75, grid = zip(*map(getel, results))
+
+    ref = np.asarray(ref)
+    gen25 = np.asarray(gen25)
+    gen25 = np.asarray(gen50)
+    gen25 = np.asarray(gen75)
+    grid = np.asarray(grid)
+
+    lines = plt.boxplot(
+            x = [gen25/ref, gen50/ref, gen75/ref, grid/ref],
+            widths=[0.7] * 4,
+            #positions=[0, 1, 2, 3, 4],
+            #whis=10,
+            )
+    plt.xticks([1, 2, 3, 4], ['HC25', 'HC50', 'HC75', 'grid'])
+    plt.ylabel('Speedup over reference (%s)' % pretty_dname(devicename))
+    if 0:
+        plt.show()
+    else:
+        figname = 'fig_genX_%s_%s.pdf' % (hostname, devicename)
+        print 'writing figure to', figname
+        plt.savefig(figname)
 
 
 def main_gflop_scatter():
