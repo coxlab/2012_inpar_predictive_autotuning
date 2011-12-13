@@ -664,29 +664,13 @@ XXX: Put in some timings of mixed \& matched all-stars to show that indeed the r
 \begin{figure}
 \centering
 \includegraphics[scale=.42]{allstars_mixup_295.pdf}
-\caption{Different arguments call for different kernels: each point corresponds to a randomly drawn argument configuration.
-The reference speed (horizontal) is completely uncorrelated to the speed of an optimal kernel for an unrelated argument configuration (trials performed on GTX 295).
-Out of 100 random confurations, 38 (not shown) could not even be run using a kernel that was auto-tuned for different arguments.
+\caption{Different arguments call for different kernels:
+{\em left} is the average argument-specific empirical auto-tuned performance across 100 random argument configurations,
+{\em middle} is the average speed of our reference implementation,
+{\em right} is the average speed of kernels auto-tuned for different argument configurations than the one being tested.
+For 38/100 random confurations, the kernel auto-tuned for another problem could not even run on the GTX 295 hardware.
+These points contributed a speed of 0, bringing down the average much lower than the reference.
 Good performance across a variety of inputs requires {\em input-dependent auto-tuning}.
-}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{speedup_295.pdf}
-\includegraphics[scale=.42]{speedup_480.pdf}
-\caption{Speedup of various auto-tuning strategies over the reference
-implementation.
-Each strategy was evaluated the same set of 83 problem configurations, which
-was disjoint from the problem configurations used to build the model for
-model-based hill-climbing.
-The vertical dashed lines are positioned at the geometric mean speedup (XXX?)
-of each strategy. The grid and hill-climbing approaches
-tested 73 and 75 configurations respectively, and took 45?? XXX
-seconds on average.
-The model-based approach tested 0 configuration evaluations, and took 0.05
-seconds on average, even with a naive Python implementation.
 }
 \label{fig:speedup}
 \end{figure}
@@ -755,29 +739,6 @@ The predictive approach typically requires about 0.1 seconds to suggest an
 implementation, whereas the empirical approach requires about 2 minutes.
 }
 \label{fig:fig_gflop_scatter}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_genX_vader_295.pdf}
-\includegraphics[scale=.42]{fig_genX_munctional0_480.pdf}
-\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_genX_munctional0_580.pdf}
-\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
-\label{fig:speedup}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_genX_munctional0_1060.pdf}
-\includegraphics[scale=.42]{fig_genX_munctional0_2070.pdf}
-\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
-\label{fig:speedup}
 \end{figure}
 
 \subsection{Model-based Autotuning}
@@ -919,4 +880,47 @@ XXX: Why not use FFT: convolution in spectral domain?
 
 XXXX: Talk about memory transfer requirements vs. speed vs. copy...
 
+
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{speedup_295.pdf}
+\includegraphics[scale=.42]{speedup_480.pdf}
+\caption{Speedup of various auto-tuning strategies over the reference
+implementation.
+Each strategy was evaluated the same set of 83 problem configurations, which
+was disjoint from the problem configurations used to build the model for
+model-based hill-climbing.
+The vertical dashed lines are positioned at the geometric mean speedup (XXX?)
+of each strategy. The grid and hill-climbing approaches
+tested 73 and 75 configurations respectively, and took 45?? XXX
+seconds on average.
+The model-based approach tested 0 configuration evaluations, and took 0.05
+seconds on average, even with a naive Python implementation.
+}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{fig_genX_vader_295.pdf}
+\includegraphics[scale=.42]{fig_genX_munctional0_480.pdf}
+\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{fig_genX_munctional0_580.pdf}
+\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
+\label{fig:speedup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=.42]{fig_genX_munctional0_1060.pdf}
+\includegraphics[scale=.42]{fig_genX_munctional0_2070.pdf}
+\caption{The speedup of hill-climbing (HC) and grid algorithms for empirical autotuning}
+\label{fig:speedup}
+\end{figure}
 
