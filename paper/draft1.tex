@@ -254,28 +254,8 @@ c) predictive autotuning.
 Section~\ref{sec:previous} summarizes previous and related work involving  machine learning with performance auto-tuning.
 Section~\ref{sec:conclusion} summarizes our findings and outlines directions for future work.
 
-
-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Predictive Auto-Tuning}
-
-This work shows that auto-tuning can be accelerated by orders of
-magnitude by using a regression model built offline as a surrogate for actual
-computations on the real hardware.
-The general form of an auto-tuning based library routine is illustrated in Figure~\ref{fig:general_autotune} (top).
-An auto-tuning based routine must operate on three sets of variables:
-\begin{description}
-\item[$\mathcal{A}$:] task description (argument shapes, physical layout)
-\item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
-\item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
-\end{description}
-The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
-might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
-so it would not be suitable for a normal library subroutine implementation.
-However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
-if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
-then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
-
 
 \begin{figure}[!ht]
 \centerline{
@@ -304,7 +284,23 @@ also be accurate.
 \label{fig:general_autotune}
 \end{figure}
 
-% =============================================================================
+This work shows that auto-tuning can be accelerated by orders of
+magnitude by using a regression model built offline as a surrogate for actual
+computations on the real hardware.
+The general form of an auto-tuning based library routine is illustrated in Figure~\ref{fig:general_autotune} (top).
+An auto-tuning based routine must operate on three sets of variables:
+\begin{description}
+\item[$\mathcal{A}$:] task description (argument shapes, physical layout)
+\item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
+\item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
+\end{description}
+The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
+might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
+so it would not be suitable for a normal library subroutine implementation.
+However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
+if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
+then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
+
 \subsection{Learning a Regression Model}
 
 The heart of predictive auto-tuning is a regression model that acts as surrogate
@@ -339,7 +335,7 @@ Our experiments evaluate $\log(0.01) \leq \zeta \leq \log(.99)$.
 \label{sec:brtree}
 
 A regression tree is a piece-wise constant function from one vector space to another,
-that works by recursively subdividing the input space into constant regions~\citep{breiman, textbook?}.
+that works by recursively subdividing the input space into constant regions~\citep{breiman+friedman+olshen+stone:1984, hastie+tibshirani+friedman:2001}.
 They are widely used in statistics and data-mining applications because the fitting algorithm is quick and reliable, and the form of the tree can provide insight into the relevant input variables.
 We use a standard fitting procedure, which takes a set of
 $(x, y)\in \mathbb{R}^k \times \mathbb{R}$ pairs and constructs a tree with a low mean squared error.
@@ -356,15 +352,18 @@ we sort the set $\mathcal{D}$ of ($x,y$) pairs along each of the $k$ features to
     \label{eq:treeloss}
 \end{align}
 One disadvantage of the regression tree is that it does not make full use of broad patterns in the data -- each partition formed by the fitting procedure is fit independently in the recursive training procedure,
-so it impossible for the model to extract more than one bit of information from each training partition (XXX unclear).
-This disadvantage is mitigated to a significant extent by the practice of {\em boosting}~\citet{XXX}.
+so it impossible for the model to extract more than one bit of information from each training partition.
+% XXX unclear
+This disadvantage is mitigated to a significant extent by the practice of {\em boosting}.
 
 % =============================================================================
 \subsection{Boosted Regression Trees}
 
 Boosting is an iterative procedure for constructing an {\em ensemble} of regression trees that is coordinated to fit training examples as accurately as possible.
+\citep{schapire:2001,friedman:2002}
 In a recent empirical study of a range of machine learning regressino problems,
-boosted decision trees were found to be among the best and easiest models to apply~\cite{caruana:2010}.
+boosted decision trees were found to be among the best and easiest models to
+apply~\citep{caruana+niculescu-mizil:2006}.
 On each boosting iteration, a regression tree is fit to the residual error remaining
 after all previously-fit models have made their predictions.
 There are essentially three parameters that control the boosted regression tree
@@ -376,6 +375,33 @@ We did not attempt a systematic study of the effect of these variables on perfor
 We chose a maximum depth of 4,
 a minimum number of examples of 10,
 and 100 iterations of boosting.
+
+\subsection{Search Algorithms}
+
+Once an accurate regression model has been fit to the data, it remains to be optimized for novel arguments (Fig.~\ref{fig:autotune_general}, bottom, step 4).
+An exhaustive search is the most reliable if it can be afforded, but in our experiments
+(as in general) an exhaustive search is prohibitively expensive.
+In our experiments we compare two strategies: (1) a hand-chosen grid provided by the authors of the kernel used in our experiments \citep{pinto+cox:2011gcg},
+and (2) a generic stochastic hill-climbing search.
+
+% XXX: what is reference?  Why was it chosen?
+% DDC: wasn't the reference implementation hand-tuned?
+% might also want to say something like:
+% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
+
+Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
+what was estimated to be the most relevant part of the configuration space. This grid iterates over all
+combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
+The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
+XXX: isn't 73 prime?? explain this so-called ``grid''.
+
+In this work, we also consider a third search algorithm based on a local search
+heuristic.  This {\em hill-climing} (HC) algorithm starts from the reference
+implementation and resamples each of the parameters
+of the current best implementation randomly with
+probability $0.25$ (keeping the current best setting with probability $0.75$).
+On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
+We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
