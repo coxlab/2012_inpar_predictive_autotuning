@@ -110,13 +110,13 @@ Compute Unified Device Architecture (CUDA) \cite{CUDA}, many developers default
 to massive amounts of manual labor to optimize CUDA code to specific input
 domains. In addition, hand-tuning rarely generalizes well to new hardware
 generations or different input domains, and it can also be error-prone or far
-from optimal. One of the reason is that kernels can produce staggeringly large
+from optimal. Kernels can produce staggeringly large
 optimization spaces \cite{K. Datta et al. Stencil computation optimization and
-auto-tuning on state-of-the-art multicore architectures}. The problem is
-further compounded by the fact that these spaces can be highly discontinuous
-\cite{RyooHwuCGO2008}, difficult to explore and holding quasi-optimal solutions
-at the edge of ''performance cliffs'' (in part due to hard resource
-restrictions, like the register file size).
+auto-tuning on state-of-the-art multicore architectures}, in which performance can vary
+widely and discontinously~\citep{RyooHwuCGO2008}.
+The best kernels are often at the edge of ``performance cliffs'' induced by
+device-specific hardware limits (e.g. shared memory size, register file size, block size).
+
 
 % COMMENT: NP, great setup! -JB
 
