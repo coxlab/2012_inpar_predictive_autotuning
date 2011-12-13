@@ -618,12 +618,15 @@ of cross-platform predictive auto-tuning for future work.
 The core of any online auto-tuning algorithm (Fig.~\ref{fig:autotune_general}) is the search procedure used to explore the space of implementations.
 Our implementation space includes 16000 (XXX) points, too many to search exhaustively for every input configuration.
 \cite{cox+pinto:2011gcg} recommends a particular hyper-parameter implementation
-based on empirical autotuning on several platforms, that achieves good
+based on empirical auto-tuning on several platforms, that achieves good
 performance on a variety of GPUs from older-generation cards such as the
 8600GT all the way to
 current-generation flagship cards such as the GTX 580 and C2070.
 We call this configuration the {\em reference} implementation.
 % XXX: what is reference?  Why was it chosen?
+% DDC: wasn't the reference implementation hand-tuned?
+% might also want to say something like:
+% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
 
 Additionally, \cite{cox+pinto:2011gcg} advocate a particular grid search over
 what was estimated to be the most relevant part of the configuration space. This grid iterates over all
@@ -742,7 +745,7 @@ implementation, whereas the empirical approach requires about 2 minutes.
 \label{fig:fig_gflop_scatter}
 \end{figure}
 
-\subsection{Model-based Autotuning}
+\subsection{Predictive Auto-tuning}
 
 On the GTX 295, a single regression-tree fit to the log-speed-multiplier
 (LSM) function (XXX: how many problem configurations, how much vs. what
