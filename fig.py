@@ -97,14 +97,24 @@ def main_genX():
     gen25 = np.asarray(gen75)
     grid = np.asarray(grid)
 
-    lines = plt.boxplot(
+    axes= plt.axes()
+    lines = axes.boxplot(
             x = [gen25/ref, gen50/ref, gen75/ref, grid/ref],
             widths=[0.7] * 4,
             #positions=[0, 1, 2, 3, 4],
-            #whis=10,
+            whis=100,
             )
-    plt.xticks([1, 2, 3, 4], ['HC25', 'HC50', 'HC75', 'grid'])
     plt.ylabel('Speedup over reference (%s)' % pretty_dname(devicename))
+    plt.xticks([1, 2, 3, 4], ['HC25', 'HC50', 'HC75', 'grid'])
+    if devicename in ('480', '580', '2070'):
+        axes.set_yscale('log')
+        axes.set_ylim(0.5, 33)
+        plt.yticks([1, 2, 4, 8, 16, 32],
+                [('%ix'%i) for i in [1, 2, 4, 8, 16, 32]])
+    else:
+        yticks = [0.5, 1, 1.5, 2, 2.5]
+        plt.yticks(yticks, [('%.1fx'%i) for i in yticks])
+
     if 0:
         plt.show()
     else:
