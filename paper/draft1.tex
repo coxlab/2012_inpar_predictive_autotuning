@@ -135,7 +135,7 @@ size and shared memory size).
 % auto-tuning is an answer
 
 One strategy for addressing these challenges is to use one of a variety of automatic
-methods known collectively as ``auto-tuning''. Two major auto-tuning approaches have emerged
+methods known collectively as ``auto-tuning.'' Two major auto-tuning approaches have emerged
 in the extensive literature covering the subject (see surveys in
 \citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
 datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
@@ -255,6 +255,24 @@ Section~\ref{sec:conclusion} summarizes our findings and outlines directions for
 
 \section{Predictive Auto-Tuning}
 
+This work shows that auto-tuning can be accelerated by orders of
+magnitude by using a regression model built offline as a surrogate for actual
+computations on the real hardware.
+The general form of an auto-tuning based library routine is illustrated in Figure~\ref{fig:general_autotune} (top).
+An auto-tuning based routine must operate on three sets of variables:
+\begin{description}
+\item[$\mathcal{A}$:] task description (argument shapes, physical layout)
+\item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
+\item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
+\end{description}
+The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
+might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
+so it would not be suitable for a normal library subroutine implementation.
+However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
+if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
+then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
+
+
 \begin{figure}[!ht]
 \centerline{
 \begin{algorithm}{$\Algo{\color{darkred}{autotune\_empirical}}\big(shapes, strides \big)$}
@@ -268,7 +286,7 @@ Section~\ref{sec:conclusion} summarizes our findings and outlines directions for
 \begin{algorithm}{$\Algo{\color{darkred}{autotune\_predictive}}\big(shapes, strides \big)$}
 \Aitem $a \setto TaskFeatures(shapes, strides)$
 \Aitem $c \setto PlatformFeatures()$
-\Aitem $f \setto LoadTimingModel()$
+\Aitem $f \setto TimingModel()$
 \Aitem $b^* \setto \operatorname*{argmin}_{b \in \mathcal{B}} f(a, b, c)$
 \algoremark{\color{darkred}{fast}}
 \Aitem \Return $b^*$
@@ -281,11 +299,6 @@ also be accurate.
 }
 \label{fig:general_autotune}
 \end{figure}
-
-XXX
-Figure~\ref{fig:general_autotune}, which permits doing on-demand auto-tuning
-for novel (not already auto-tuned) argument combinations.
-We call this approach {\em predictive auto-tuning}.
 
 \subsection{Learning a Regression Model}
 
@@ -307,7 +320,14 @@ y^{(i)}
 = \log\left(\frac{t(a, b^{(\mathrm{ref})}, c)}{t(a, b, c)} \right)
 \end{equation}
 
-One wrinkle compared with a standard regression framework is that not all kernel implementations $b$ are {\em valid} on all input configurations.
+One unique aspect of our setting compared with standard regression
+is that not all kernel implementations ($b$) are {\em valid}
+for all input configurations. One option for dealing with these invalid configurations
+would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that would lead to a biased regression model.
+Instead, we chose to associate invalid $(a, b, c)$ tuples with a constant $y = \zeta$.
+It makes sense to choose $\zeta < 0$ so that invalid configurations are treated as being worse than the reference,
+but the question of how much worse these points should be is an empirical one.
+Our experiments evaluate $\log(0.01) \leq \zeta \leq \log(.99)$.
 
 \subsection{Regression Trees}
 \label{sec:brtree}
@@ -352,7 +372,7 @@ and 100 iterations of boosting.
 
 
 
-\section{Case Study: Filterbank Correlation}
+\section{Filterbank Correlation}
 
 \label{sec:fbcorr}
 
@@ -431,39 +451,6 @@ generalized stencil kernels are not amenable to packaging as libraries.''
 
 
 XXXXXXXXXXX
-Current languages and software engineering practices have conspired to make it difficult
-to provide high-performance libraries for general mathematical operations on GPU devices.
-An important approach in implementing high-performance GPU codes has been auto-tuning,
-which is fundamentally slow. Auto-tuning requires running a large number of
-sub-compilations and representative computations to {\em measure} which
-of several possible implementations is fastest. General-purpose libraries such
-as CUBLAS and CUFFT hide this overhead by auto-tuning offline and using
-intimate knowledge of the mathematical problem being solved as well as the
-kernel implementations to heuristically choose a good computation strategy quickly when a
-user asks for e.g. a matrix product of particular arguments.
-Designing and testing libraries of this form is time-consuming, difficult, and provides little
-reusable infrastructure to assist in the implementation of different computations.
-For instance, even if one has already developed an auto-tuned library for dense matrix algebra, 
-one must basically start from scratch to develop an auto-tuned library for
-stencil computations or sparse matrix operations.
-
-This work shows that auto-tuning can be accelerated by orders of
-magnitude by using a regression model built offline as a surrogate for actual
-computations on the real hardware.
-The general form of an auto-tuning based library routine is illustrated in Figure~\ref{fig:general_autotune} (top).
-We will use filterbank correlation (Section~\ref{sec:fbcorr}) as our running example, but the approach is both general and powerful.
-An auto-tuning based routine must operate on three sets of variables:
-\begin{description}
-\item[$\mathcal{A}$:] task description (argument shapes, physical layout)
-\item[$\mathcal{B}$:] implementation description (auto-tuning parameters)
-\item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
-\end{description}
-The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
-might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
-so it would be all but unusable as a normal library routine.
-However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
-if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
-then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
 
 Our contribution of the present work is to show that boosted regression tree models,
 a powerful machine learning technique for function approximation, can meet the
