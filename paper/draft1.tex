@@ -882,6 +882,25 @@ XXX: Why not use FFT: convolution in spectral domain?
 XXXX: Talk about memory transfer requirements vs. speed vs. copy...
 
 
+\section{Future Work}
+
+more features (this is the hardest, and most manual part, may require
+domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
+* features derived from micro-benchmarking \citep{wong2010demystifying}
+* features derived from performance limiter analysis \citep{micikevicius2010analysis}
+* more instrumentation
+* more data-layout
+* more threading strategies to lower latency
+
+online distributed auto-tuning with learning, especially w/ HT-based
+experiments \cite{HT} our method is indeed very well suited for parallel
+explorating of multiple configurations for learning (in a cluster, e.g. in HT
+context) this may get us \emph{more} than linear speed ups for better accuracy,
+especially when more features will be present (see above)
+
+interpret the learned model and confront the performance against theoreticial
+(or approximated) models of mem/com/compute, arithmetic intensity, etc. to
+understand performance limiters, the hardware, etc.
 
 \begin{figure}
 \centering
