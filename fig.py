@@ -55,21 +55,30 @@ def main_allstars_mixup():
     i = 0
     x = []
     y = []
+    z = []
     for finding_dct in results:
         if 'gen75' in finding_dct:
             gen75 = finding_dct['gen75']
             if i >= len(timings):
                 break
             timing = timings[i]
+            x.append(gen75.speed())
             if timing.valid:
-                x.append(gen75.speed())
                 y.append(timing.speed())
+            else:
+                y.append(0)
+            z.append(finding_dct['ref'].speed())
             i += 1
     print x
     print y
-    plt.scatter(x, y)
-    plt.xlabel("GFLOPS/s of reference")
-    plt.ylabel("GFLOPS/s of random auto-tuned")
+    plt.bar([0.75, 1.75, 2.75],
+            [np.mean(x), np.mean(z), np.mean(y)],
+            width=[0.5, 0.5, 0.5])
+    plt.xticks([1, 2, 3], [
+        'Auto-tuned',
+        'Reference',
+        'Mismatched Auto-tuned'])
+    plt.ylabel("Avg. GFLOPS/s")
     if 0:
         plt.show()
     else:
