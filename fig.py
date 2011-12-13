@@ -62,7 +62,7 @@ def main_allstars():
     print y
     plt.scatter(x, y)
     plt.xlabel("GFLOPS/s of reference")
-    plt.xlabel("GFLOPS/s of random auto-tuned")
+    plt.ylabel("GFLOPS/s of random auto-tuned")
     if 0:
         plt.show()
     else:
