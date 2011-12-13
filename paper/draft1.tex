@@ -949,6 +949,21 @@ we believe that our approach is the most practial one to get high perf on
 recent hardware, since there is no consensus on hw features (and it won't
 change soon)
 
+XXX: deliver significant performance increases at very low run-time cost (less
+than a second if the input domain has not been seen before, zero if it
+has, since it will hit the cache) compared with the reference
+implementation
+
+XXX always delivered good performance: optimality without loss of productivity?
+
+XXX such machine learning derived model-based empirical auto-tuner hold great
+promise for dev productivity, portability, performance on future multi-core hw
+with different architectural features
+
+XXX frameworks for predicting performance exist \cite{XXX Hwu An Adaptive
+Performance Modeling Tool for GPU Architectures}
+but for non-GPU architectures
+
 auto-tuning required hardward expertise *and* application-domain knowledge, we
 want to remove these restrictions ultimately we want a ml-based approach to
 code optimization that will where a set of generic but deep code
@@ -1022,4 +1037,3 @@ seconds on average, even with a naive Python implementation.
 
 \bibliography{local}
 \end{document}
-
