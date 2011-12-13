@@ -43,18 +43,18 @@
 \maketitle
 
 \begin{abstract}
-Auto-tuning is a widely used and effective technique for optimizing a
+Template-based auto-tuning techniques are widely used and effective for optimizing a
 parametrized GPU code template for a particular computation on particular
-hardware.  Its drawback is that thorough or exhaustive auto-tuning requires
-compiling many kernels and calling each one many times; this process is slow.
+hardware \cite{XXXX}.  A drawback of this approach is that exhaustive, or even thorough, auto-tuning requires
+compiling many kernels and calling each one many times, and this process is slow.
 Furthermore, library abstraction boundaries provide operations such as image
 filtering and matrix multiplication, which actually correspond to a large set
 of potential problem configurations with a wide variety of memory access
 patterns and computational bottlenecks.  How can we draw on data from previous
 empirical auto-tuning of related problems on related hardware to make a
 just-in-time implementation decision for a novel problem?  This paper presents
-a machine learning approach to auto-tuning, in which features of (a) the
-current hardware platform, (b) the kernel configuration and (c) the problem
+a machine learning approach to auto-tuning, in which features of the
+current hardware platform, the kernel configuration and the problem
 instance are passed to a regression model (boosted regression trees) which
 predicts how much faster this kernel will be than a reference baseline.
 Combinatorial optimization strategies that would normally implement auto-tuning
@@ -64,8 +64,8 @@ validate our approach using the filterbank correlation kernel described in
 \citet{pinto+cox:2011gcg}, where we find that 0.1 seconds (XXX) of hill
 climbing on the regression model ({\em predictive} auto-tuning) can achieve an
 average of 95\% of the speed brought by 120 seconds of empirical auto-tuning
-XXX.  Our approach is not specific to filterbank correlation, or even to GPU
-kernel auto-tuning: the approach of using a non-linear regression model on top
+XXX.  Our approach is not specific to filterbank correlation, nor to GPU
+kernel auto-tuning; the approach of using a non-linear regression model on top
 of simple features applies to a variety of problem types, kernel types, and
 platforms.  \end{abstract}
 
@@ -88,7 +88,7 @@ high-end computer farms for web-scale applications (e.g. social networks).
 % no consensus => push to flexibility => push to sw
 
 Although the future lies in low-power multi-core hardware designs, the field
-lacks meaningful consensus on exactly how the different subsystems (memory,
+lacks  consensus on exactly how the different subsystems (memory,
 communication and computation) should be efficiently integrated, modeled and
 programmed. These systems have exhibited varying degrees of memory hierarchy
 and multi-threading complexity and, as a consequence, they have been
@@ -126,8 +126,8 @@ size).
 
 % auto-tuning is an answer
 
-One of the strategies for addressing these challenges is to use automatic
-methods called ``auto-tuning''. Two major auto-tuning approaches have emerged
+One strategy for addressing these challenges is to use one of a variety of automatic
+methods known collectively as ``auto-tuning''. Two major auto-tuning approaches have emerged
 in the extensive literature covering the subject (see surveys in
 \citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
 datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
@@ -160,21 +160,22 @@ surrogates. One of its main advantage is that it allows any metric to be
 optimized without loss of generality. It is indeed possible to formulate the
 problem as a multi-objective optimization and minimize both speed \emph{and}
 power consumption \citep{rahman2011automated}, a feat that renders the
-analytical model-driven approach even more intractable. Due to its flexibility,
+analytical model-driven approach even more difficult. Due to its flexibility,
 empirical auto-tuning has been successfully applied to build high-performance
 domain-specific libraries including dense linear algebra
 \citep{clint2001automated, bilmes1997optimizing}, sparse linear algebra
 \citep{vuduc2005oski}, signal processing \citep{frigo1998fftw}, sorting
 \citep{li2004dynamically}, general stencil operations \citep{kamil2010auto}, etc.
 
-Even though this ``black-box'' approach does not necessarily try to build an
-explicit model per se, it could, if care is taken, help to greatly accelerate
+Even though such a ``black-box'' approach does not try to build an
+explicit model per se, it could, if care were taken, help to greatly accelerate
 our understanding of the complex interactions between the set of optimizations,
 their parameters and the hardware architectural features (XXX: that's what
 we are trying to do w/ ML-based, decision trees, etc.).
 
 % empirical optimization: disadvantages
 
+% DDC: "sensible to"?  what is meant here? "Sensitive to?"
 The empirical approach is very sensible to the choice of instrumented
 optimizations \emph{and} to the search method. The size of the search space is
 so large that the current best empirical auto-tuners can only consider
@@ -192,7 +193,7 @@ can be directly derived from the analytical model.
 
 % hybrid optimization: the bad way
 
-To alleviate this major weakness, it seems intuitive to combine the two
+To alleviate this major weakness, it is intuitively appealing to combine the two
 approaches by first constraining the search space with an analytical model and
 then exploring the reduced space empirically \citep{chen2005combining,
 li2009note}. Unfortunately, this hybrid approach is still bound by the quality
@@ -204,7 +205,7 @@ of the analytical model, which remains hard to build by hand.
 In this paper, we propose to \emph{learn the model}, empirically, (XXX:
 we'll describe what this means in more details later in the paper, riiiighhht
 ???) instead of deriving it analytically. By learning the model, one can
-hope to get ``the best of both approaches'' and capitalize on the large body of
+hope to achieve elements of the best of both approaches and capitalize on the large body of
 literature from the machine learning community.
 
 Although various statistical prediction techniques have been applied with
@@ -239,9 +240,9 @@ XXX WIIFY here ??? (what's in their for you) XXX in text, say what's in this pap
 \subsection{Case Study}
 Current languages and software engineering practices have conspired to make it difficult
 to provide high-performance libraries for general mathematical operations on GPU devices.
-The dominant approach to implementing high-performance GPU codes has been auto-tuning,
+An important approach in implementing high-performance GPU codes has been auto-tuning,
 which is fundamentally slow. Auto-tuning requires running a large number of
-sub-compilations and representative computations to actually {\em measure} which
+sub-compilations and representative computations to {\em measure} which
 of several possible implementations is fastest. General-purpose libraries such
 as CUBLAS and CUFFT XXX hide this overhead by auto-tuning offline and using
 intimate knowledge of the mathematical problem being solved as well as the
@@ -249,7 +250,9 @@ kernel implementations to heuristically choose a good computation strategy quick
 user asks for e.g. a matrix product of particular arguments.
 Designing and testing libraries of this form is time-consuming, difficult, and provides little
 reusable infrastructure to assist in the implementation of different computations.
-Libraries for stencil computations and sparse matrix operations must start from scratch.
+For instance, even if one has already developed an auto-tuned library for dense matrix algebra, 
+one must basically start from scratch to develop an auto-tuned library for
+stencil computations or sparse matrix operations.
 
 
 \begin{figure}[!ht]
