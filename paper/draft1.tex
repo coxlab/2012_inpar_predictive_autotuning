@@ -202,38 +202,40 @@ of the analytical model, which remains hard to build by hand.
 % hybrid optimization: the ML way (note that ML-based are in essence
 % model-driven too just with an empirically learned model)
 
-In this paper, we propose to \emph{learn the model}, empirically, (XXX:
-we'll describe what this means in more details later in the paper, riiiighhht
-???) instead of deriving it analytically. By learning the model, one can
-hope to achieve elements of the best of both approaches and capitalize on the large body of
-literature from the machine learning community.
+In this paper, we propose to \emph{learn the model} using non-linear regression
+modelling techniques instead of constructing a model manually. By learning the model, one can
+hope to achieve elements of the best of both approaches: XXX.
+%and capitalize on the large body of
+%literature from the machine learning community.
 
-Although various statistical prediction techniques have been applied with
+Various statistical prediction techniques have been applied with
 success at compile-time for general programs on various CPU architectures
 \citep{monsifrot2002machine, stephenson2003meta, yotov2003comparison,
 kulkarni2004fast, cooper2005acme, franke2005probabilistic,
 hutter2006performance, cavazos2007rapidly, cavazos2008intelligent,
-hartono2009annotation, park2011evaluation, fursin2008milepost}, there is, to
-our knowledge, no fast predictive auto-tuning work that has tried to cover
-simultaneously: (a) more recent multi-core architectures like GPUs
-\citep{schaa2009exploring}, (b) high-performance domain-specific libraries
-\citep{nukada2009auto, li2009note, kamil2010auto}, (c) at run-time
-\citep{klockner2011pycuda, pinto+cox:2011gcg}, and (d) on \emph{many} input
-domains \citep{liu2009cross, grauer2011optimizing}.
+hartono2009annotation, park2011evaluation, fursin2008milepost}.
+Relative to this work our contribution is to show
+how to do fast predictive auto-tuning that satisifies the requirements to:
+(a) handle the variety of recent multi-core architectures like GPUs \citep{schaa2009exploring},
+(b) provide high-performance domain-specific libraries \citep{nukada2009auto, li2009note, kamil2010auto},
+(c) that select good implementations at run-time \citep{klockner2011pycuda, pinto+cox:2011gcg}, and
+(d) for the full input domain of a library routine \citep{liu2009cross, grauer2011optimizing}.
+% XXX: are these last references appropriate
+% XXX: there are 4 versions of the stencil work - consolidate to just the full journal version
 
+\iffalse
 XXX WIIFY here ??? (what's in their for you) XXX in text, say what's in this paper for:
 - compiler people
 - libs people
 - ml people
 - tools people
 - cv people
+\fi
 
+% XXX: organisation of the paper?
 
 % auto-tuning is an answer
 
-% XXX: our contributions
-% XXX: WIIFY
-% XXX: organisation of the paper
 
 % XXX: see gdoc and merge this below
 
