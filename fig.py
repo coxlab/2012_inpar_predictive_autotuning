@@ -76,12 +76,26 @@ def main_allstars_mixup():
     Produce a scatterplot of ref vs. mismatched auto-tuned kernels
     """
     _python, _cmd, wisdomfile, timingfile = sys.argv
-    assert '295' in wisdomfile # otw fix save mechanism
+    what = '580'
+    #what = '295'
+    assert what in wisdomfile # otw fix save mechanism
     _wdb, results, _rng = cPickle.load(open(wisdomfile))
     timings = cPickle.load(open(timingfile))
     print "LEN TIMINGS", len(timings)
     print "N VALID", len([t for t in timings if t.valid])
+
+    from matplotlib import rc
+    rc('text', usetex=True)
+    #rc('font', family='serif')
+
+    f = plt.figure()#figsize=(8, 12), dpi=100, facecolor='w')
+    ax = f.add_subplot(1,1,1)#, aspect=1.2)
+    plt.hold(True)
+
+    ax.hold(True)
+
     i = 0
+
     x = []
     y = []
     z = []
@@ -100,18 +114,50 @@ def main_allstars_mixup():
             i += 1
     print x
     print y
+    x = np.array(x)
+    y = np.array(y)
+    z = np.array(z)
+    xm = np.mean(x)
+    ym = np.mean(y)
+    zm = np.mean(z)
+    xe = np.std(x) / np.sqrt(xm.size)
+    ye = np.std(y) / np.sqrt(ym.size)
+    ze = np.std(z) / np.sqrt(zm.size)
+    #gvr = x / z
+    #bvr = y / z
+    #gvrm = gvr.mean()
+    #bvrm = bvr.mean()
+    #gvre = gvr.std() / np.sqrt(gvr.size)
+    #bvre = bvr.std() / np.sqrt(bvr.size)
+    #print gvre, bvre
     plt.bar([0.75, 1.75, 2.75],
-            [np.mean(x), np.mean(z), np.mean(y)],
+            [xm, zm, ym],
+            #yerr=[xe, ze, ye],
             width=[0.5, 0.5, 0.5])
-    plt.xticks([1, 2, 3], [
+    plt.xticks([1, 2, 3],
+               [
         'Auto-tuned',
         'Reference',
         'Mismatched Auto-tuned'])
-    plt.ylabel("Avg. GFLOPS/s")
+    #plt.bar([0.75, 1.75],#,, 2.75],
+            #[gvrm, bvrm],
+            #yerr=[gvre, bvre],
+            ##[xm, zm, ym],
+            ##yerr=[xe, ze, ye],
+            #width=[0.5, 0.5])#, 0.5])
+    #plt.xticks([1, 2],#, 3],
+               #[
+        #'Auto-tuned vs. Reference',
+        ##'Reference',
+        #'Mismatched Auto-tuned vs. Reference'])
+
+    adjust_axis(ax)
+
+    plt.ylabel("Average GFLOPS/s")
     if PLOT:
         plt.show()
     else:
-        plt.savefig('allstars_mixup_295.pdf')
+        plt.savefig('fig_allstars_mixup_%s.pdf' % what)
 
 
 def main_genX():
