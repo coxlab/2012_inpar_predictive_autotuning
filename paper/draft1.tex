@@ -718,6 +718,26 @@ Good performance across a variety of inputs requires {\em input-dependent auto-t
 \label{fig:allstars}
 \end{figure}
 
+Comparing the {\em grid} to {\em HC25}, {\em HC50} and {\em HC75} we found very little difference in performance.  The HC25 was slightly poorer, but the grid, HC50, and HC75 algorithms delivered similar average results. None of the algorithms was strictly better than the others.  In our predictive auto-tuning experiments we used HC75.
+
+% formation of training set
+
+Figure~\ref{XXX} shows how accurate predictive auto-tuning is compared with empirical auto-tuning.
+The training set $(\mathcal{X}, \mathcal{Y})$ for the regression model comprised
+all of the $<(a,b,c), y>$ pairs observed during grid search and hill-climbing search.
+So for each training argument configuration $a,c$ there were 148 different values of $b$ and thus 148 training points.
+Figure~\ref{XXX} shows that as more argument configurations are used for training,
+the performance of predictive auto-tuning on test configurations $(a', c)$ quickly
+approaches the average performance of empirical auto-tuning.
+We took care to partition the train and test sets so that there were no overlapping configurations.
+The key difference between the predictive and empirical auto-tuning,
+is that predictive auto-tuning
+typically took about 0.1 seconds per test example, whereas empirical auto-tuning took about 1-3 minutes.
+
+% backtracking
+In some cases, predictive auto-tuning yields an invalid implementation.
+We dealt with this scenario by backtracking through the various best-estimates discovered during the hill-climbing search.  Some invalid kernels can only be discovered after compiling code and attempting to run the compiled code, so in these cases predictive auto-tuning took up to 3 seconds.  Even in these cases the predictive model is much faster than empirical auto-tuning, because the first kernel that actually runs is a fast one.
+
 
 Figure~\ref{fig:speedup} also shows that random hill-climbing is at least
 competitive and often better than the hand-chosen grid approach of ~\citet{pinto+cox:2011gcg}.  Figure~\ref{fig:hcX} shows how the number of hill-climbing iterations
