@@ -650,7 +650,7 @@ Computation speed for novel problem configurations using predictive
 vs. empirical auto-tuning.
 (a) As more problem configurations are used to train the regression model,
 the performance of predictive auto-tuning approaches that of empirical auto-tuning
-despite taking only 0.1 seconds instead of 2 minutes.
+despite taking only 0.1 seconds instead of minutes.
 (b) and (c) For a wide range of devices, implementation speeds found by predictive auto-tuning correlate tightly with
 implementation speeds found by empirical auto-tuning.
 %The boosted regression trees used for predictive auto-tuning generalize correctly across the implementation space.
@@ -692,14 +692,14 @@ typically took about 0.1 seconds per test example, whereas empirical auto-tuning
 
 Figure~\ref{fig:fig_gflop_scatter} (b) and (c) show that the implementation
 speeds found by predictive auto-tuning correlates very well with the speed of
-empirical auto-tuning across all of the devices we tested: GTX 580, GTX 480,
-GTX 295, Tesla C2070, and Tesla C1060 which span three generations of
-CUDA platforms.
+empirical auto-tuning across all of the devices we tested: GeForce GTX 295,
+Tesla C1060, GeForce GTX 580, GeForce GTX 480 and Tesla C2070 which
+span two generations of NVIDIA CUDA platforms.
 
 % backtracking
 In some cases, predictive auto-tuning yields an invalid implementation.  We
 dealt with this scenario by backtracking through the various best-estimates
-discovered during the hill-climbing search.  Some invalid kernels can only be
+found during the hill-climbing search.  Some invalid kernels can only be
 discovered after compiling code and attempting to run the compiled code, so in
 these cases predictive auto-tuning took up to 3 seconds.  Even in these cases
 the predictive model is much faster than empirical auto-tuning, because the
@@ -709,7 +709,7 @@ Figure~\ref{fig:fig_ntrain} shows how the training set size
 and the value of $\zeta$ affect the accuracy of predictive auto-tuning.
 All candidates timed during the grid and
 hill-climbing search procedures were used as training examples, so the training
-set sizes ranged from an average of 1480 (10 problem configurations) to 29 600
+set sizes ranged from an average of 1,480 (10 problem configurations) to 29,600
 (200 problem configurations).
 Training from the largest training sets took approximately 30 seconds.
 Training 50 or more problem configurations yielded quite accurate predictions
@@ -724,7 +724,7 @@ devices in our study.
 auto-tuned performance across 100 random argument configurations,
 {\em middle} is the average speed of our reference implementation,
 {\em right} is the average speed of kernels auto-tuned for different argument
-configurations than the one being tested.  For 38/100 random configurations, the
+configurations than the one being tested.  For 38 out of 100 random configurations, the
 kernel auto-tuned for another problem could not even run on the GTX 295
 hardware.  These points contributed a speed of 0, bringing down the average
 much lower than the reference.  Good performance across a variety of inputs
