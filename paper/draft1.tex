@@ -48,7 +48,7 @@ A family of methods known collectively as ``auto-tuning'' has emerged to
 address this challenge.  Two major approaches to auto-tuning are
 {\em empirical} and {\em model-based}:
 empirical auto-tuning is a generic but slow approach that works by measuring runtimes of
-candidate implementations, model-based auto-tuning predicts those runtimes using simplified hardware abstractions designed by hand.
+candidate implementations, model-based auto-tuning predicts those runtimes using simplified abstractions designed by hand.
 We show that machine learning methods for non-linear regression can be used
 to estimate timing models from data, capturing the best of both approaches.
 A statistically-derived model offers the speed of a model-based approach,
@@ -271,7 +271,7 @@ An auto-tuning based routine must operate on three sets of variables:
 \end{description}
 The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
 might take many minutes or hours to perform the $argmin$ at step 3 (during which it computes the desired result many times!)
-so it would not be suitable for a normal library subroutine implementation.
+so it would not be suitable for a normal library routine implementation.
 However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
 if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
 then the $argmin$ could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
@@ -756,7 +756,7 @@ Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 \label{sec:discuss}
 
 % say what we said
-In this paper, we've demonstrated a boosted regression tree-based auto-tuning
+In this paper, we have demonstrated a boosted regression tree-based auto-tuning
 method, wherein empirical performance data is used to train a machine learning
 model of performance for an instrumented GPU kernel.  In contrast to
 traditional model-based auto-tuning, where an explicit model of performance is
