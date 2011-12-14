@@ -65,7 +65,7 @@ normally require evaluating large number of kernel configurations on the real
 hardware, are made orders of magnitude faster by evaluating the surrogate
 regression model instead.  We validate our approach using the filterbank
 correlation kernel described in \citet{pinto+cox:2011gcg}, where we find that
-0.1 seconds of hill climbing on the regression model (which we dub ``{\em
+0.1 seconds of hill climbing on the regression model (``{\em
 predictive} auto-tuning'') can achieve an average of 95\% of the
 speed-up brought by minutes of empirical auto-tuning.  Our approach is not
 specific to filterbank correlation, nor even to GPU kernel auto-tuning, and can
@@ -105,8 +105,9 @@ management and parallelism \citep{asanovic2006landscape} in order to better
 control and understand the various trade-offs among performance, reliability,
 energy efficiency, production costs, etc. This evolution has profoundly
 altered the landscape of application development: programmers are now
-facing a wide diversity of low-level architectural features to write
-high-performance \emph{and} portable code.
+facing a wide diversity of low-level architectural issues
+that must be carefully balanced if one is to write code that is both
+high-performance \emph{and} portable.
 
 % =============================================================================
 \subsection{Motivation}
@@ -117,7 +118,7 @@ high-performance \emph{and} portable code.
 In this rapidly evolving landscape, the construction of general
 development tools and libraries that fully utilize system resources
 remains a daunting task. Even within specialized architectures from the
-\emph{same} vendor, like NVIDIA's Graphics Processing Units (GPUs) and the
+\emph{same} vendor, such as NVIDIA's Graphics Processing Units (GPUs) and the
 Compute Unified Device Architecture (CUDA) \citep{nickolls2008scalable,
 nvidia2011cuda}, many developers default to massive amounts of manual labor
 to optimize CUDA code to specific input domains. In addition, hand-tuning
@@ -149,31 +150,30 @@ analytical model-driven optimization and empirical optimization
 % model-driven optimization: intro
 
 The model-driven optimization approach uses analytical abstractions to model
-the hardware architectures, the possible code transformations and their complex
+the hardware architectures, in order to identify possible code transformations and their complex
 interactions. Even though highly-accurate analytical models are generally
-intractable to build, this approach has been quite successful in the past at
-accelerating serial code with simplified but general abstractions. However,
+difficult to build, this approach has been quite successful in the past, especially for 
+accelerating serial code, utilizing simplified but general abstractions. However,
 large speed-ups for parallel code require more accurate high-dimensional models
 and since this approach is bound by the quality and scalability of its
 abstraction, it has been less suited for highly-specialized kernels. This
-approach has been dominant in the compiler community, and as a result, it has
-generally been applied at compile-time where important run-time characteristics
-such as input domains are missing. These drawbacks render the model-driven
-optimization approach less attractive for high-performance library developers.
+approach has been well-developed in the compiler community, and as a result, it has
+most often been applied at compile-time where important run-time characteristics
+such as input domains may be missing. These limitations render the model-driven
+optimization approach less attractive in many high-performance library development settings.
 
 % * empirical optimization: intro / advantages
 
-The empirical optimization approach, on the contrary, seeks to find the best
+The empirical optimization approach, in contrast, seeks to find the best
 performing code configuration by automatically generating many versions of a
 parametrized kernel and benchmarking them on the actual hardware (possibly at
 runtime, when contextual information about the hardware and software stack is
-the richest). This method directly optimizes the metric(s) of interest and not
-surrogates. One of its main advantage is that it allows any metric to be
-optimized without loss of generality. It is indeed possible to formulate the
-problem as a multi-objective optimization and minimize both speed \emph{and}
-power consumption \citep{rahman2011automated}, a feat that renders the
-analytical model-driven approach even more difficult. Due to its flexibility,
-empirical auto-tuning has been successfully applied to build high-performance
+the richest). This method directly optimizes the metric(s) of interest (e.g. performance) and does not rely on
+surrogates.  A significant advantage of such approaches is that they allow any metric to be
+optimized without loss of generality. Indeed, it is possible to formulate a multi-objective optimization that minimize both run time \emph{and}
+power consumption \citep{rahman2011automated}, a feat that would be even more difficult using an
+analytical model-driven approach. Due to its flexibility,
+empirical auto-tuning has been successfully applied to build a variety of high-performance
 domain-specific libraries including dense linear algebra
 \citep{clint2001automated, bilmes1997optimizing}, sparse linear algebra
 \citep{vuduc2005oski}, signal processing \citep{frigo1998fftw}, sorting
@@ -183,17 +183,17 @@ domain-specific libraries including dense linear algebra
 
 The empirical approach is very sensitive to the choice of instrumented
 optimizations \emph{and} to the search method. The size of the search space is
-so large that the current best empirical auto-tuners can only consider
+often so large that the current best empirical auto-tuners typically only consider
 highly-specialized functions with a limited set of code transformations and
-compiler options, on very few input domains \citep{ganapathi2009case}. Although
-searching for good code configurations in this highly-discontinuous space can
-be made embarrassingly parallel, it remains a very difficult and prohibitively
-expensive combinatorial optimization problem as many variants of the code must
+compiler options, on a limited set of input domains \citep{ganapathi2009case}. Although
+searches for good code configurations in highly-discontinuous spaces can
+be made ``embarrassingly'' parallel, and thus benefit from parallel execution across many devices, it remains a prohibitively
+expensive combinatorial optimization problem, as many variants of the code must
 generated, compiled, and benchmarked on specific input domains with meaningful
 statistics (that may require multiple runs). Consequently, most proposed
 methods prune the space with hard-coded heuristics that offer little
-generalization guarantees. This has been the main drawback of the empirical
-approach compared to the model-driven approach where good code configurations
+generalization guarantees. This has been a key drawback of the empirical
+approach as compared to the model-driven approach, where good code configurations
 can be directly derived from the analytical model.
 
 % hybrid optimization: the bad way
