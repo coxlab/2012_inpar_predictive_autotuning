@@ -697,6 +697,23 @@ of cross-platform predictive auto-tuning for future work.
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 
+\begin{figure*}[!ht]
+\centering
+\includegraphics[width=.9\linewidth]{illustrator/fig_main_R1.pdf}
+\caption{
+XXX UPDATE THIS WITH (a) (b) (c) XXX
+Computation speed for novel problem configurations using predictive
+vs. empirical code specialization.
+The scatterplots are roughly symmetric about the axis of equality (main diagonal)
+with occasional outliers, indicating that for most problem configurations the
+predictive approach gives as good a solution as the empirical approach.
+The predictive approach typically requires about 0.1 seconds to suggest an
+implementation, whereas the empirical approach requires about 2 minutes.
+}
+\label{fig:fig_gflop_scatter}
+\end{figure*}
+
+
 Figure~\ref{fig:allstars} shows the effectiveness of empirical auto-tuning is in this setting.
 Taking the GTX 295 as an example,
 and averaging across the range of problem configurations in our study,
@@ -790,22 +807,6 @@ best, but $a$ had no significant effect on the GTX 480.
 \caption{more timing on munctional0}
 \label{fig:fig_ntrain}
 \end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{fig_gflop_scatter_295.pdf}
-\includegraphics[scale=.42]{fig_gflop_scatter_480.pdf}
-\caption{Computation speed for novel problem configurations using predictive
-vs. empirical code specialization.
-The scatterplots are roughly symmetric about the axis of equality (main diagonal)
-with occasional outliers, indicating that for most problem configurations the
-predictive approach gives as good a solution as the empirical approach.
-The predictive approach typically requires about 0.1 seconds to suggest an
-implementation, whereas the empirical approach requires about 2 minutes.
-}
-\label{fig:fig_gflop_scatter}
-\end{figure}
-
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
