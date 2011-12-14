@@ -571,19 +571,18 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \label{sec:refgrid}
 
 \cite{pinto+cox:2011gcg} recommends as a reference implementation: block\_w 8, 
-block\_h = 8, n\_filter\_rows 1, n\_output\_4s all, spill $False$, imul\_fast $True$,
-pad\_shared $True$, 
-use\_text1d $True$,
-maxrreg $\infty$,
-and fast\_math $False$.
-This reference implementation was chosen manually based on good performance across a range of platforms from older-generation
-cards such as the
-8600GT all the way to
-current-generation flagship cards such as the GTX 580 and C2070.
+block\_h = 8, n\_filter\_rows = 1, n\_output\_4s = all, spill = $False$, imul\_fast = $True$,
+pad\_shared = $True$, 
+use\_text1d = $True$,
+maxrreg = $\infty$,
+and fast\_math = $False$.
+This reference implementation was chosen manually based on good performance
+across a range of platforms from older-generation cards such as the 8600GT all
+the way to current-generation flagship cards such as the GTX 580 and C2070.
 Given that parameters were hand-chosen for the reference kernel, no claims are
 made as to the optimality nor universality of this reference (indeed, different
-programmers would undoubtedly arrive at different results).  We use this
-kernel configuration as a reasonable indicator of typical performance
+programmers would undoubtedly arrive at different results).  We use
+this kernel configuration as a reasonable indicator of typical performance
 made possible by ad hoc experimentation with parameters.
 
 Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
