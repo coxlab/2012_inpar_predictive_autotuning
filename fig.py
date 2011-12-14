@@ -6,15 +6,48 @@ Scripts for making figures
 import cPickle
 import logging
 import sys
-import time
+from os import environ
+# -- 
+import matplotlib.pyplot as plt
+plt.rcParams["xtick.direction"] = "out"
+plt.rcParams["ytick.direction"] = "out"
+#plt.rcParams['ps.useafm'] = True 
+#plt.rcParams['ps.fonttype'] = 42
+#plt.rcParams['ps.usedistiller'] = 'xpdf'
+plt.rcParams['ps.useafm'] = True 
+plt.rcParams['ps.fonttype'] = 42
+plt.rcParams['ps.usedistiller'] = 'xpdf'
+
+PLOT = int(environ.get("PLOT", 0))
 
 import numpy as np
 
-import wisdom
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
+
+# *try* to convince mpl to do something non-crappy
+def adjust_axis(ax):
+
+    for loc, spine in ax.spines.iteritems():
+        if loc in ['left', 'bottom']:
+            spine.set_position(('outward', 10))
+            spine.set_linewidth(0.5)
+        if loc in ['right', 'top']:
+            spine.set_color('none')
+
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+    fontsize = 10
+    for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
+        tick.label1.set_fontsize(fontsize)
+        tick.label1.set_family('sans-serif')
+    for line in ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines():
+        line.set_markeredgewidth(0.5)
+
 
 def pretty_dname(devicename):
     if devicename == '295': return 'GTX 295'
@@ -79,7 +112,7 @@ def main_allstars_mixup():
         'Reference',
         'Mismatched Auto-tuned'])
     plt.ylabel("Avg. GFLOPS/s")
-    if 0:
+    if PLOT:
         plt.show()
     else:
         plt.savefig('allstars_mixup_295.pdf')
@@ -124,7 +157,7 @@ def main_genX():
         yticks = [0.5, 1, 1.5, 2, 2.5]
         plt.yticks(yticks, [('%.1fx'%i) for i in yticks])
 
-    if 0:
+    if PLOT:
         plt.show()
     else:
         figname = 'fig_genX_%s_%s.pdf' % (hostname, devicename)
@@ -151,8 +184,19 @@ def main_gflop_scatter():
     grid_speeds = [getpspecspeed(p, 'grid') for p, t in mdl_timings.items() if use_this(p, t)]
     ref_speeds = [getpspecspeed(p, 'ref') for p, t in mdl_timings.items() if use_this(p, t)]
 
+    f = plt.figure(figsize=(6, 4), dpi=100, facecolor='w')
+    ax = f.add_subplot(1,1,1, aspect=1.2)
+    plt.hold(True)
+
+    plt.subplots_adjust(left = 0.0,
+                    right = 0.9,
+                    bottom = 0.15,
+                    top = 0.95,
+                    wspace = 0.1,
+                    hspace = 0.45)
+    ax.hold(True)
+
     plt.scatter(hc_speeds, tree_speeds, c='b')
-    #plt.scatter(ref_speeds, tree_speeds, c='r')
 
     if devicename == '295':
         ubound =  350
@@ -185,15 +229,35 @@ def main_gflop_scatter():
     plt.text(ubound, ubound/2.0, '2x slower')
     plt.text(ubound/2.0, ubound, '2x faster')
 
+    adjust_axis(ax)
+
     plt.xlabel('GFLOP/s of empirical auto-tuning')
     plt.ylabel('GFLOP/s of predictive auto-tuning ')
     #plt.legend(loc='lower left')
-    if 1:
+    if PLOT:
         plt.show()
     else:
         print 'saving to ', figname
         plt.savefig(figname)
 
+# *try* to convince mpl to do something non-crappy
+def adjust_axis(ax):
+
+    for loc, spine in ax.spines.iteritems():
+        if loc in ['left', 'bottom']:
+            spine.set_position(('outward', 10))
+            spine.set_linewidth(0.5)
+        if loc in ['right', 'top']:
+            spine.set_color('none')
+
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+    fontsize = 8
+    for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
+        tick.label1.set_fontsize(fontsize)
+    for line in ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines():
+        line.set_markeredgewidth(0.5)
 
 def main_ntrain():
     _python, _cmd, hostname, devicename = sys.argv
@@ -208,6 +272,10 @@ def main_ntrain():
                     return None
     def use_this(p, t):
         return t.valid and getpspecspeed(p, 'ref') is not None
+
+    from matplotlib import rc
+    rc('text', usetex=True)
+    #rc('font', family='serif')
 
     all_hc_speeds = []
     all_ref_speeds = []
@@ -235,7 +303,7 @@ def main_ntrain():
             all_hc_speeds.extend(hc_speeds)
             all_ref_speeds.extend(ref_speeds)
             print inv_mult, n_train, len(mdl_timings), yy[-1]
-        plt.errorbar(xx, yy, yerr=yy_v, c=col, label='a=%s' % inv_mult)
+        plt.errorbar(xx, yy, yerr=yy_v, c=col, label=r'$\zeta=\log(%s)$' % inv_mult)
 
     plt.xlim(-10, 220)
     plt.axhline(np.mean(all_hc_speeds), c='k', ls='--')
@@ -259,7 +327,7 @@ def main_ntrain():
     plt.xlabel('N. auto-tuned problem configurations used for training')
     plt.ylabel('GFLOP/s')
     plt.legend(loc='lower right')
-    if 0:
+    if PLOT:
         plt.show()
     else:
         print 'saving figure', figfile
