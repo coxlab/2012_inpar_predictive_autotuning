@@ -400,6 +400,7 @@ the details of the grid are provided with our experimental results in Section~\r
 
 \label{sec:fbcorr}
 
+<<<<<<< Updated upstream
 \iffalse
 XXX: note that image processing libraries include convolutions (e.g. OpenCV ???
 even for GPU!), but only don’t exploit the _bank_ dimension of the
@@ -409,6 +410,17 @@ XXX: in addition, when they are optimized, it’s often for pre-defined filters
 (e.g. sobel?), and they are not suitable for encapsulation into libraries
 usable by most real-world applications (bouuuuhhhh opencv !!!).
 \fi
+=======
+% \iffalse
+% XXX: note that image processing libraries include convolutions (e.g. OpenCV ???
+% even for GPU!), but only don’t exploit the _bank_ dimension of the
+% _filterbank_ and thus can’t exploit parallel hardware as much.
+% 
+% XXX: in addition, when they are optimized, it’s often for pre-defined filters
+% (e.g. sobel?), and they are not suitable for encapsulation into libraries
+% usable by most real-world applications (bouuuuhhhh opencv !!!).
+% \iffalse
+>>>>>>> Stashed changes
 
 Filterbank correlation is a simple spatial image filtering operation that is
 an important subroutine in many image processing applications. It has a relatively
@@ -947,29 +959,36 @@ want to remove these restrictions ultimately we want a ml-based approach to
 code optimization that will where a set of generic but deep code
 transformations, could be templated and injected in any domain-specific
 library. this will reduce the need for specialized expertise across the range
-of targetted computing systems.
+of targeted computing systems.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Future Work}
 
-more features (this is the hardest, and most manual part, may require
-domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
-* features derived from micro-benchmarking \citep{wong2010demystifying}
-* features derived from performance limiter analysis \citep{micikevicius2010analysis}
-* more instrumentation
-* more data-layout
-* more threading strategies to lower latency
-(finding a good representation is key, again...)
+While the present work serves as a basic demonstration of the value of using machine learning models to predict optimal implementation parameters, there are many avenues for taking these ideas further. A natural route to extend of our current approach is to include more features as inputs to the predictive model.  In addition to further instrumentation of the kernel in question, input features could include a much broader range of hardware-related information, from more detailed information about device capabilities to micro-benchmarks  \citep{wong2010demystifying}, and results from performance limiter analyses \citep{micikevicius2010analysis}. Such additional features would increase the predictive model's ability to adapt to a wide range of different kinds of hardware, including new devices not available at the time of kernel creation.
 
-online distributed auto-tuning with learning, especially w/ HT-based
-experiments \cite{HT} our method is indeed very well suited for parallel
-explorating of multiple configurations for learning (in a cluster, e.g. in HT
-context) this may get us \emph{more} than linear speed ups for better accuracy,
-especially when more features will be present (see above)
+Another potentially interesting avenue of research is in interpreting the model learned by predictive auto-tuning.  While traditional model-based auto-tuning approaches by design assume a given model, and empirical auto-tuning approaches are completely model free, the predictive approach described here \emph{generates} a model from performance data.  Because this generated model can be interrogated by a variety of means, a significant opportunity exists to learn about the factors that drive the performance of a given kernel.  These insights can be used to further guide the development and instrumentation of the kernel, potentially yielding even greater gains.
 
-interpret the learned model and confront the performance against theoreticial
-(or approximated) models of mem/com/compute, arithmetic intensity, etc. to
-understand performance limiters, the hardware, etc.
+% more features (this is the hardest, and most manual part, may require
+% domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
+% * features derived from micro-benchmarking \citep{wong2010demystifying}
+% * features derived from performance limiter analysis \citep{micikevicius2010analysis}
+
+% DDC: these aren't terribly general / interesting to a broad audience
+
+% * more instrumentation
+% * more data-layout
+% * more threading strategies to lower latency
+% (finding a good representation is key, again...)
+% 
+% online distributed auto-tuning with learning, especially w/ HT-based
+% experiments \cite{HT} our method is indeed very well suited for parallel
+% explorating of multiple configurations for learning (in a cluster, e.g. in HT
+% context) this may get us \emph{more} than linear speed ups for better accuracy,
+% especially when more features will be present (see above)
+% 
+% interpret the learned model and confront the performance against theoreticial
+% (or approximated) models of mem/com/compute, arithmetic intensity, etc. to
+% understand performance limiters, the hardware, etc.
 
 \begin{figure}
 \centering
