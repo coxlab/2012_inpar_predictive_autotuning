@@ -79,7 +79,7 @@ whiteboard.
 
 This paper is about different ways of doing the minimization.
 For a particular problem (filterbank correlation) we
-look at a parameterized kernel implementation (from GCG)
+look at a parameterized kernel implementation (from \citet{pinto+cox:2011gcg})
 and a few hardware platforms, and compare
 random search, grid search, and a hill-climbing strategy with a good, but
 generic, reference implementation.
@@ -141,11 +141,9 @@ XXX such machine learning derived model-based empirical auto-tuner hold great
 promise for dev productivity, portability, performance on future multi-core hw
 with different architectural features
 
-\iffalse
-XXX frameworks for predicting performance exist \cite{XXX Hwu An Adaptive
-Performance Modeling Tool for GPU Architectures}
-but for non-GPU architectures
-\fi
+XXX frameworks for predicting performance exist \cite{XXX}
+% Hwu An Adaptive Performance Modeling Tool for GPU Architectures}
+% but for non-GPU architectures
 
 auto-tuning required hardward expertise *and* application-domain knowledge, we
 want to remove these restrictions ultimately we want a ml-based approach to
@@ -158,16 +156,15 @@ of targetted computing systems.
 \centering
 \includegraphics[scale=.42]{speedup_295.pdf}
 \includegraphics[scale=.42]{speedup_480.pdf}
-\caption{Speedup of various auto-tuning strategies over the reference
-implementation.
-Each strategy was evaluated the same set of 83 problem configurations, which
-was disjoint from the problem configurations used to build the model for
-model-based hill-climbing.
-The vertical dashed lines are positioned at the geometric mean speedup (XXX?)
-of each strategy. The grid and hill-climbing approaches
-tested 73 and 75 configurations respectively, and took 45?? XXX
-seconds on average.
-The model-based approach tested 0 configuration evaluations, and took 0.05
+\caption{
+Speedup of various auto-tuning strategies over the reference
+implementation.  Each strategy was evaluated the same set of 83 problem
+configurations, which was disjoint from the problem configurations used
+to build the model for model-based hill-climbing.  The vertical dashed
+lines are positioned at the geometric mean speedup (XXX?) of each
+strategy. The grid and hill-climbing approaches tested 73 and 75
+configurations respectively, and took 45?? XXX seconds on average.
+The model-based approach tested 0 configuration evaluations, and took 0.1
 seconds on average, even with a naive Python implementation.
 }
 \label{fig:speedup}
