@@ -675,14 +675,14 @@ of cross-platform predictive auto-tuning for future work.
 \centering
 \includegraphics[width=.9\linewidth]{illustrator/fig_main_R1.pdf}
 \caption{
-XXX UPDATE THIS WITH (a) (b) (c) XXX
 Computation speed for novel problem configurations using predictive
-vs. empirical code specialization.
-The scatterplots are roughly symmetric about the axis of equality (main diagonal)
-with occasional outliers, indicating that for most problem configurations the
-predictive approach gives as good a solution as the empirical approach.
-The predictive approach typically requires about 0.1 seconds to suggest an
-implementation, whereas the empirical approach requires about 2 minutes.
+vs. empirical auto-tuning.
+(a) As more problem configurations are used to train the regression model,
+the performance of predictive auto-tuning approaches that of empirical auto-tuning
+despite taking only 0.1 seconds instead of 2 minutes.
+(b) and (c) For a wide range of devices, implementation speeds found by predictive auto-tuning correlate tightly with
+implementation speeds found by empirical auto-tuning.
+%The boosted regression trees used for predictive auto-tuning generalize correctly across the implementation space.
 }
 \label{fig:fig_gflop_scatter}
 \end{figure*}
@@ -715,17 +715,19 @@ Comparing the {\em grid} to {\em HC25}, {\em HC50} and {\em HC75} we found very 
 
 % formation of training set
 
-Figure~\ref{XXX} shows how accurate predictive auto-tuning is compared with empirical auto-tuning.
+Figure~\ref{fig:fig_gflop_scatter} shows how accurate predictive auto-tuning is compared with empirical auto-tuning.
 The training set $(\mathcal{X}, \mathcal{Y})$ for the regression model comprised
 all of the $<(a,b,c), y>$ pairs observed during grid search and hill-climbing search.
 So for each training argument configuration $a,c$ there were 148 different values of $b$ and thus 148 training points.
-Figure~\ref{XXX} shows that as more argument configurations are used for training,
+Figure~\ref{fig:fig_gflop_scatter} (a) shows that as more argument configurations are used for training,
 the performance of predictive auto-tuning on test configurations $(a', c)$ quickly
 approaches the average performance of empirical auto-tuning.
 We took care to partition the train and test sets so that there were no overlapping configurations.
 The key difference between the predictive and empirical auto-tuning,
 is that predictive auto-tuning
 typically took about 0.1 seconds per test example, whereas empirical auto-tuning took about 1-3 minutes.
+
+Figure~\ref{fig:fig_gflop_scatter} (b) and (c) show that the implementation speeds found by predictive auto-tuning correlates very well with the speed of empirical auto-tuning across all of the devices we tested: GTX 580, GTX 480, GTX 296, Tesla C2070, and Tesla C1060 which span three generations of CUDA platforms.
 
 % backtracking
 In some cases, predictive auto-tuning yields an invalid implementation.  We
