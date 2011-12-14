@@ -407,11 +407,11 @@ defined according to Equation~\ref{eq:z}:
         \label{eq:z}
 \end{equation}
 
-In terms of floating point operations, a filterbank correlation requires the
+In terms of floating point operations (FLOP), a filterbank correlation requires the
 inner sums to be computed for each output pixel, yielding the quantity in
 Eq.~\ref{eq:flops}:
 \begin{equation}
-\mathrm{FLOPS} = 2  F  H  W  D  (R - H + 1)( C- W + 1)
+\mathrm{FLOP} = 2  F  H  W  D  (R - H + 1)( C- W + 1)
 \label{eq:flops}
 \end{equation}
 The multiplicative factor of 2 arises because we must first multiply an element of
@@ -637,11 +637,11 @@ with depth channels being contiguous in memory, followed by columns, then rows, 
 
 The product space in our study
 includes 1600 argument combinations, but we restricted our experiments to correlations that
-represented between 1 and 50 gigaflops of arithmetic.
+represented between 1 and 50 gigaflops (GFLOP) of arithmetic.
 Smaller problems do not fully utilize GPU hardware and are handled equally well by many kernel settings.
 Larger take so long to evaluate that there is negligible
 inefficiency in implementing them via multiple calls with smaller images and fewer filters.
-With the experiments searched an argument space included 602 configurations with between 1 and 50 gigaflops.
+With the experiments searched an argument space included 602 configurations with between 1 and 50 GFLOP.
 
 For the implementation features $b$, we directly used the integer and binary
 values (block\_w, block\_h, etc.) that parametrized the kernels.  We did not
