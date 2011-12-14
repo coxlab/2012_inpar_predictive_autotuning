@@ -594,9 +594,6 @@ the theoretical lower limit.
 & + 4FHWD \nonumber \\
 & + 8(R-H+1)(C-W+1)FP.
 \nonumber
-% XXX: incrementing requires reading and writing $z$ right? so actually the 4
-% above should be an 8? (see related ticket on github for potential
-% optimization about this)
 \label{eq:bytesP}
 \end{align}
 These passes make the I/O requirements increase quadratically in $F$ and $H$.
@@ -604,11 +601,9 @@ At the same time, the total number of floating-point operations (Eq.~\ref{eq:flo
 is quadratic in $H$ and $W$. In our experiments, we only considered square
 filters so in our setting the total number of flops is proportional to $H^4$.
 
-XXX
-Arithmetic density with passes.
-
 Critically:
-The arithmetic intensity, shared storage, and register requirements
+what makes this kernel interesting as a case study is that the
+arithmetic intensity, shared storage, and register requirements
 of this kernel change significantly and in a complicated platform-dependent way
 with the argument parameters ($R, C, D, F, H, W$) and with the implementation parameters,
 especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
@@ -616,18 +611,29 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 
 \subsection{Reference and Grid}
 \label{sec:refgrid}
-The reference implementation XXX
 
-% XXX: what is reference?  Why was it chosen?
-% DDC: wasn't the reference implementation hand-tuned?
-% might also want to say something like:
-% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
+\cite{pinto+cox:2011gcg} recommends as a reference implementation: block\_w 8, 
+block\_h = 8, n\_filter\_rows 1, n\_output\_4s all, spill $False$, imul\_fast $True$,
+pad\_shared $True$, 
+text1dfetch $True$,
+maxrregcount $\infty$,
+and fast\_math $False$.
+This reference implementation was chosen manually based on good performance across a range of platforms from older-generation
+cards such as the
+8600GT all the way to
+current-generation flagship cards such as the GTX 580 and C2070.
+Given that parameters were hand-chosen for the reference kernel, no claims are
+made as to the optimality nor universality of this reference (indeed, different
+programmers would undoubtedly arrive at different results).  We use this
+kernel configuration as a reasonable indicator of typical performance
+made possible by ad hoc experimentation with parameters.
 
 Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
-what was estimated to be the most relevant part of the configuration space. This grid iterates over all
-combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
+what was estimated to be the most relevant part of the configuration space.
+This grid iterates over all
+combinations of n\_filter\_rows, n\_output\_4s, spill\_l, pad\_shared\_l for three different block\_h, block\_w choices: (16, 8), (16, 16), and (32, 8).
+In our experiments, we call this algorithm the {\em grid} search procedure.
 The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
-XXX: isn't 73 prime?? explain this so-called ``grid''.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -678,21 +684,6 @@ We did not use platform features ($c$) in our experiments. We leave the investig
 of cross-platform predictive auto-tuning for future work.
 
 % =============================================================================
-\subsection{Search Algorithms}
-
-The core of any online auto-tuning algorithm (Fig.~\ref{fig:autotune_general}) is the search procedure used to explore the space of implementations.
-Our implementation space includes 16000 (XXX) points, too many to search exhaustively for every input configuration.
-\cite{cox+pinto:2011gcg} recommends a particular hyper-parameter implementation
-based on empirical auto-tuning on several platforms, that achieves good
-performance on a variety of GPUs from older-generation cards such as the
-8600GT all the way to
-current-generation flagship cards such as the GTX 580 and C2070.
-We call this configuration the {\em reference} implementation.
-% XXX: what is reference?  Why was it chosen?
-% DDC: wasn't the reference implementation hand-tuned?
-% might also want to say something like:
-% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
-
 Additionally, \cite{cox+pinto:2011gcg} advocate a particular grid search over
 what was estimated to be the most relevant part of the configuration space. This grid iterates over all
 combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
