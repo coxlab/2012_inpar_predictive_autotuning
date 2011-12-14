@@ -4,7 +4,11 @@ import time
 import fbconv3_cuda
 import numpy as np
 import scipy
-from hyperopt.ht_dist2 import one_of, rSON2
+try:
+    from hyperopt.ht_dist2 import one_of, rSON2
+except ImportError:
+    print "could not import hyperopt"
+    pass
 import pycuda.driver
 
 logger = logging.getLogger(__name__)
