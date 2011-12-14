@@ -812,6 +812,12 @@ the original function, do we get good performance?
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
 
+% say what we said
+In this paper, we've demonstrated a boosted regression tree-based auto-tuning method, wherein empirical performance data is used to train a machine learning model of performance for an instrumented GPU kernel.  In contrast to traditional model-based auto-tuning, where an explicit model of performance is built on the basis of an understanding of hardware inner workings, and empirical auto-tuning, where an exhaustive set of implementation configurations are tried, the present approach generates, from scratch, a flexible model of kernel performance on the basis of timing data from a user-definable number of kernel evaluations.
+
+
+% DDC: the following text looks like random dumping ground
+
 We're characterizing hardware by a 1-of-N feature vector, simply describing
 which hardware is the current hardware.
 To make better use of auto-tuning data from other platforms, it would be more
