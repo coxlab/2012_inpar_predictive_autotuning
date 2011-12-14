@@ -1,4 +1,3 @@
-
 @incollection{pinto+cox:2011gcg,
     author={N. Pinto and D. D. Cox},
     title={{GPU} Metaprogramming: A Case Study in Biologically Inspired Machine
@@ -6,42 +5,13 @@
     booktitle={GPU Computing Gems},
     publisher={Morgan Kauffmann},
     year={2012},
-    volume=2,
-    note={to appear},
-}
-
-@misc{klochner+etal:2009,
-    author={A. Kl{\"o}ckner and N. Pinto and Y. Lee and B. C. Catanzaro and P.
-        Ivanov and A. Fasih},
-    title={{PyCUDA}: {GPU} Run-Time Code Generation for High-Performance Computing},
-    year=2009,
-    howpublished={arXiv},
-    pages={0911.3456v2}
-}
-
-@phdthesis{datta:2009,
-    author={K. Datta},
-    title={Auto-tuning Stencil Codes for Cache-Based Multicore Platforms},
-    year=2009,
-    school={Computer Science Division, U.C. Berkeley},
-    month=dec,
-}
-@phdthesis{vuduc:2003,
-    author={R. Vuduc},
-    title={Automatic Performance Tuning of Sparse Matrix Kernels},
-    year=2003,
-    school={Computer Science Division, U.C. Berkeley},
-    month=dec,
-    annote={Ch 9 has good stuff about ML and auto-tuning, including a good
-        survey of statistical methods in auto-tuning circa 2003.}
 }
 
 @inproceedings{volkov+demmel:2008,
     author={V. Volkov and J. Demmel},
     title={Benchmarking {GPU}s to Tune Dense Linear Algebra},
-    booktitle={Supercomputing 2008},
+    booktitle={ACM/IEEE SC},
     year=2008,
-    month=nov,
     annote={walks through benchmarking strategies, optimization techniques and
         reasoning patterns that explain how to get fast GEMM and factorization
         on GPU.}
@@ -52,55 +22,16 @@
     author={S. Kamil and C. Chan and S. Williams and L. Oliker and J. Shalf
         and M. Howison and E. W. Bethel, Prabhat},
     booktitle={Cray User Group Conference},
-    month=may,
     year=2009,
     annote={In support of generic auto-tuning, that uses meta-programming to
         generate auto-tuning candidates automatically. Good results on
         multicore processors. Uses lisp and ECL as intermediate representation},
 }
 
-@inproceedings{ganapathi+datta+fox+patterson:2009,
-    author={A. Ganapathi and K. Datta and A. Fox and D. Patterson},
-    title={A Case for Machine Learning to Optimize Multicore Performance},
-    booktitle={First USENIX Workshop on Hot Topics in Parallelism (HotPar
-            ’09)},
-    month=mar,
-    year=2009,
-    annote={Kernel Canonical Correlation Analysis for connecting configuration
-        parameters to multiple metrics. Uses genetic algorithm to optimize
-            within model.}
-}
-
-Brewer 95?
-
-Cavazos et al. (yr?) used logistic regression to select compiler flags
-
-Self-Adapting Linear Algebra Algorithms and Software
-(Proceedings of the IEEE, Special Issue on Program Generation, Optimization,
- and Adaptation, 93(2), February 2005)
-    James Demmel, Jack Dongarra, Victor Eijkhout, Erika Fuentes, Antoine
-    Petitet, Richard Vuduc, R. Clint Whaley, and Katherine Yelick.
-
-
-R. C. Whaley, A. Petitet, and J. Dongarra. Automated Empirical
-Optimization of Software and the ATLAS project.
-Parallel Computing, 27(1-2):3–35, 2001.
-
-
-R. Vuduc, J. Demmel, and K. Yelick. OSKI: A
-library of
-automatically tuned sparse matrix kernels. In
-Proc. of SciDAC 2005, J. of Physics: Conference
-Series. Institute of
-Physics Publishing, June 2005.
-
-
-% from google scholar:
 @article{li2009note,
   title={A Note on Auto-tuning GEMM for GPUs},
   author={Li, Y. and Dongarra, J. and Tomov, S.},
-  journal={Computational Science--ICCS 2009},
-  pages={884--892},
+  journal={IICS},
   year={2009},
   publisher={Springer}
 }
@@ -108,39 +39,29 @@ Physics Publishing, June 2005.
 @inproceedings{ganapathi2009case,
   title={A case for machine learning to optimize multicore performance},
   author={Ganapathi, A. and Datta, K. and Fox, A. and Patterson, D.},
-  booktitle={Proceedings of the First USENIX conference on Hot topics in parallelism},
-  pages={1--1},
+  booktitle={HotPar},
   year={2009},
-  organization={USENIX Association}
 }
 
 @inproceedings{ryoo2008program,
   title={Program optimization space pruning for a multithreaded GPU},
   author={Ryoo, S. and Rodrigues, C.I. and Stone, S.S. and Baghsorkhi, S.S. and Ueng, S.Z. and Stratton, J.A. and Hwu, W.W.},
-  booktitle={Proceedings of the 6th annual IEEE/ACM international symposium on Code generation and optimization},
-  pages={195--204},
+  booktitle={ACM CGO},
   year={2008},
-  organization={ACM}
 }
 
 @inproceedings{datta2008stencil,
   title={Stencil computation optimization and auto-tuning on state-of-the-art multicore architectures},
   author={Datta, K. and Murphy, M. and Volkov, V. and Williams, S. and Carter, J. and Oliker, L. and Patterson, D. and Shalf, J. and Yelick, K.},
-  booktitle={Proceedings of the 2008 ACM/IEEE conference on Supercomputing},
-  pages={4},
+  booktitle={SC},
   year={2008},
-  organization={IEEE Press}
 }
 
 @article{lindholm2008nvidia,
   title={NVIDIA Tesla: A unified graphics and computing architecture},
   author={Lindholm, E. and Nickolls, J. and Oberman, S. and Montrym, J.},
-  journal={Micro, IEEE},
-  volume={28},
-  number={2},
-  pages={39--55},
+  journal={IEEE Micro},
   year={2008},
-  publisher={IEEE}
 }
 
 @article{nvidia2011cuda,
@@ -152,51 +73,36 @@ Physics Publishing, June 2005.
 @article{asanovic2006landscape,
   title={The landscape of parallel computing research: A view from berkeley},
   author={Asanovic, K. and Bodik, R. and Catanzaro, B.C. and Gebis, J.J. and Husbands, P. and Keutzer, K. and Patterson, D.A. and Plishker, W.L. and Shalf, J. and Williams, S.W. and others},
-  journal={EECS Department University of California Berkeley Tech Rep UCBEECS2006183},
-  volume={18},
-  number={UCB/EECS-2006-183},
+  journal={EECS UC Berkeley Tech Rep},
   year={2006},
-  publisher={Citeseer}
 }
 @article{nickolls2008scalable,
   title={Scalable parallel programming with CUDA},
   author={Nickolls, J. and Buck, I. and Garland, M. and Skadron, K.},
-  journal={Queue},
-  volume={6},
-  number={2},
-  pages={40--53},
+  journal={ACM Queue},
   year={2008},
-  publisher={ACM}
 }
 
 @inproceedings{tiwari2009scalable,
   title={A scalable auto-tuning framework for compiler optimization},
   author={Tiwari, A. and Chen, C. and Chame, J. and Hall, M. and Hollingsworth, J.K.},
-  booktitle={Parallel \& Distributed Processing, 2009. IPDPS 2009. IEEE International Symposium on},
-  pages={1--12},
+  booktitle={IPDPS},
   year={2009},
   organization={IEEE}
 }
 
-
 @article{vuduc2001statistical,
   title={Statistical models for automatic performance tuning},
   author={Vuduc, R. and Demmel, J. and Bilmes, J.},
-  journal={Computational Science—ICCS 2001},
-  pages={117--126},
+  journal={ICCS},
   year={2001},
-  publisher={Springer}
 }
 
 @article{demmel2005self,
   title={Self-adapting linear algebra algorithms and software},
   author={Demmel, J. and Dongarra, J. and Eijkhout, V. and Fuentes, E. and Petitet, A. and Vuduc, R. and Whaley, R.C. and Yelick, K.},
-  journal={Proceedings of the IEEE},
-  volume={93},
-  number={2},
-  pages={293--312},
-  year={2005},
-  publisher={IEEE}
+  journal={IEEE},
+  year={2005}
 }
 
 @book{williams2008auto,
@@ -210,17 +116,13 @@ Physics Publishing, June 2005.
   title={OSKI: A library of automatically tuned sparse matrix kernels},
   author={Vuduc, R. and Demmel, J.W. and Yelick, K.A.},
   booktitle={Journal of Physics: Conference Series},
-  volume={16},
-  pages={521},
   year={2005},
-  organization={IOP Publishing}
 }
 
 @inproceedings{cavazos2008intelligent,
   title={Intelligent compilers},
   author={Cavazos, J.},
-  booktitle={Cluster Computing, 2008 IEEE International Conference on},
-  pages={360--368},
+  booktitle={IEEE Cluster Computing},
   year={2008},
   organization={IEEE}
 }
@@ -228,39 +130,28 @@ Physics Publishing, June 2005.
 @inproceedings{park2011evaluation,
   title={An evaluation of different modeling techniques for iterative compilation},
   author={Park, E. and Kulkarni, S. and Cavazos, J.},
-  booktitle={Proceedings of the 14th international conference on Compilers, architectures and synthesis for embedded systems},
-  pages={65--74},
-  year={2011},
-  organization={ACM}
+  booktitle={ACM CASES},
+  year={2011}
 }
 
 @inproceedings{cavazos2007rapidly,
   title={Rapidly selecting good compiler optimizations using performance counters},
   author={Cavazos, J. and Fursin, G. and Agakov, F. and Bonilla, E. and O'Boyle, M.F.P. and Temam, O.},
-  booktitle={Code Generation and Optimization, 2007. CGO'07. International Symposium on},
-  pages={185--197},
+  booktitle={IEEE CGO},
   year={2007},
-  organization={IEEE}
 }
 
 @article{puschel2005spiral,
   title={SPIRAL: Code generation for DSP transforms},
   author={Puschel, M. and Moura, J.M.F. and Johnson, J.R. and Padua, D. and Veloso, M.M. and Singer, B.W. and Xiong, J. and Franchetti, F. and Gacic, A. and Voronenko, Y. and others},
-  journal={Proceedings of the IEEE},
-  volume={93},
-  number={2},
-  pages={232--275},
-  year={2005},
-  publisher={IEEE}
+  journal={IEEE},
+  year={2005}
 }
 
 @article{clint2001automated,
   title={Automated empirical optimizations of software and the ATLAS project},
   author={Clint Whaley, R. and Petitet, A. and Dongarra, J.J.},
   journal={Parallel Computing},
-  volume={27},
-  number={1-2},
-  pages={3--35},
   year={2001},
   publisher={Elsevier}
 }
@@ -268,91 +159,63 @@ Physics Publishing, June 2005.
 @inproceedings{chen2005combining,
   title={Combining models and guided empirical search to optimize for multiple levels of the memory hierarchy},
   author={Chen, C. and Chame, J. and Hall, M.},
-  booktitle={Code Generation and Optimization, 2005. CGO 2005. International Symposium on},
-  pages={111--122},
-  year={2005},
-  organization={IEEE}
+  booktitle={IEEE CGO},
+  year={2005}
 }
 
 @inproceedings{li2004dynamically,
   title={A dynamically tuned sorting library},
   author={Li, X. and Garzar{\'a}n, M.J. and Padua, D.},
-  booktitle={Code Generation and Optimization, 2004. CGO 2004. International Symposium on},
-  pages={111--122},
-  year={2004},
-  organization={IEEE}
+  booktitle={IEEE CGO},
+  year={2004}
 }
-
 
 @inproceedings{almagor2004finding,
   title={Finding effective compilation sequences},
   author={Almagor, L. and Cooper, K.D. and Grosul, A. and Harvey, T.J. and Reeves, S.W. and Subramanian, D. and Torczon, L. and Waterman, T.},
-  booktitle={ACM SIGPLAN Notices},
-  volume={39},
-  number={7},
-  pages={231--239},
-  year={2004},
-  organization={ACM}
+  booktitle={ACM SIGPLAN},
+  year={2004}
 }
 
 @article{stephenson2003meta,
   title={Meta optimization: Improving compiler heuristics with machine learning},
   author={Stephenson, M. and Amarasinghe, S. and Martin, M. and O'Reilly, U.M.},
-  journal={ACM SIGPLAN Notices},
-  volume={38},
-  number={5},
-  pages={77--90},
-  year={2003},
-  publisher={ACM}
+  journal={ACM SIGPLAN},
+  year={2003}
 }
 
 @inproceedings{kulkarni2004fast,
   title={Fast searches for effective optimization phase sequences},
   author={Kulkarni, P. and Hines, S. and Hiser, J. and Whalley, D. and Davidson, J. and Jones, D.},
-  booktitle={ACM SIGPLAN Notices},
-  volume={39},
-  number={6},
-  pages={171--182},
+  booktitle={ACM SIGPLAN},
   year={2004},
-  organization={ACM}
 }
 
 @inproceedings{stephenson2005predicting,
   title={Predicting unroll factors using supervised classification},
   author={Stephenson, M. and Amarasinghe, S.},
-  booktitle={Code Generation and Optimization, 2005. CGO 2005. International Symposium on},
-  pages={123--134},
-  year={2005},
-  organization={IEEE}
+  booktitle={IEEE CGO},
+  year={2005}
 }
 
 @inproceedings{cooper2005acme,
   title={ACME: adaptive compilation made efficient},
   author={Cooper, K.D. and Grosul, A. and Harvey, T.J. and Reeves, S. and Subramanian, D. and Torczon, L. and Waterman, T.},
-  booktitle={ACM SIGPLAN Notices},
-  volume={40},
-  number={7},
-  pages={69--77},
-  year={2005},
-  organization={ACM}
+  booktitle={ACM SIGPLAN},
+  year={2005}
 }
 
 @inproceedings{yotov2003comparison,
   title={A comparison of empirical and model-driven optimization},
   author={Yotov, K. and Li, X. and Ren, G. and Cibulskis, M. and DeJong, G. and Garzaran, M. and Padua, D. and Pingali, K. and Stodghill, P. and Wu, P.},
-  booktitle={ACM SIGPLAN Notices},
-  volume={38},
-  number={5},
-  pages={63--76},
-  year={2003},
-  organization={ACM}
+  booktitle={ACM SIGPLAN},
+  year={2003}
 }
 
 @article{monsifrot2002machine,
   title={A machine learning approach to automatic production of compiler heuristics},
   author={Monsifrot, A. and Bodin, F. and Quiniou, R.},
   journal={Artificial Intelligence: Methodology, Systems, and Applications},
-  pages={389--409},
   year={2002},
   publisher={Springer}
 }
@@ -360,19 +223,14 @@ Physics Publishing, June 2005.
 @inproceedings{franke2005probabilistic,
   title={Probabilistic source-level optimisation of embedded programs},
   author={Franke, B. and O'Boyle, M. and Thomson, J. and Fursin, G.},
-  booktitle={ACM SIGPLAN Notices},
-  volume={40},
-  number={7},
-  pages={78--86},
+  booktitle={ACM SIGPLAN},
   year={2005},
-  organization={ACM}
 }
 
 @article{hutter2006performance,
   title={Performance prediction and automated tuning of randomized and parametric algorithms},
   author={Hutter, F. and Hamadi, Y. and Hoos, H. and Leyton-Brown, K.},
   journal={Principles and Practice of Constraint Programming-CP 2006},
-  pages={213--228},
   year={2006},
   publisher={Springer}
 }
@@ -380,35 +238,28 @@ Physics Publishing, June 2005.
 @inproceedings{hartono2009annotation,
   title={Annotation-based empirical performance tuning using Orio},
   author={Hartono, A. and Norris, B. and Sadayappan, P.},
-  booktitle={Parallel \& Distributed Processing, 2009. IPDPS 2009. IEEE International Symposium on},
-  pages={1--11},
-  year={2009},
-  organization={IEEE}
+  booktitle={IEEE IPDPS},
+  year={2009}
 }
 
 @inproceedings{rahman2011automated,
   title={Automated empirical tuning of scientific codes for performance and power consumption},
   author={Rahman, S.F. and Guo, J. and Yi, Q.},
-  booktitle={Proceedings of the 6th International Conference on High Performance and Embedded Architectures and Compilers},
-  pages={107--116},
-  year={2011},
-  organization={ACM}
+  booktitle={ACM International Conference on High Performance and Embedded Architectures and Compilers},
+  year={2011}
 }
 
 @inproceedings{liu2009cross,
   title={A cross-input adaptive framework for GPU program optimizations},
   author={Liu, Y. and Zhang, E.Z. and Shen, X.},
-  booktitle={Parallel \& Distributed Processing, 2009. IPDPS 2009. IEEE International Symposium on},
-  pages={1--10},
-  year={2009},
-  organization={IEEE}
+  booktitle={IEEE IPDPS},
+  year={2009}
 }
 
 @article{grauer2011optimizing,
   title={Optimizing and Auto-tuning Belief Propagation on the GPU},
   author={Grauer-Gray, S. and Cavazos, J.},
   journal={Languages and Compilers for Parallel Computing},
-  pages={121--135},
   year={2011},
   publisher={Springer}
 }
@@ -416,19 +267,15 @@ Physics Publishing, June 2005.
 @inproceedings{bilmes1997optimizing,
   title={Optimizing matrix multiply using PHiPAC: a portable, high-performance, ANSI C coding methodology},
   author={Bilmes, J. and Asanovic, K. and Chin, C.W. and Demmel, J.},
-  booktitle={Proceedings of the 11th international conference on Supercomputing},
-  pages={340--347},
+  booktitle={SC},
   year={1997},
-  organization={ACM}
 }
 
 @inproceedings{kamil2010auto,
   title={An auto-tuning framework for parallel multicore stencil computations},
   author={Kamil, S. and Chan, C. and Oliker, L. and Shalf, J. and Williams, S.},
-  booktitle={Parallel \& Distributed Processing (IPDPS), 2010 IEEE International Symposium on},
-  pages={1--12},
-  year={2010},
-  organization={IEEE}
+  booktitle={IEEE IPDPS},
+  year={2010}
 }
 
 @article{fursin2008milepost,
@@ -440,17 +287,14 @@ Physics Publishing, June 2005.
 @inproceedings{schaa2009exploring,
   title={Exploring the multiple-GPU design space},
   author={Schaa, D. and Kaeli, D.},
-  booktitle={Parallel \& Distributed Processing, 2009. IPDPS 2009. IEEE International Symposium on},
-  pages={1--12},
-  year={2009},
-  organization={IEEE}
+  booktitle={IEEE IPDPS},
+  year={2009}
 }
 
 @inproceedings{nukada2009auto,
   title={Auto-tuning 3-D FFT library for CUDA GPUs},
   author={Nukada, A. and Matsuoka, S.},
-  booktitle={Proceedings of the Conference on High Performance Computing Networking, Storage and Analysis},
-  pages={30},
+  booktitle={Conference on High Performance Computing Networking, Storage and Analysis},
   year={2009},
   organization={ACM}
 }
@@ -466,10 +310,8 @@ Physics Publishing, June 2005.
 @inproceedings{wong2010demystifying,
   title={Demystifying GPU microarchitecture through microbenchmarking},
   author={Wong, H. and Papadopoulou, M.M. and Sadooghi-Alvandi, M. and Moshovos, A.},
-  booktitle={Performance Analysis of Systems \& Software (ISPASS), 2010 IEEE International Symposium on},
-  pages={235--246},
-  year={2010},
-  organization={IEEE}
+  booktitle={IEEE ISPASS},
+  year={2010}
 }
 
 @inproceedings{micikevicius2010analysis,
@@ -483,20 +325,20 @@ Physics Publishing, June 2005.
 @inproceedings{caruana+niculescu-mizil:2006,
     author={R. Caruana and A. Niculescu-Mizil},
     title={An Empirical Comparison of Supervised Learning Algorithms},
-    booktitle={ICML 2006},
+    booktitle={ICML},
     year={2006},
 }
 @book{breiman+friedman+olshen+stone:1984,
     author={Breiman, L. and  Friedman, J. H. and Olshen, R. A. and Stone, C. J.},
     year={1984},
     title={Classification and Regression Trees},
-    address={Monterey, CA},
     publisher={Wadsworth \& Brooks/Cole Advanced Books \& Software},
 }
+
 @book{hastie+tibshirani+friedman:2001,
     author={Hastie, T. and Tibshirani, R. and Friedman, J. H.},
     year={2001},
-    title={The Elements of Statistical Learning: Data Mining, Inference, and Prediction},
+    title={The Elements of Statistical Learning},
     address={New York},
     publisher={Springer Verlag},
 }
@@ -504,29 +346,18 @@ Physics Publishing, June 2005.
     author={Schapire, R.},
     year=2001,
     title={The Boosting Approach to Machine Learning: An Overview},
-    booktitle={In MSRI Workshop on Nonlinear Estimation and Classification},
+    booktitle={MSRI Workshop on Nonlinear Estimation and Classification},
 }
 @article{friedman:2002,
     title = {Stochastic Gradient Boosting},
     journal = {Computational Statistics \& Data Analysis},
-    volume = "38",
-    number = "4",
-    pages = "367 -- 378",
+    author = "J. H. Friedman",
     year = "2002",
-    doi = "10.1016/S0167-9473(01)00065-2",
-    author = "J. H. Friedman"
 }
-
-
-wong2010demystifying
 
 @inproceedings{brewer1995high,
   title={High-level optimization via automated statistical modeling},
   author={Brewer, E.A.},
   booktitle={ACM SIGPLAN Notices},
-  volume={30},
-  number={8},
-  pages={80--91},
   year={1995},
-  organization={ACM}
 }
