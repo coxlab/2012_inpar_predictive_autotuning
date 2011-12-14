@@ -207,7 +207,7 @@ of the analytical model, which remains hard to build by hand.
 % model-driven too just with an empirically learned model)
 
 In this paper, we propose to \emph{learn the model} using non-linear regression
-modelling techniques instead of constructing a model manually. By learning the model, one can
+modeling techniques instead of constructing a model manually. By learning the model, one can
 hope to achieve elements of the best of both approaches: the search speed of model-based auto-tuning with the broad applicability
 and ease of implementation of empirical auto-tuning.
 
@@ -733,7 +733,7 @@ devices in our study.
 auto-tuned performance across 100 random argument configurations,
 {\em middle} is the average speed of our reference implementation,
 {\em right} is the average speed of kernels auto-tuned for different argument
-configurations than the one being tested.  For 38/100 random confurations, the
+configurations than the one being tested.  For 38/100 random configurations, the
 kernel auto-tuned for another problem could not even run on the GTX 295
 hardware.  These points contributed a speed of 0, bringing down the average
 much lower than the reference.  Good performance across a variety of inputs
@@ -748,7 +748,7 @@ requires {\em input-dependent auto-tuning}.
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
 size on predictive auto-tuning.
 Models trained on as few as 25 configurations outperformed the reference.
-Models trained on 50 or more configurations rivalled empirical auto-tuning.
+Models trained on 50 or more configurations rivaled empirical auto-tuning.
 Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
@@ -768,7 +768,7 @@ empirical auto-tuning, where an exhaustive set of implementation configurations
 are tried, the present approach generates, from scratch, a model of kernel
 performance on the basis of timing data from a user-definable number of kernel
 evaluations.  This approach allows significant flexibility to navigate
-tradeoffs between offline and run-time costs, and final auto-tuning
+trade-offs between offline and run-time costs, and final auto-tuning
 performance.  Importantly, this method treats kernels as black-boxes, allowing
 the user to auto-tune in the absence of deep knowledge of hardware details
 (which may even been unknowable, in the case of hardware not available at the
@@ -791,7 +791,7 @@ heuristics or explicit, hand-crafted models to select the appropriate
 implementation for a given set of inputs.  The development of such auto-tuned
 libraries, while extremely successful, is also very difficult.  The
 machine-learning-based techniques described here provide a middle ground, where
-a library implementor can simply create an instrumented kernel, and allow
+a library developer can simply create an instrumented kernel, and allow
 generic tools to automatically generate appropriate auto-tuned implementations,
 with small (and controllable) run-time costs.
 
