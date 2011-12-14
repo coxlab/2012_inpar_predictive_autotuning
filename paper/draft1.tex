@@ -131,7 +131,7 @@ size or low-latency cache size).
 
 One strategy for addressing these challenges is to use one of a variety of
 automatic methods known collectively as ``auto-tuning.'' Two major auto-tuning
-approaches have emerged in the extensive literature covering the subject (see
+approaches have emer-ged in the extensive literature covering the subject (see
 surveys in e.g.
 \citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
 datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
@@ -562,9 +562,14 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \subsection{Reference and Grid}
 \label{sec:refgrid}
 
-\cite{pinto+cox:2011gcg} recommends as a reference implementation: block\_w 8, 
-block\_h = 8, n\_filter\_rows = 1, n\_output\_4s = all, spill = $False$, imul\_fast = $True$,
-pad\_shared = $True$, 
+\cite{pinto+cox:2011gcg} recommends as a reference implementation:
+block\_w = 8, 
+block\_h = 8,
+n\_filter\_rows = 1,
+n\_output\_4s = all,
+spill = $False$,
+imul\_fast = $True$,
+pad\_sha-red = $True$, %%% XXX: hypenation by hand
 use\_text1d = $True$,
 maxrreg = $\infty$,
 and fast\_math = $False$.
@@ -635,7 +640,7 @@ inefficiency in implementing them via multiple calls with smaller images and few
 With the experiments searched an argument space included 602 configurations with between 1 and 50 GFLOP.
 
 For the implementation features $b$, we directly used the integer and binary
-values (block\_w, block\_h, etc.) that parametrized the kernels.  We did not
+values (block\_w, block\_h, etc.) that paramet-rized the kernels.  We did not
 use platform features ($c$) in our experiments. We leave the investigation of
 cross-platform predictive auto-tuning for future work.
 
@@ -679,8 +684,8 @@ auto-tuning experiments we used HC75.
 % formation of training set
 
 Figure~\ref{fig:fig_gflop_scatter} shows how accurate predictive auto-tuning is compared with empirical auto-tuning.
-The training set $(\mathcal{X}, \mathcal{Y})$ for the regression model comprised
-all of the $<(a,b,c), y>$ pairs observed during grid search and hill-climbing search.
+The training set $(\mathcal{X}$, $\mathcal{Y})$ for the regression model comprised
+all of the ($(a,b,c)$, $y$) pairs observed during grid search and hill-climbing search.
 So for each training argument configuration $a,c$ there were 148 different values of $b$ and thus 148 training points.
 Figure~\ref{fig:fig_gflop_scatter} (a) shows that as more argument configurations are used for training,
 the performance of predictive auto-tuning on test configurations $(a', c)$ quickly
