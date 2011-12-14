@@ -42,26 +42,18 @@
 \begin{abstract}
 
 % UPDATE ABSTRCT.TXT IF YOU CHANGE THIS!!! (abstract.txt)
-Auto-tuning techniques are widely used and effective for optimizing a
-parametrized GPU code template for a particular computation on particular
-hardware.
-However, a drawback of this approach is that thorough or exhaustive
-auto-tuning requires compiling many kernels and calling each one many times,
-and this process is slow.  Furthermore, it is desirable to provide users
-with unified library abstraction boundaries for operations such as image
-filtering and matrix multiplication, even those these operations actually
-correspond to a large set of potential problem configurations with a wide
-variety of memory access patterns and computational bottlenecks.  How can we
-draw on data from previous empirical auto-tuning of related problems on related
-hardware to make a just-in-time implementation decision for a novel problem?
-This paper presents a machine learning approach to auto-tuning, in which
-features of the current hardware platform, the kernel configuration and the
-problem instance are passed to a regression model (boosted regression trees)
-which predicts how much faster this kernel will be than a reference
-baseline.  Combinatorial optimization strategies for auto-tuning that would
-normally require evaluating large number of kernel configurations on the real
-hardware, are made orders of magnitude faster by evaluating the surrogate
-regression model instead.  We validate our approach using the filterbank
+The rapidly evolving landscape of multicore architectures makes
+the construction of efficient libraries a daunting task.
+A family of methods known collectively as ``auto-tuning'' has emerged to
+address this challenge.  Two major approaches to auto-tuning are
+{\em empirical} and {\em model-based}:
+empirical auto-tuning is a generic but slow approach that works by measuring runtimes of
+candidate implementations, model-based auto-tuning predicts those runtimes using simplified hardware abstractions designed by hand.
+We show that machine learning methods for non-linear regression can be used
+to estimate timing models from data, capturing the best of both approaches.
+A statistically-derived model offers the speed of a model-based approach,
+with the generality and simplicity of empirical auto-tuning.
+We validate our approach using the filterbank
 correlation kernel described in \citet{pinto+cox:2011gcg}, where we find that
 0.1 seconds of hill climbing on the regression model (``{\em
 predictive} auto-tuning'') can achieve an average of 95\% of the
