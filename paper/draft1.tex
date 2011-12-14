@@ -234,9 +234,8 @@ Section~\ref{sec:exp} presents the results of our benchmarking experiments, whic
 compare a reference implementation to a) empirical auto-tuning over a domain-specific grid,
 b) empirical auto-tuning over a hill-climbing search, and
 c) predictive auto-tuning.
-%Section~\ref{sec:discussion}.
-Section~\ref{sec:previous} summarizes previous and related work involving  machine learning with performance auto-tuning.
-Section~\ref{sec:conclusion} summarizes our findings and outlines directions for future work.
+Section~\ref{sec:discuss} provides discussion of our results, and
+Section~\ref{sec:fw} outlines directions for future work.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Predictive Auto-Tuning}
@@ -363,7 +362,7 @@ and 100 iterations of boosting.
 
 \subsection{Search Algorithms}
 
-Once an accurate regression model has been fit to the data, it remains to be optimized for novel arguments (Fig.~\ref{fig:autotune_general}, bottom, step 4).
+Once an accurate regression model has been fit to the data, it remains to be optimized for novel arguments (Fig.~\ref{fig:general_autotune}, bottom, step 4).
 An exhaustive search is the most reliable if it can be afforded, but in our experiments
 (as in general) an exhaustive search is prohibitively expensive.
 In our experiments we compare two strategies:
@@ -408,11 +407,11 @@ defined according to Equation~\ref{eq:z}:
         \label{eq:z}
 \end{equation}
 
-In terms of floating point operations, a filterbank correlation requires the
+In terms of floating point operations (FLOP), a filterbank correlation requires the
 inner sums to be computed for each output pixel, yielding the quantity in
 Eq.~\ref{eq:flops}:
 \begin{equation}
-\mathrm{FLOPS} = 2  F  H  W  D  (R - H + 1)( C- W + 1)
+\mathrm{FLOP} = 2  F  H  W  D  (R - H + 1)( C- W + 1)
 \label{eq:flops}
 \end{equation}
 The multiplicative factor of 2 arises because we must first multiply an element of
@@ -598,14 +597,15 @@ The grid included $72$ points in addition to the reference implementation, for a
 
 This kernel was implemented in the meta-programming style advocated in
 \citet{pinto+cox:2011gcg} in Python using Cheetah for string
-processing~\citep{cheetah} and PyCUDA~\citep{klockner2011pycuda} for dynamic
+processing and PyCUDA~\citep{klockner2011pycuda} for dynamic
 kernel compilation and interfacing with CUDA.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Experimental Setup}
+\label{sec:exp}
 
-Recall from the introduction (Eq.~\ref{eq:condopt}) that auto-tuning can be seen
+Recall from the introduction (Eq.~\ref{fig:general_autotune}) that auto-tuning can be seen
 as a conditional optimization problem in which we seek an implementation ($b \in \mathcal{B}$) that minimizes runtime or some other scalar-valued cost function
 for given arguments ($a \in \mathcal{A}$) on a particular platform ($c \in \mathcal{C}$).
 In order to perform predictive auto-tuning with a regression model,
@@ -637,11 +637,11 @@ with depth channels being contiguous in memory, followed by columns, then rows, 
 
 The product space in our study
 includes 1600 argument combinations, but we restricted our experiments to correlations that
-represented between 1 and 50 gigaflops of arithmetic.
+represented between 1 and 50 gigaflops (GFLOP) of arithmetic.
 Smaller problems do not fully utilize GPU hardware and are handled equally well by many kernel settings.
 Larger take so long to evaluate that there is negligible
 inefficiency in implementing them via multiple calls with smaller images and fewer filters.
-With the experiments searched an argument space included 602 configurations with between 1 and 50 gigaflops.
+With the experiments searched an argument space included 602 configurations with between 1 and 50 GFLOP.
 
 For the implementation features $b$, we directly used the integer and binary
 values (block\_w, block\_h, etc.) that parametrized the kernels.  We did not
@@ -757,6 +757,7 @@ Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
+\label{sec:discuss}
 
 % say what we said
 In this paper, we've demonstrated a boosted regression tree-based auto-tuning
@@ -943,6 +944,7 @@ with small (and controllable) run-time costs.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Future Work}
+\label{sec:fw}
 
 While the present work serves as a basic demonstration of the value of using
 machine learning models to predict optimal implementation parameters, there are
