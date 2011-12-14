@@ -11,11 +11,11 @@
 \definecolor{darkred}{rgb}{.5,0,0}
 
 
-%XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
+%XXX:  Machine Learning for Auto-tuning: A Data-Driven Approach...} ???
 %\title{Boosted Regression Trees for Data-Driven Auto-Tuning}
 \title{Boosted Regression Trees for Predictive Auto-Tuning}
 % NP: I like this title !
-%XXX:  Machine Learning for Auto-tuning: A Data-Drive Approach...} ???
+%XXX:  Machine Learning for Auto-tuning: A Data-Driven Approach...} ???
 
 \numberofauthors{3}
 
@@ -46,7 +46,7 @@
 
 Auto-tuning of parameteric, instrumented code has proven to be a highly
 effective technique for tailoring an optimal compute kernel for a particular
-hardware \cite{XXX}.
+hardware.
 % DDC: I'm still struggling with the above sentence.  Feel free to substitute your own ideas
 However, a drawback of this approach is that exhaustive, or even thorough,
 auto-tuning requires compiling many kernels and calling each one many times,
@@ -66,16 +66,16 @@ normally require evaluating large number of kernel configurations on the real
 hardware, are made orders of magnitude faster by evaluating the surrogate
 regression model instead.  We validate our approach using the filterbank
 correlation kernel described in \citet{pinto+cox:2011gcg}, where we find that
-0.1 seconds (XXX) of hill climbing on the regression model (which we dub ``{\em
+0.1 seconds of hill climbing on the regression model (which we dub ``{\em
 predictive} auto-tuning'') can achieve an average of 95\% of the
-speed-up brought by minutes of empirical auto-tuning XXX.  Our approach is not
+speed-up brought by minutes of empirical auto-tuning.  Our approach is not
 specific to filterbank correlation, nor even to GPU kernel auto-tuning, and can
 be applied to almost any templated-code optimization problem, spanning a wide
 variety of problem types, kernel types, and platforms.
 
 \end{abstract}
 
-XXX: use 300\% boost instead of 3x
+%XXX: use 300\% boost instead of 3x
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -180,11 +180,14 @@ domain-specific libraries including dense linear algebra
 \citep{vuduc2005oski}, signal processing \citep{frigo1998fftw}, sorting
 \citep{li2004dynamically}, general stencil operations \citep{kamil2010auto}, etc.
 
+\iffalse
+% XXX: paragraph has XXX in it and seems slightly tangential
 Even though such a ``black-box'' approach does not try to build an
 explicit model per se, it could, if care were taken, help to greatly accelerate
 our understanding of the complex interactions between the set of optimizations,
 their parameters and the hardware architectural features (XXX: that's what
 we are trying to do w/ ML-based, decision trees, etc.).
+\fi
 
 % empirical optimization: disadvantages
 
@@ -205,10 +208,10 @@ can be directly derived from the analytical model.
 
 % hybrid optimization: the bad way
 
-To alleviate this major weakness, it is intuitively appealing to combine the two
+To ameliorate this weakness, it is intuitively appealing to combine the two
 approaches by first constraining the search space with an analytical model and
 then exploring the reduced space empirically \citep{chen2005combining,
-li2009note}. Unfortunately, this hybrid approach is still bound by the quality
+li2009note}. Unfortunately, such a hybrid approach is still bound by the quality
 of the analytical model, which remains hard to build by hand.
 
 % hybrid optimization: the ML way (note that ML-based are in essence
@@ -216,9 +219,8 @@ of the analytical model, which remains hard to build by hand.
 
 In this paper, we propose to \emph{learn the model} using non-linear regression
 modelling techniques instead of constructing a model manually. By learning the model, one can
-hope to achieve elements of the best of both approaches: XXX.
-%and capitalize on the large body of
-%literature from the machine learning community.
+hope to achieve elements of the best of both approaches: the search speed of model-based auto-tuning with the broad applicability
+and ease of implementation of empirical auto-tuning.
 
 Various statistical prediction techniques have been applied with
 success at compile-time for general programs on various CPU architectures
@@ -227,7 +229,7 @@ kulkarni2004fast, cooper2005acme, franke2005probabilistic,
 hutter2006performance, cavazos2007rapidly, cavazos2008intelligent,
 hartono2009annotation, park2011evaluation, fursin2008milepost}.
 Relative to this work, our contribution is to show
-how to do fast predictive auto-tuning that satisifies the requirements to:
+how to do fast predictive auto-tuning that satisfies the requirements to:
 (a) handle the variety of recent multi-core architectures like GPUs \citep{schaa2009exploring},
 (b) provide high-performance domain-specific libraries \citep{nukada2009auto, li2009note, kamil2010auto},
 (c) that select good implementations at run-time \citep{klockner2011pycuda, pinto+cox:2011gcg}, and
@@ -306,8 +308,8 @@ then the argmin could be done in a fraction of a second and the routine could be
 \subsection{Learning a Regression Model}
 
 The heart of predictive auto-tuning is a regression model that acts as surrogate
-for a hand-written hardware model or empirical timing estimates.
-In our experiments this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
+for a hand-crafted hardware model or empirical timing estimates.
+In our experiments, this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
 To fit this model, we
 form a training set $\mathcal{X}, \mathcal{Y}$ where
 each point $x^{(i)} \in \mathcal{X}$ is a tuple $(a^{(i)}, b^{(i)}, c^{(i)})$
@@ -402,20 +404,9 @@ the details of the grid are provided with our experimental results in Section~\r
 
 \label{sec:fbcorr}
 
-\iffalse
-XXX: note that image processing libraries include convolutions (e.g. OpenCV ???
-even for GPU!), but only don’t exploit the _bank_ dimension of the
-_filterbank_ and thus can’t exploit parallel hardware as much.
-
-XXX: in addition, when they are optimized, it’s often for pre-defined filters
-(e.g. sobel?), and they are not suitable for encapsulation into libraries
-usable by most real-world applications (bouuuuhhhh opencv !!!).
-\fi
-
 Filterbank correlation is a simple spatial image filtering operation that is
 an important subroutine in many image processing applications. It has a relatively
 high arithmetic intensity which makes it a natural fit for GPU platforms~\citep{pinto+cox:2011gcg}.
-%XXX cite some computer vision papers.
 
 Mathematically, we define filterbank correlation in terms of an
 image $x$ and a filterbank $f$.
@@ -474,8 +465,7 @@ and and filterbank correlation is used extensively in image and video processing
 where it is often a computational bottleneck.
 One might expect then, that it would be easy to implement a library providing
 this operation as a simple function that takes pointers and strides for $x$, $f$, and $z$ and performs the computation.
-However, as shown in \citet{pinto+cox:2011gcg} and numerous articles on
-related stencil operations, %XXX
+However, as shown in \citet{pinto+cox:2011gcg} 
 it is challenging to provide an implementation
 or even an implementation strategy that provides satisfactory performance
 across the range of inputs (shapes, physical layouts) that occur in
@@ -483,17 +473,6 @@ typical usage.
 \citet{kamil+etal:2009} summarize a related situation related to general stencil computations in their abstract:
 ``Although the auto-tuning strategy has been successfully applied to libraries,
 generalized stencil kernels are not amenable to packaging as libraries.''
-% XXX: out of context?
-
-
-XXXXXXXXXXX
-
-Our contribution of the present work is to show that boosted regression tree models,
-a powerful machine learning technique for function approximation, can meet the
-requirements of this application.
-We call this approach {\em predictive} auto-tuning to contrast it with the standard measurement-based approach which we will call {\em empirical} auto-tuning.
-We show that the kernel from \citet{pinto+cox:2011gcg} can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
-%XXX: this has no flow
 
 
 
@@ -580,10 +559,7 @@ is padded, which wastes space in shared memory but reduces bank conflicts.
 The ``use\_tex1d'' parameter controls whether the image is loaded into shared
 memory with global pointer dereferences or texture fetches.
 The ``maxrreg'' and ``fast\_math'' parameters are passed to the nvcc compiler to limit
-the number of registers available to each thread, and to enable XXX,
-respectively.
-%XXX: what effect does fast-math have here?
-
+the number of registers available to each thread, and to enable more aggressive instruction selection, respectively.
 
 
 When the entire filterbank does not fit into the GPU's
@@ -678,8 +654,6 @@ perform.
 Our experiments consider a somewhat simplified setting in which the arguments are always stored
 with depth channels being contiguous in memory, followed by columns, then rows, and then filters having the largest stride.
 
-%XXX: DIAGRAM OF IMAGE, FILTERBANK, OUTPUT
-
 The product space in our study
 includes 1600 argument combinations, but we restricted our experiments to correlations that
 represented between 1 and 50 gigaflops of arithmetic.
@@ -700,14 +674,14 @@ of cross-platform predictive auto-tuning for future work.
 \centering
 \includegraphics[width=.9\linewidth]{illustrator/fig_main_R1.pdf}
 \caption{
-XXX UPDATE THIS WITH (a) (b) (c) XXX
 Computation speed for novel problem configurations using predictive
-vs. empirical code specialization.
-The scatterplots are roughly symmetric about the axis of equality (main diagonal)
-with occasional outliers, indicating that for most problem configurations the
-predictive approach gives as good a solution as the empirical approach.
-The predictive approach typically requires about 0.1 seconds to suggest an
-implementation, whereas the empirical approach requires about 2 minutes.
+vs. empirical auto-tuning.
+(a) As more problem configurations are used to train the regression model,
+the performance of predictive auto-tuning approaches that of empirical auto-tuning
+despite taking only 0.1 seconds instead of 2 minutes.
+(b) and (c) For a wide range of devices, implementation speeds found by predictive auto-tuning correlate tightly with
+implementation speeds found by empirical auto-tuning.
+%The boosted regression trees used for predictive auto-tuning generalize correctly across the implementation space.
 }
 \label{fig:fig_gflop_scatter}
 \end{figure*}
@@ -740,11 +714,11 @@ Comparing the {\em grid} to {\em HC25}, {\em HC50} and {\em HC75} we found very 
 
 % formation of training set
 
-Figure~\ref{XXX} shows how accurate predictive auto-tuning is compared with empirical auto-tuning.
+Figure~\ref{fig:fig_gflop_scatter} shows how accurate predictive auto-tuning is compared with empirical auto-tuning.
 The training set $(\mathcal{X}, \mathcal{Y})$ for the regression model comprised
 all of the $<(a,b,c), y>$ pairs observed during grid search and hill-climbing search.
 So for each training argument configuration $a,c$ there were 148 different values of $b$ and thus 148 training points.
-Figure~\ref{XXX} shows that as more argument configurations are used for training,
+Figure~\ref{fig:fig_gflop_scatter} (a) shows that as more argument configurations are used for training,
 the performance of predictive auto-tuning on test configurations $(a', c)$ quickly
 approaches the average performance of empirical auto-tuning.
 We took care to partition the train and test sets so that there were no overlapping configurations.
@@ -752,24 +726,32 @@ The key difference between the predictive and empirical auto-tuning,
 is that predictive auto-tuning
 typically took about 0.1 seconds per test example, whereas empirical auto-tuning took about 1-3 minutes.
 
+Figure~\ref{fig:fig_gflop_scatter} (b) and (c) show that the implementation speeds found by predictive auto-tuning correlates very well with the speed of empirical auto-tuning across all of the devices we tested: GTX 580, GTX 480, GTX 296, Tesla C2070, and Tesla C1060 which span three generations of CUDA platforms.
+
 % backtracking
-In some cases, predictive auto-tuning yields an invalid implementation.
-We dealt with this scenario by backtracking through the various best-estimates discovered during the hill-climbing search.  Some invalid kernels can only be discovered after compiling code and attempting to run the compiled code, so in these cases predictive auto-tuning took up to 3 seconds.  Even in these cases the predictive model is much faster than empirical auto-tuning, because the first kernel that actually runs is a fast one.
+In some cases, predictive auto-tuning yields an invalid implementation.  We
+dealt with this scenario by backtracking through the various best-estimates
+discovered during the hill-climbing search.  Some invalid kernels can only be
+discovered after compiling code and attempting to run the compiled code, so in
+these cases predictive auto-tuning took up to 3 seconds.  Even in these cases
+the predictive model is much faster than empirical auto-tuning, because the
+first kernel that actually runs is a fast one.
 
-
+% DDC: XXX are these figures still in?
 Figure~\ref{fig:speedup} also shows that random hill-climbing is at least
 competitive and often better than the hand-chosen grid approach of ~\citet{pinto+cox:2011gcg}.  Figure~\ref{fig:hcX} shows how the number of hill-climbing iterations
 affects the quality of the auto-tuned model.
 The quicker HC25 approach is clearly inferior but the quality of the 75 iteration search (HC75) is statistically similar to the shorter HC50, suggesting that XXX.
 Still, HC75 is not always better than the grid, so evidently neither search algorithm is perfect.
 
-The previous figures establish that auto-tuning on a problem-by-problem basis can achieve good performance improvements over a high-quality reference baseline, but they do not show how long it takes to find these implementations.  A search of 75 iterations took an average of about 120 seconds XXX on a fast computer, because it requires compiling 75 CUDA kernels, and evaluating up to 750 filterbank correlations to get reliable timing information for each candidate implementation.
+The previous figures establish that auto-tuning on a problem-by-problem basis
+can achieve good performance improvements over a high-quality reference
+baseline, but they do not show how long it takes to find these implementations.
+A search of 75 iterations took an average of about 120 seconds XXX on a fast
+computer, because it requires compiling 75 CUDA kernels, and evaluating up to
+750 filterbank correlations to get reliable timing information for each
+candidate implementation.
 
-Our contrib
-
-TL;DR: Hill-climbing is a good way to search the implementation space, can
-search the full space and do about as well as grid search in the more
-restricted space.
 
 
 \begin{figure}
@@ -1046,7 +1028,10 @@ the kernel, potentially yielding even greater gains.
 % (or approximated) models of mem/com/compute, arithmetic intensity, etc. to
 % understand performance limiters, the hardware, etc.
 
-\section{Conclusion}
+% DDC: XXX is "Conclusion" a "required" section in any sense.  If not, I think we could probably do without
+%\section{Conclusion}
+
+%Our 
 
 {\small
     \bibliography{local}
