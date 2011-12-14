@@ -639,11 +639,10 @@ The grid included $72$ points in addition to the reference implementation, for a
 
 \subsection{Software Stack}
 
-This kernel was implemented in the meta-programming style advocated
-in \citet{pinto+cox:2011gcg} in Python using
-Cheetah for string processing~\citep{cheetah}
-and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
-compilation and interfacing with CUDA.
+This kernel was implemented in the meta-programming style advocated in
+\citet{pinto+cox:2011gcg} in Python using Cheetah for string
+processing~\citep{cheetah} and PyCUDA~\citep{klockner2011pycuda} for dynamic
+kernel compilation and interfacing with CUDA.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1049,7 +1048,9 @@ the kernel, potentially yielding even greater gains.
 
 \section{Conclusion}
 
-\bibliography{local}
+{\small
+    \bibliography{local}
+}
 \end{document}
 
 % FOR Extra material see scratch.tex
