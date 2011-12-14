@@ -7,22 +7,18 @@ import cPickle
 import logging
 import sys
 from os import environ
+
+import numpy as np
 # -- 
 import matplotlib.pyplot as plt
 plt.rcParams["xtick.direction"] = "out"
 plt.rcParams["ytick.direction"] = "out"
-#plt.rcParams['ps.useafm'] = True 
-#plt.rcParams['ps.fonttype'] = 42
-#plt.rcParams['ps.usedistiller'] = 'xpdf'
 plt.rcParams['ps.useafm'] = True 
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams['ps.usedistiller'] = 'xpdf'
 
 PLOT = int(environ.get("PLOT", 0))
 
-import numpy as np
-
-import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -41,7 +37,7 @@ def adjust_axis(ax):
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
-    fontsize = 10
+    fontsize = 8
     for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
         tick.label1.set_fontsize(fontsize)
         tick.label1.set_family('sans-serif')
@@ -170,6 +166,9 @@ def main_gflop_scatter():
     results = step_timings(hostname, devicename)
     mdl_timings = test_timings(hostname, devicename, inv_mult, n_train)
 
+    from matplotlib import rc
+    rc('text', usetex=True)
+
     def getpspecspeed(pspec, k):
         for r in results:
             if k in r and r[k].prob_spec == pspec:
@@ -181,6 +180,7 @@ def main_gflop_scatter():
         return t.valid and getpspecspeed(p, 'ref') is not None
     hc_speeds = [getpspecspeed(p, 'gen75') for p, t in mdl_timings.items() if use_this(p, t)]
     tree_speeds = [t.speed() for p, t in mdl_timings.items()]
+
     grid_speeds = [getpspecspeed(p, 'grid') for p, t in mdl_timings.items() if use_this(p, t)]
     ref_speeds = [getpspecspeed(p, 'ref') for p, t in mdl_timings.items() if use_this(p, t)]
 
@@ -240,25 +240,6 @@ def main_gflop_scatter():
         print 'saving to ', figname
         plt.savefig(figname)
 
-# *try* to convince mpl to do something non-crappy
-def adjust_axis(ax):
-
-    for loc, spine in ax.spines.iteritems():
-        if loc in ['left', 'bottom']:
-            spine.set_position(('outward', 10))
-            spine.set_linewidth(0.5)
-        if loc in ['right', 'top']:
-            spine.set_color('none')
-
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
-
-    fontsize = 8
-    for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
-        tick.label1.set_fontsize(fontsize)
-    for line in ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines():
-        line.set_markeredgewidth(0.5)
-
 def main_ntrain():
     _python, _cmd, hostname, devicename = sys.argv
     results = step_timings(hostname, devicename)
@@ -277,13 +258,26 @@ def main_ntrain():
     rc('text', usetex=True)
     #rc('font', family='serif')
 
+    f = plt.figure(figsize=(6, 4), dpi=100, facecolor='w')
+    ax = f.add_subplot(1,1,1, aspect=1.2)
+    plt.hold(True)
+
+    plt.subplots_adjust(left = 0.0,
+                    right = 0.9,
+                    bottom = 0.15,
+                    top = 0.95,
+                    wspace = 0.1,
+                    hspace = 0.45)
+    ax.hold(True)
+
     all_hc_speeds = []
     all_ref_speeds = []
     for inv_mult, col in [('0.01', 'r'),
             ('0.25', 'g'),
             ('0.5', 'b'),
             ('0.75', 'c'),
-            ('0.99', 'm')]:
+            ('0.99', 'm')
+                         ]:
         xx = []
         yy = []
         yy_v = []
@@ -323,6 +317,9 @@ def main_ntrain():
         plt.title('Tesla C2070')
     elif '8600'  == devicename:
         plt.title('8600GT')
+
+    adjust_axis(ax)
+
     figfile = 'fig_ntrain_%s_%s.pdf' % (hostname, devicename,)
     plt.xlabel('N. auto-tuned problem configurations used for training')
     plt.ylabel('GFLOP/s')

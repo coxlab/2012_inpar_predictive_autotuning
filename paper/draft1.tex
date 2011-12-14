@@ -43,6 +43,7 @@
 \maketitle
 
 \begin{abstract}
+
 Auto-tuning of parameteric, instrumented code has proven to be a highly
 effective technique for tailoring an optimal compute kernel for a particular
 hardware \cite{XXX}.
@@ -137,9 +138,10 @@ size or low-latency cache size).
 
 % auto-tuning is an answer
 
-One strategy for addressing these challenges is to use one of a variety of automatic
-methods known collectively as ``auto-tuning.'' Two major auto-tuning approaches have emerged
-in the extensive literature covering the subject (see surveys in
+One strategy for addressing these challenges is to use one of a variety of
+automatic methods known collectively as ``auto-tuning.'' Two major auto-tuning
+approaches have emerged in the extensive literature covering the subject (see
+surveys in
 \citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
 datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
 analytical model-driven optimization and empirical optimization
@@ -502,7 +504,7 @@ Our contribution of the present work is to show that boosted regression tree mod
 a powerful machine learning technique for function approximation, can meet the
 requirements of this application.
 We call this approach {\em predictive} auto-tuning to contrast it with the standard measurement-based approach which we will call {\em empirical} auto-tuning.
-We show that the kernel from the GCG chapter can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
+We show that the kernel from \citet{pinto+cox:2011gcg} can be modeled on a variety of hardware and get good performance compared to empirical auto-tuning.
 %XXX: this has no flow
 
 
@@ -888,7 +890,7 @@ whiteboard.
 
 This paper is about different ways of doing the minimization.
 For a particular problem (filterbank correlation) we
-look at a parameterized kernel implementation (from GCG)
+look at a parameterized kernel implementation (from \citet{pinto+cox:2011gcg})
 and a few hardware platforms, and compare
 random search, grid search, and a hill-climbing strategy with a good, but
 generic, reference implementation.
@@ -922,7 +924,6 @@ space included 12000 kernels.
 XXX: how to make sense of these paramters without code listing?
 
 XXX: What to all the parameters mean?
-XXX: Point to github / GCG for full code listing.
 
 XXX: how many configurations are in the configuration space
 
@@ -994,16 +995,15 @@ Another potentially interesting avenue of research is in interpreting the model 
 \centering
 \includegraphics[scale=.42]{speedup_295.pdf}
 \includegraphics[scale=.42]{speedup_480.pdf}
-\caption{Speedup of various auto-tuning strategies over the reference
-implementation.
-Each strategy was evaluated the same set of 83 problem configurations, which
-was disjoint from the problem configurations used to build the model for
-model-based hill-climbing.
-The vertical dashed lines are positioned at the geometric mean speedup (XXX?)
-of each strategy. The grid and hill-climbing approaches
-tested 73 and 75 configurations respectively, and took 45?? XXX
-seconds on average.
-The model-based approach tested 0 configuration evaluations, and took 0.05
+\caption{
+Speedup of various auto-tuning strategies over the reference
+implementation.  Each strategy was evaluated the same set of 83 problem
+configurations, which was disjoint from the problem configurations used
+to build the model for model-based hill-climbing.  The vertical dashed
+lines are positioned at the geometric mean speedup (XXX?) of each
+strategy. The grid and hill-climbing approaches tested 73 and 75
+configurations respectively, and took 45?? XXX seconds on average.  The
+model-based approach tested 0 configuration evaluations, and took 0.1
 seconds on average, even with a naive Python implementation.
 }
 \label{fig:speedup}
