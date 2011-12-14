@@ -46,7 +46,7 @@
 
 Auto-tuning of parameteric, instrumented code has proven to be a highly
 effective technique for tailoring an optimal compute kernel for a particular
-hardware \cite{XXX}.
+hardware.
 % DDC: I'm still struggling with the above sentence.  Feel free to substitute your own ideas
 However, a drawback of this approach is that exhaustive, or even thorough,
 auto-tuning requires compiling many kernels and calling each one many times,
@@ -75,7 +75,7 @@ variety of problem types, kernel types, and platforms.
 
 \end{abstract}
 
-XXX: use 300\% boost instead of 3x
+% XXX: use 300\% boost instead of 3x
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -180,11 +180,11 @@ domain-specific libraries including dense linear algebra
 \citep{vuduc2005oski}, signal processing \citep{frigo1998fftw}, sorting
 \citep{li2004dynamically}, general stencil operations \citep{kamil2010auto}, etc.
 
-Even though such a ``black-box'' approach does not try to build an
-explicit model per se, it could, if care were taken, help to greatly accelerate
+Even though such a ``black-box'' approach does not explicitly try to build an
+interpretable model, per se, it could nonetheless help to greatly accelerate
 our understanding of the complex interactions between the set of optimizations,
-their parameters and the hardware architectural features (XXX: that's what
-we are trying to do w/ ML-based, decision trees, etc.).
+their parameters and the hardware architectural features.
+% (XXX: that's what we are trying to do w/ ML-based, decision trees, etc.).
 
 % empirical optimization: disadvantages
 
@@ -205,18 +205,18 @@ can be directly derived from the analytical model.
 
 % hybrid optimization: the bad way
 
-To alleviate this major weakness, it is intuitively appealing to combine the two
+To ameliorate this weakness, it is intuitively appealing to combine the two
 approaches by first constraining the search space with an analytical model and
 then exploring the reduced space empirically \citep{chen2005combining,
-li2009note}. Unfortunately, this hybrid approach is still bound by the quality
+li2009note}. Unfortunately, such a hybrid approach is still bound by the quality
 of the analytical model, which remains hard to build by hand.
 
 % hybrid optimization: the ML way (note that ML-based are in essence
 % model-driven too just with an empirically learned model)
 
-In this paper, we propose to \emph{learn the model} using non-linear regression
-modelling techniques instead of constructing a model manually. By learning the model, one can
-hope to achieve elements of the best of both approaches: XXX.
+In this paper, we propose to \emph{learn} the model using non-linear regression
+modeling techniques, rather than constructing a model manually. By learning the model, one can
+hope to achieve elements of the best of both approaches. %: XXX.
 %and capitalize on the large body of
 %literature from the machine learning community.
 
@@ -227,7 +227,7 @@ kulkarni2004fast, cooper2005acme, franke2005probabilistic,
 hutter2006performance, cavazos2007rapidly, cavazos2008intelligent,
 hartono2009annotation, park2011evaluation, fursin2008milepost}.
 Relative to this work, our contribution is to show
-how to do fast predictive auto-tuning that satisifies the requirements to:
+how to do fast predictive auto-tuning that satisfies the requirements to:
 (a) handle the variety of recent multi-core architectures like GPUs \citep{schaa2009exploring},
 (b) provide high-performance domain-specific libraries \citep{nukada2009auto, li2009note, kamil2010auto},
 (c) that select good implementations at run-time \citep{klockner2011pycuda, pinto+cox:2011gcg}, and
@@ -306,8 +306,8 @@ then the argmin could be done in a fraction of a second and the routine could be
 \subsection{Learning a Regression Model}
 
 The heart of predictive auto-tuning is a regression model that acts as surrogate
-for a hand-written hardware model or empirical timing estimates.
-In our experiments this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
+for a hand-crafted hardware model or empirical timing estimates.
+In our experiments, this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
 To fit this model, we
 form a training set $\mathcal{X}, \mathcal{Y}$ where
 each point $x^{(i)} \in \mathcal{X}$ is a tuple $(a^{(i)}, b^{(i)}, c^{(i)})$
