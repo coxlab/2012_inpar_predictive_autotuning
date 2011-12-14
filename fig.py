@@ -258,16 +258,10 @@ def main_ntrain():
     rc('text', usetex=True)
     #rc('font', family='serif')
 
-    f = plt.figure(figsize=(6, 4), dpi=100, facecolor='w')
-    ax = f.add_subplot(1,1,1, aspect=1.2)
+    f = plt.figure()#figsize=(8, 12), dpi=100, facecolor='w')
+    ax = f.add_subplot(1,1,1)#, aspect=1.2)
     plt.hold(True)
 
-    plt.subplots_adjust(left = 0.0,
-                    right = 0.9,
-                    bottom = 0.15,
-                    top = 0.95,
-                    wspace = 0.1,
-                    hspace = 0.45)
     ax.hold(True)
 
     all_hc_speeds = []
