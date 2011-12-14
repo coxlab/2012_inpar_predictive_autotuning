@@ -646,15 +646,15 @@ Larger take so long to evaluate that there is negligible
 inefficiency in implementing them via multiple calls with smaller images and fewer filters.
 With the experiments searched an argument space included 602 configurations with between 1 and 50 gigaflops.
 
-For the implementation features $b$, we directly used the integer and binary values (block\_w, block\_h, etc.) that parametrized the kernels.
-We did not use platform features ($c$) in our experiments. We leave the investigation
-of cross-platform predictive auto-tuning for future work.
-
+For the implementation features $b$, we directly used the integer and binary
+values (block\_w, block\_h, etc.) that parametrized the kernels.  We did not
+use platform features ($c$) in our experiments. We leave the investigation of
+cross-platform predictive auto-tuning for future work.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 
-\begin{figure*}[!ht]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=.9\linewidth]{illustrator/fig_main_R1.pdf}
 \caption{
@@ -671,32 +671,22 @@ implementation speeds found by empirical auto-tuning.
 \end{figure*}
 
 
-Figure~\ref{fig:allstars} shows the effectiveness of empirical auto-tuning is in this setting.
-Taking the GTX 295 as an example,
-and averaging across the range of problem configurations in our study,
-we find that empirically auto-tuned implementations are on average about
-50\% faster than the reference implementation.
-The reference in turn, is about 50\% faster than implementations that were empirically auto-tuned for a [randomly chosen] different argument configuration.
-This shows that it is genereally not enough to auto-tune for particular argument configurations;
-instead it is important to choose the right kernel for the job for each unique argument configuration (input-dependent auto-tuning).
-\begin{figure}
-\centering
-\includegraphics[scale=.42]{allstars_mixup_295.pdf}
-% XXX: NPTODO: ERROR BARS
-% XXX: NPTODO: fix fonts for better proportions
-\caption{Different arguments call for different kernels:
-{\em left} is the average argument-specific empirical
-auto-tuned performance across 100 random argument configurations,
-{\em middle} is the average speed of our reference implementation,
-{\em right} is the average speed of kernels auto-tuned for different argument configurations than the one being tested.
-For 38/100 random confurations, the kernel auto-tuned for another problem could not even run on the GTX 295 hardware.
-These points contributed a speed of 0, bringing down the average much lower than the reference.
-Good performance across a variety of inputs requires {\em input-dependent auto-tuning}.
-}
-\label{fig:allstars}
-\end{figure}
+Figure~\ref{fig:allstars} shows the effectiveness of empirical auto-tuning is
+in this setting.  Taking the GTX 295 as an example, and averaging across the
+range of problem configurations in our study, we find that empirically
+auto-tuned implementations are on average about 50\% faster than the reference
+implementation.  The reference in turn, is about 50\% faster than
+implementations that were empirically auto-tuned for a \emph{randomly chosen}
+different argument configuration.  This shows that it is genereally not enough
+to auto-tune for particular argument configurations; instead it is important to
+choose the right kernel for the job for each unique argument configuration
+(input-dependent auto-tuning).
 
-Comparing the {\em grid} to {\em HC25}, {\em HC50} and {\em HC75} we found very little difference in performance.  The HC25 was slightly poorer, but the grid, HC50, and HC75 algorithms delivered similar average results. None of the algorithms was strictly better than the others.  In our predictive auto-tuning experiments we used HC75.
+Comparing the {\em grid} to {\em HC25}, {\em HC50} and {\em HC75} we found very
+little difference in performance.  The HC25 was slightly poorer, but the grid,
+       HC50, and HC75 algorithms delivered similar average results. None of the
+       algorithms was strictly better than the others.  In our predictive
+       auto-tuning experiments we used HC75.
 
 % formation of training set
 
@@ -734,7 +724,24 @@ Training 50 or more problem configurations yielded quite accurate predictions
 with $\zeta=\log(0.5)$, which was the best value for $\zeta$ across the range of
 devices in our study.
 
-\begin{figure}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{illustrator/fig_allstars_mixup_580_R1.pdf}
+\caption{Different arguments call for different kernels:
+{\em left} is the average argument-specific empirical
+auto-tuned performance across 100 random argument configurations,
+{\em middle} is the average speed of our reference implementation,
+{\em right} is the average speed of kernels auto-tuned for different argument
+configurations than the one being tested.  For 38/100 random confurations, the
+kernel auto-tuned for another problem could not even run on the GTX 295
+hardware.  These points contributed a speed of 0, bringing down the average
+much lower than the reference.  Good performance across a variety of inputs
+requires {\em input-dependent auto-tuning}.
+}
+\label{fig:allstars}
+\end{figure}
+
+\begin{figure}[!t]
 \centering
 \includegraphics[scale=.42]{fig_ntrain_munctional0_580.pdf} % on vader
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
@@ -745,6 +752,7 @@ Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
 \end{figure}
+
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}
