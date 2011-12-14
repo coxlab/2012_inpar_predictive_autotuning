@@ -278,15 +278,15 @@ An auto-tuning based routine must operate on three sets of variables:
 \item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
 \end{description}
 The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
-might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
+might take many minutes or hours to perform the $argmin$ at step 3 (during which it computes the desired result many times!)
 so it would not be suitable for a normal library subroutine implementation.
 However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
 if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
-then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
+then the $argmin$ could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
 
 \subsection{Learning a Regression Model}
 
-The heart of predictive auto-tuning is a regression model that acts as surrogate
+The heart of our predictive auto-tuning is a regression model that acts as surrogate
 for a hand-crafted hardware model or empirical timing estimates.
 In our experiments, this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
 To fit this model, we
