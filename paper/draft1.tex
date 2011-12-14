@@ -132,7 +132,7 @@ size or low-latency cache size).
 One strategy for addressing these challenges is to use one of a variety of
 automatic methods known collectively as ``auto-tuning.'' Two major auto-tuning
 approaches have emerged in the extensive literature covering the subject (see
-surveys in
+surveys in e.g.
 \citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
 datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
 analytical model-driven optimization and empirical optimization
@@ -189,7 +189,7 @@ can be directly derived from the analytical model.
 
 % hybrid optimization: the bad way
 
-To ameliorate this weakness, it is intuitively appealing to combine the two
+To addess this weakness, it is intuitively appealing to combine the two
 approaches by first constraining the search space with an analytical model and
 then exploring the reduced space empirically \citep{chen2005combining,
 li2009note}. Unfortunately, such a hybrid approach is still bound by the quality
@@ -270,15 +270,15 @@ An auto-tuning based routine must operate on three sets of variables:
 \item[$\mathcal{C}$:] platform description (capabilities, micro-benchmarks)
 \end{description}
 The hypothetical auto-tuning routine described at the top of Figure~\ref{fig:general_autotune}
-might take many minutes or hours to perform the argmin at step 3 (during which time it computes the desired result many times!)
+might take many minutes or hours to perform the $argmin$ at step 3 (during which it computes the desired result many times!)
 so it would not be suitable for a normal library subroutine implementation.
 However, the form of the auto-tuning routine suggests the potential for enormous acceleration:
 if only there were a fast (even approximate) surrogate for the costly $MeasureTime(\cdot)$ function,
-then the argmin could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
+then the $argmin$ could be done in a fraction of a second and the routine could be used normally (Figure~\ref{fig:general_autotune}, bottom).
 
 \subsection{Learning a Regression Model}
 
-The heart of predictive auto-tuning is a regression model that acts as surrogate
+The heart of our predictive auto-tuning is a regression model that acts as surrogate
 for a hand-crafted hardware model or empirical timing estimates.
 In our experiments, this regression model fits empirically measured timing information for a {\em subset} of the configuration space and interpolates / extrapolates that timing across the remainder of the space.
 To fit this model, we
@@ -563,19 +563,18 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \label{sec:refgrid}
 
 \cite{pinto+cox:2011gcg} recommends as a reference implementation: block\_w 8, 
-block\_h = 8, n\_filter\_rows 1, n\_output\_4s all, spill $False$, imul\_fast $True$,
-pad\_shared $True$, 
-use\_text1d $True$,
-maxrreg $\infty$,
-and fast\_math $False$.
-This reference implementation was chosen manually based on good performance across a range of platforms from older-generation
-cards such as the
-8600GT all the way to
-current-generation flagship cards such as the GTX 580 and C2070.
+block\_h = 8, n\_filter\_rows = 1, n\_output\_4s = all, spill = $False$, imul\_fast = $True$,
+pad\_shared = $True$, 
+use\_text1d = $True$,
+maxrreg = $\infty$,
+and fast\_math = $False$.
+This reference implementation was chosen manually based on good performance
+across a range of platforms from older-generation cards such as the 8600GT all
+the way to current-generation flagship cards such as the GTX 580 and C2070.
 Given that parameters were hand-chosen for the reference kernel, no claims are
 made as to the optimality nor universality of this reference (indeed, different
-programmers would undoubtedly arrive at different results).  We use this
-kernel configuration as a reasonable indicator of typical performance
+programmers would undoubtedly arrive at different results).  We use
+this kernel configuration as a reasonable indicator of typical performance
 made possible by ad hoc experimentation with parameters.
 
 Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
