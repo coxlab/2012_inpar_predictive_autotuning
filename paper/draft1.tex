@@ -738,38 +738,21 @@ these cases predictive auto-tuning took up to 3 seconds.  Even in these cases
 the predictive model is much faster than empirical auto-tuning, because the
 first kernel that actually runs is a fast one.
 
-% DDC: XXX are these figures still in?
-Figure~\ref{fig:speedup} also shows that random hill-climbing is at least
-competitive and often better than the hand-chosen grid approach
-of~\citet{pinto+cox:2011gcg}.  Figure~\ref{fig:hcX} shows how the number of hill-climbing iterations
-affects the quality of the auto-tuned model.
-The quicker HC25 approach is clearly inferior but the quality of the 75 iteration search (HC75) is statistically similar to the shorter HC50, suggesting that XXX.
-Still, HC75 is not always better than the grid, so evidently neither search algorithm is perfect.
-
-The previous figures establish that auto-tuning on a problem-by-problem basis
-can achieve good performance improvements over a high-quality reference
-baseline, but they do not show how long it takes to find these implementations.
-A search of 75 iterations took an average of about 120 seconds XXX on a fast
-computer, because it requires compiling 75 CUDA kernels, and evaluating up to
-750 filterbank correlations to get reliable timing information for each
-candidate implementation.
-
-
 
 \begin{figure}
 \centering
 \includegraphics[scale=.42]{fig_ntrain_munctional0_580.pdf} % on vader
-\caption{The effect of the invalid configuration score ($a$) and training set
+\caption{The effect of the invalid configuration score ($\zeta$) and training set
 size on simulated auto-tuning.
 All candidates timed during the grid and
-hill-climbing search procedures were used as training points, so the training
-set sizes ranged from an average of 1500 (10 problem configurations) to 30
-thousand (200 problem configurations).
-Training on 10 or 25 configurations was useful (higher mean than the reference),
+hill-climbing search procedures were used as training examples, so the training
+set sizes ranged from an average of 1480 (10 problem configurations) to 29 600
+(200 problem configurations).
+Training from the largest training sets took approximately 30 seconds
+Models trained on as few as 25 configurations outperformed the reference.
+Models trained
 but not as useful as training on 50 or more configurations.
-The results on the GTX 295 suggest that
-moderate values of $a$ between $0.25$ and $0.75$ might be
-best, but $a$ had no significant effect on the GTX 480.
+Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
 \end{figure}
