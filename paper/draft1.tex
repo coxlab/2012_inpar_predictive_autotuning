@@ -179,15 +179,6 @@ domain-specific libraries including dense linear algebra
 \citep{vuduc2005oski}, signal processing \citep{frigo1998fftw}, sorting
 \citep{li2004dynamically}, general stencil operations \citep{kamil2010auto}, etc.
 
-\iffalse
-% XXX: paragraph has XXX in it and seems slightly tangential
-Even though such a ``black-box'' approach does not try to build an
-explicit model per se, it could, if care were taken, help to greatly accelerate
-our understanding of the complex interactions between the set of optimizations,
-their parameters and the hardware architectural features (XXX: that's what
-we are trying to do w/ ML-based, decision trees, etc.).
-\fi
-
 % empirical optimization: disadvantages
 
 The empirical approach is very sensitive to the choice of instrumented
@@ -236,15 +227,6 @@ how to do fast predictive auto-tuning that satisfies the requirements to:
 % XXX: are these last references appropriate
 % XXX: there are 4 versions of the stencil work - consolidate to just the full journal version
 
-
-\iffalse
-XXX WIIFY here ??? (what's in their for you) XXX in text, say what's in this paper for:
-- compiler people
-- libs people
-- ml people
-- tools people
-- cv people
-\fi
 
 The paper is organized as follows:
 Section~\ref{sec:brtree} describes the boosted regression tree model and the procedure for fitting it to empirical timing data.
@@ -316,12 +298,13 @@ and each target $y^{(i)} \in \mathcal{Y}$  reflects the speed of implementation 
 on inputs $a^{(i)}$ on platform $c^{(i)}$.
 
 The effectiveness of predictive auto-tuning depends on the mapping between the raw kernel timings $t(a, b, c)$ (i.e. in seconds) and the utility $y$ associated with that timing.
-Anticipating that regression involves minimizing the squared error of our predictor (see Eq.~\ref{XXXbelow}) it is important to choose $y$ so that differences of a given numerical {\em magnitude} correspond to {\em improvements} of a certain utility.
+Anticipating that regression involves minimizing the squared error of our predictor (see Eq.~\ref{eq:y}) it is important to choose $y$ so that differences of a given numerical {\em magnitude} correspond to {\em improvements} of a certain utility.
 In program optimization we are interested in improving the speedup over a reference implementation $b^{(\mathrm{ref})}$, so it is natural to choose
 \begin{equation}
 y^{(i)}
 = \log\left(\frac{\mathrm{speed}(a, b, c)}{\mathrm{speed}(a, b^{(\mathrm{ref})}, c)} \right)
 = \log\left(\frac{t(a, b^{(\mathrm{ref})}, c)}{t(a, b, c)} \right)
+\label{eq:y}
 \end{equation}
 
 One unique aspect of our setting compared with standard regression
@@ -738,20 +721,24 @@ these cases predictive auto-tuning took up to 3 seconds.  Even in these cases
 the predictive model is much faster than empirical auto-tuning, because the
 first kernel that actually runs is a fast one.
 
+Figure~\ref{fig:fig_ntrain} shows how the training set size
+and the value of $\zeta$ affect the accuracy of predictive auto-tuning.
+All candidates timed during the grid and
+hill-climbing search procedures were used as training examples, so the training
+set sizes ranged from an average of 1480 (10 problem configurations) to 29 600
+(200 problem configurations).
+Training from the largest training sets took approximately 30 seconds.
+Training 50 or more problem configurations yielded quite accurate predictions
+with $\zeta=\log(0.5)$, which was the best value for $\zeta$ across the range of
+devices in our study.
 
 \begin{figure}
 \centering
 \includegraphics[scale=.42]{fig_ntrain_munctional0_580.pdf} % on vader
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
-size on simulated auto-tuning.
-All candidates timed during the grid and
-hill-climbing search procedures were used as training examples, so the training
-set sizes ranged from an average of 1480 (10 problem configurations) to 29 600
-(200 problem configurations).
-Training from the largest training sets took approximately 30 seconds
+size on predictive auto-tuning.
 Models trained on as few as 25 configurations outperformed the reference.
-Models trained
-but not as useful as training on 50 or more configurations.
+Models trained on 50 or more configurations rivaled empirical auto-tuning.
 Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
@@ -825,12 +812,6 @@ with small (and controllable) run-time costs.
 % predictive auto-tuning framework (XXX name).
 % 
 % Platform Space: XXX
-% 
-% XXX: GCG chapter pg 13 notes that among the grid search, the best parameter
-% setting is different for the various platforms.
-% 
-% XXX: so far we only tried 3 cards... so we're using a 1-of-N feature.
-% 
 % 
 % %\renewcommand{\bibsection}{\section*{Bibliography}}
 % %\setlength{\bibsep}{5pt}
