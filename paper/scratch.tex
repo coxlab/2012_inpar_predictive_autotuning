@@ -1,3 +1,19 @@
+% DDC: XXX are these figures still in?
+Figure~\ref{fig:speedup} also shows that random hill-climbing is at least
+competitive and often better than the hand-chosen grid approach
+of~\citet{pinto+cox:2011gcg}.  Figure~\ref{fig:hcX} shows how the number of hill-climbing iterations
+affects the quality of the auto-tuned model.
+The quicker HC25 approach is clearly inferior but the quality of the 75 iteration search (HC75) is statistically similar to the shorter HC50, suggesting that XXX.
+Still, HC75 is not always better than the grid, so evidently neither search algorithm is perfect.
+
+The previous figures establish that auto-tuning on a problem-by-problem basis
+can achieve good performance improvements over a high-quality reference
+baseline, but they do not show how long it takes to find these implementations.
+A search of 75 iterations took an average of about 120 seconds XXX on a fast
+computer, because it requires compiling 75 CUDA kernels, and evaluating up to
+750 filterbank correlations to get reliable timing information for each
+candidate implementation.
+
 
 Our contribution of the present work is to show that boosted regression tree models,
 a powerful machine learning technique for function approximation, can meet the
