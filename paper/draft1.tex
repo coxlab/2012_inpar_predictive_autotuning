@@ -374,12 +374,12 @@ In our experiments we compare two strategies:
 a generic stochastic hill-climbing search,
 and (2)
 a hand-chosen grid provided by the authors of the kernel used in our experiments \citep{pinto+cox:2011gcg}.
-The {\em hill-climing} (HC) search algorithm starts from the reference
+The {\em hill-climbing} (HC) search algorithm starts from the reference
 implementation and resamples each of the parameters
 of the current best implementation randomly with
 probability $0.25$ (keeping the current best setting with probability $0.75$).
 On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
-We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
+We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbing for 25, 50, and 75 iterations respectively.
 The {\em grid} algorithm is specific to the kernel used in our case study,
 the details of the grid are provided with our experimental results in Section~\ref{sec:refgrid}
 
@@ -470,7 +470,7 @@ The overall strategy is to load the filterbank into constant memory, which is
 relatively fast and visible to all threads, and then launch a grid of blocks
 that tiles the output image.
 Each thread computes $4 \times n\_output\_4s$ channels for some column and row of $z$.
-Each block of threads computes $4 \times n\_output\_4s$ channels for a subrectangle of the output image ($z$).
+Each block of threads computes $4 \times n\_output\_4s$ channels for a sub-rectangle of the output image ($z$).
 When there are more than $4 \times n\_output\_4s$ channels in $z$, or if the
 filterbank is too large to fit into constant memory, then multiple
 kernel executions perform the full computation.
@@ -577,8 +577,8 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \cite{pinto+cox:2011gcg} recommends as a reference implementation: block\_w 8, 
 block\_h = 8, n\_filter\_rows 1, n\_output\_4s all, spill $False$, imul\_fast $True$,
 pad\_shared $True$, 
-text1dfetch $True$,
-maxrregcount $\infty$,
+use\_text1d $True$,
+maxrreg $\infty$,
 and fast\_math $False$.
 This reference implementation was chosen manually based on good performance across a range of platforms from older-generation
 cards such as the
@@ -609,7 +609,7 @@ kernel compilation and interfacing with CUDA.
 \section{Experimental Setup}
 
 Recall from the introduction (Eq.~\ref{eq:condopt}) that auto-tuning can be seen
-as a conditional optimization problem in whic we seek an implementation ($b \in \mathcal{B}$) that minimizes runtime or some other scalar-valued cost function
+as a conditional optimization problem in which we seek an implementation ($b \in \mathcal{B}$) that minimizes runtime or some other scalar-valued cost function
 for given arguments ($a \in \mathcal{A}$) on a particular platform ($c \in \mathcal{C}$).
 In order to perform predictive auto-tuning with a regression model,
 it is necessary to characterize these
@@ -677,7 +677,7 @@ and averaging across the range of problem configurations in our study,
 we find that empirically auto-tuned implementations are on average about
 50\% faster than the reference implementation.
 The reference in turn, is about 50\% faster than implementations that were empirically auto-tuned for a [randomly chosen] different argument configuration.
-This shows that it is genereally not enough to auto-tune for particular argument configurations;
+This shows that it is generally not enough to auto-tune for particular argument configurations;
 instead it is important to choose the right kernel for the job for each unique argument configuration (input-dependent auto-tuning).
 \begin{figure}
 \centering
@@ -689,7 +689,7 @@ instead it is important to choose the right kernel for the job for each unique a
 auto-tuned performance across 100 random argument configurations,
 {\em middle} is the average speed of our reference implementation,
 {\em right} is the average speed of kernels auto-tuned for different argument configurations than the one being tested.
-For 38/100 random confurations, the kernel auto-tuned for another problem could not even run on the GTX 295 hardware.
+For 38/100 random configurations, the kernel auto-tuned for another problem could not even run on the GTX 295 hardware.
 These points contributed a speed of 0, bringing down the average much lower than the reference.
 Good performance across a variety of inputs requires {\em input-dependent auto-tuning}.
 }
@@ -740,7 +740,7 @@ devices in our study.
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
 size on predictive auto-tuning.
 Models trained on as few as 25 configurations outperformed the reference.
-Models trained on 50 or more configurations rivaled empirical auto-tuning.
+Models trained on 50 or more configurations rivalled empirical auto-tuning.
 Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
