@@ -363,7 +363,7 @@ This disadvantage is mitigated to a significant extent by the practice of {\em b
 
 Boosting is an iterative procedure for constructing an {\em ensemble} of regression trees that is coordinated to fit training examples as accurately as possible.
 \citep{schapire:2001,friedman:2002}
-In a recent empirical study of a range of machine learning regressino problems,
+In a recent empirical study of a range of machine learning regression problems,
 boosted decision trees were found to be among the best and easiest models to
 apply~\citep{caruana+niculescu-mizil:2006}.
 On each boosting iteration, a regression tree is fit to the residual error remaining
@@ -410,7 +410,7 @@ _filterbank_ and thus can’t exploit parallel hardware as much.
 XXX: in addition, when they are optimized, it’s often for pre-defined filters
 (e.g. sobel?), and they are not suitable for encapsulation into libraries
 usable by most real-world applications (bouuuuhhhh opencv !!!).
-\iffalse
+\fi
 
 Filterbank correlation is a simple spatial image filtering operation that is
 an important subroutine in many image processing applications. It has a relatively
@@ -596,9 +596,6 @@ the theoretical lower limit.
 & + 4FHWD \nonumber \\
 & + 8(R-H+1)(C-W+1)FP.
 \nonumber
-% XXX: incrementing requires reading and writing $z$ right? so actually the 4
-% above should be an 8? (see related ticket on github for potential
-% optimization about this)
 \label{eq:bytesP}
 \end{align}
 These passes make the I/O requirements increase quadratically in $F$ and $H$.
@@ -606,11 +603,9 @@ At the same time, the total number of floating-point operations (Eq.~\ref{eq:flo
 is quadratic in $H$ and $W$. In our experiments, we only considered square
 filters so in our setting the total number of flops is proportional to $H^4$.
 
-XXX
-Arithmetic density with passes.
-
 Critically:
-The arithmetic intensity, shared storage, and register requirements
+what makes this kernel interesting as a case study is that the
+arithmetic intensity, shared storage, and register requirements
 of this kernel change significantly and in a complicated platform-dependent way
 with the argument parameters ($R, C, D, F, H, W$) and with the implementation parameters,
 especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.''
@@ -618,18 +613,37 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 
 \subsection{Reference and Grid}
 \label{sec:refgrid}
-The reference implementation XXX
 
-% XXX: what is reference?  Why was it chosen?
-% DDC: wasn't the reference implementation hand-tuned?
-% might also want to say something like:
-% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
+\cite{pinto+cox:2011gcg} recommends as a reference implementation: block\_w 8, 
+block\_h = 8, n\_filter\_rows 1, n\_output\_4s all, spill $False$, imul\_fast $True$,
+pad\_shared $True$, 
+text1dfetch $True$,
+maxrregcount $\infty$,
+and fast\_math $False$.
+This reference implementation was chosen manually based on good performance across a range of platforms from older-generation
+cards such as the
+8600GT all the way to
+current-generation flagship cards such as the GTX 580 and C2070.
+Given that parameters were hand-chosen for the reference kernel, no claims are
+made as to the optimality nor universality of this reference (indeed, different
+programmers would undoubtedly arrive at different results).  We use this
+kernel configuration as a reasonable indicator of typical performance
+made possible by ad hoc experimentation with parameters.
 
 Additionally, \cite{pinto+cox:2011gcg} advocate a particular grid search over
-what was estimated to be the most relevant part of the configuration space. This grid iterates over all
-combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
+what was estimated to be the most relevant part of the configuration space.
+This grid iterates over all
+combinations of n\_filter\_rows, n\_output\_4s, spill\_l, pad\_shared\_l for three different block\_h, block\_w choices: (16, 8), (16, 16), and (32, 8).
+In our experiments, we call this algorithm the {\em grid} search procedure.
 The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
-XXX: isn't 73 prime?? explain this so-called ``grid''.
+
+\subsection{Software Stack}
+
+This kernel was implemented in the meta-programming style advocated
+in \citet{pinto+cox:2011gcg} in Python using
+Cheetah for string processing~\citep{cheetah}
+and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
+compilation and interfacing with CUDA.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -655,7 +669,7 @@ F &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \}
 
 A library implementation of this operation would ideally support all image and
 filter sizes as well as variations due
-to strided memory layouts. In such a setting would be useful to characterize
+to strided memory layouts. In such a setting it would be useful to characterize
 the arguments with
 features such as whether the inputs are Fortran-style contiguous, C-style contiguous, or row-padded to various byte alignments.
 These additional options would make our
@@ -679,61 +693,18 @@ For the implementation features $b$, we directly used the integer and binary val
 We did not use platform features ($c$) in our experiments. We leave the investigation
 of cross-platform predictive auto-tuning for future work.
 
-% =============================================================================
-\subsection{Search Algorithms}
-
-The core of any online auto-tuning algorithm (Fig.~\ref{fig:autotune_general}) is the search procedure used to explore the space of implementations.
-Our implementation space includes 16000 (XXX) points, too many to search exhaustively for every input configuration.
-\cite{cox+pinto:2011gcg} recommends a particular hyper-parameter implementation
-based on empirical auto-tuning on several platforms, that achieves good
-performance on a variety of GPUs from older-generation cards such as the
-8600GT all the way to
-current-generation flagship cards such as the GTX 580 and C2070.
-We call this configuration the {\em reference} implementation.
-% XXX: what is reference?  Why was it chosen?
-% DDC: wasn't the reference implementation hand-tuned?
-% might also want to say something like:
-% Given that parameters were hand-chosen for the reference kernel, no claims are made as to the optimality nor universality of this reference (indeed, different programmers would undoubtedly arrive at different results).  We provide this kernel configuration simply as a reasonable indicator of typical performance made possible by ad hoc experimentation with parameters.
-
-Additionally, \cite{cox+pinto:2011gcg} advocate a particular grid search over
-what was estimated to be the most relevant part of the configuration space. This grid iterates over all
-combinations of XXX, but leaves the value of XXX at. In our experiments, we call this algorithm the {\em grid} search procedure.
-The grid included $72$ points in addition to the reference implementation, for a total of $73$ points.
-XXX: isn't 73 prime?? explain this so-called ``grid''.
-
-In this work, we also consider a third search algorithm based on a local search
-heuristic.  This {\em hill-climing} (HC) algorithm starts from the reference
-implementation and resamples each of the parameters
-of the current best implementation randomly with
-probability $0.25$ (keeping the current best setting with probability $0.75$).
-On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
-We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbin for 25, 50, and 75 iterations respectively.
-
-% =============================================================================
-\subsection{Platforms and Implementation}
-
-This kernel was implemented in the meta-programming style advocated
-in \citet{pinto+cox:2011gcg} in Python using
-Cheetah for string processing~\citep{cheetah}
-and PyCUDA~\citep{klochner+etal:2009} for dynamic kernel
-compilation and interfacing with CUDA.
-
-We evaluated our approach on several GPU devices:
-XXX.
-
-XXX Table showing theoretical peak FLOPS, theoretical peak bandwidth, core count, shared memory size, register size, etc.
-
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 
-Figure~\ref{fig:speedup} shows the effectiveness of empirical auto-tuning is in this setting.  Averaging across the range of problem configurations in our study,
-implementations discovered by empirical auto-tuning are on average about 50\% (XXX check) faster than the reference implementation.
-XXX: recalculate with simpler mean speedup formula.
-On the GTX 295 speedups over the reference implementation ranged from XXX to XXX with mean XXX.
-On the GTX 480 speedups over the reference implementation ranged from XXX to XXX with mean XXX.
-XXX: Consider table for these numbers.
-XXX: Put in some timings of mixed \& matched all-stars to show that indeed the reference was a good general baseline, and in fact the auto-tuned models are special-purpose.
+Figure~\ref{fig:allstars} shows the effectiveness of empirical auto-tuning is in this setting.
+Taking the GTX 295 as an example,
+and averaging across the range of problem configurations in our study,
+we find that empirically auto-tuned implementations are on average about
+50\% faster than the reference implementation.
+The reference in turn, is about 50\% faster than implementations that were empirically auto-tuned for a [randomly chosen] different argument configuration.
+This shows that it is genereally not enough to auto-tune for particular argument configurations;
+instead it is important to choose the right kernel for the job for each unique argument configuration (input-dependent auto-tuning).
 \begin{figure}
 \centering
 \includegraphics[scale=.42]{allstars_mixup_295.pdf}
@@ -746,7 +717,7 @@ For 38/100 random confurations, the kernel auto-tuned for another problem could 
 These points contributed a speed of 0, bringing down the average much lower than the reference.
 Good performance across a variety of inputs requires {\em input-dependent auto-tuning}.
 }
-\label{fig:speedup}
+\label{fig:allstars}
 \end{figure}
 
 
