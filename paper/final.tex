@@ -141,7 +141,7 @@ analytical model-driven optimization and empirical optimization
 The model-driven optimization approach uses analytical abstractions to model
 the hardware architectures, in order to identify possible code transformations and their complex
 interactions. Even though highly-accurate analytical models are generally
-difficult to build, this approach has been quite successful in the past, especially for 
+difficult to build, this approach has been quite successful in the past, especially for
 accelerating serial code, utilizing simplified but general abstractions. However,
 large speed-ups for parallel code require more accurate high-dimensional models
 and since this approach is bound by the quality and scalability of its
@@ -216,19 +216,22 @@ how to do fast predictive auto-tuning that satisfies the requirements to:
 % XXX: are these last references appropriate
 % XXX: there are 4 versions of the stencil work - consolidate to just the full journal version
 
-
-The paper is organized as follows:
-Section~\ref{sec:brtree} describes the boosted regression tree model and the procedure for fitting it to empirical timing data.
-Section~\ref{sec:kernel} describes the sort of kernel we employ for our benchmarking,
-Section~\ref{sec:exp} presents the results of our benchmarking experiments, which
-compare a reference implementation to a) empirical auto-tuning over a domain-specific grid,
-b) empirical auto-tuning over a hill-climbing search, and
-c) predictive auto-tuning.
-Section~\ref{sec:discuss} provides discussion of our results, and
-Section~\ref{sec:fw} outlines directions for future work.
+The paper is organized as follows: Section~\ref{sec:predautotuning}
+describes the boosted regression tree model and the procedure for
+fitting it to empirical timing data.  Section~\ref{sec:fbcorr} details
+the data-parallel image processing algorithm we use to illustrate our
+auto-tuning framework.  Section~\ref{sec:kernel} describes the sort of
+kernel we employ for our benchmarking. Section~\ref{sec:exp} and
+\ref{sec:results} present the results of our benchmarking experiments,
+which compare a reference implementation to a) empirical auto-tuning
+over a domain-specific grid, b) empirical auto-tuning over
+a hill-climbing search, and c) predictive auto-tuning.
+Section~\ref{sec:discuss} provides discussion and concluding remarks,
+while Section~\ref{sec:fw} outlines directions for future work.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Predictive Auto-Tuning}
+\label{sec:predautotuning}
 
 \begin{figure}[!ht]
 \centerline{
@@ -371,7 +374,6 @@ the details of the grid are provided with our experimental results in Section~\r
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Filterbank Correlation}
-
 \label{sec:fbcorr}
 
 Filterbank correlation is a simple spatial image filtering operation that is
@@ -430,20 +432,21 @@ for images that are large relative to filters.
 Each $F$ output writes corresponds to approximately $D$ input reads
 and $F$ inner products between $DHW$ elements.
 
-The high potential for arithmetic intensity makes the GPU an ideal platform for computing filterbank correlations,
-and and filterbank correlation is used extensively in image and video processing,
-where it is often a computational bottleneck.
-One might expect then, that it would be easy to implement a library providing
-this operation as a simple function that takes pointers and strides for $x$, $f$, and $z$ and performs the computation.
-However, as shown in \citet{pinto+cox:2011gcg} 
-it is challenging to provide an implementation
-or even an implementation strategy that provides satisfactory performance
-across the range of inputs (shapes, physical layouts) that occur in
-typical usage.
-\citet{kamil+etal:2009} summarize a related situation related to general stencil computations in their abstract:
-``Although the auto-tuning strategy has been successfully applied to libraries,
-generalized stencil kernels are not amenable to packaging as libraries.''
-
+The high potential for arithmetic intensity makes the GPU an ideal
+platform for computing filterbank correlations, and filterbank
+correlation is used extensively in image and video processing, where it
+is often a computational bottleneck.  One might expect then, that it
+would be easy to implement a library providing this operation as
+a simple function that takes pointers and strides for $x$, $f$, and $z$
+and performs the computation.  However, as shown in
+\citet{pinto+cox:2011gcg} it is challenging to provide an implementation
+or even an implementation strategy that provides satisfactory
+performance across the range of inputs (shapes, physical layouts) that
+occur in typical usage.  \citet{kamil+etal:2009} summarize a related
+situation related to general stencil computations in their abstract:
+``Although the auto-tuning strategy has been successfully applied to
+libraries, generalized stencil kernels are not amenable to packaging as
+libraries.''
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -561,7 +564,7 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \label{sec:refgrid}
 
 \cite{pinto+cox:2011gcg} recommends as a reference implementation:
-block\_w = 8, 
+block\_w = 8,
 block\_h = 8,
 n\_filter\_rows = 1,
 n\_output\_4s = all,
@@ -644,6 +647,7 @@ cross-platform predictive auto-tuning for future work.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
+\label{sec:results}
 
 \begin{figure*}[!t]
 \centering
@@ -801,7 +805,7 @@ with small (and controllable) run-time costs.
 % is present.  With these features a model-assisted auto-tuning approach
 % might be able to make very good guesses on hardware for which no auto-tuning
 % has ever been done.
-% 
+%
 % In a complete implementation of Eq.~\ref{eq:z}, there would be parameters
 % related to the physical layout (e.g. strides) of $x$, $f$ and $z$ arrays in
 % addition to the mathematical parameters of heights and widths and so on,
@@ -816,14 +820,14 @@ with small (and controllable) run-time costs.
 % our model-based technique to auto-tune in full problem configuration space, so
 % that we can optimize as much of the computation as possible within the
 % predictive auto-tuning framework (XXX name).
-% 
+%
 % Platform Space: XXX
-% 
+%
 % %\renewcommand{\bibsection}{\section*{Bibliography}}
 % %\setlength{\bibsep}{5pt}
-% 
-% 
-% 
+%
+%
+%
 % One might expect then, that it would be easy to implement a library providing
 % this operation -- this hypothetical library could have quite a simple interface
 % following the spirit of FFTW or a BLAS routine:
@@ -837,31 +841,31 @@ with small (and controllable) run-time costs.
 % or even an implementation strategy that provides satisfactory performance
 % across the range of inputs (shapes, physical layouts) that occur even in
 % typical usage.
-% 
+%
 % Current state-of-the art is to do empirical auto-tuning.
 % XXX \vspace{12pt}
-% 
+%
 % Increasingly, machine learning and statistical inference strategies are
 % finding application in compiler technology.
 % XXX \vspace{12pt}
-% 
+%
 % machine learning
-% 
+%
 % This paper shows that a kernel with several  boosted
-% 
-% 
+%
+%
 % There is a natural function from
 % problem space x implementation space x platform space to runtime:
 % how much wall time elapses on the given platform when solving the given
 % problem with the given implementation.
-% 
+%
 % Auto-tuning is a family of empirical techniques for finding the implementation
 % that minimizes that runtime function, when the platform and the problem
 % configuration are given.
-% 
+%
 % XXX: some math, or possibly a picture with the three boxes that was on Pinto's
 % whiteboard.
-% 
+%
 % This paper is about different ways of doing the minimization.
 % For a particular problem (filterbank correlation) we
 % look at a parameterized kernel implementation (from \citet{pinto+cox:2011gcg})
@@ -876,59 +880,59 @@ with small (and controllable) run-time costs.
 % Model-based auto-tuning makes it possible to simulate auto-tuning quickly and
 % accurately enough to be used within a single library call of the computational
 % routine.
-% 
+%
 % Best arithmetic density
-% 
+%
 % A bandwidth analysis that takes the blocking structure into account would
 % reveal that larger $H$ and $W$ require each block to read a larger input
 % region, and store it in a larger shared memory region, which reduces the
 % potential for high occupancy.
-% 
+%
 % Filterbank correlation represents a difficult code-optimization problem
 % because of the number of interacting constraints: a large value of $P$ reduces
 % arithmetic density, but a small value of $P$ requires that each thread do more
 % work, and makes global memory access latency harder to hide. (XXX: is there a
 % better reason?)
-% 
-% 
+%
+%
 % The kernel used to perform
 % filterbank correlation was parametrized by 10 parameters, some of which
 % were binary and others of which were integer-valued. The full configuration
 % space included 12000 kernels.
 % XXX: how to make sense of these paramters without code listing?
-% 
+%
 % XXX: What to all the parameters mean?
-% 
+%
 % XXX: how many configurations are in the configuration space
-% 
+%
 % XXX: what was the reference kernel, and how was it chosen?
-% 
+%
 % XXX: analysis of READ traffic, WRITE traffic, DATA re-use and CACHEing
 % strategies. FLOPS per write etc.
-% 
+%
 % XXX: Why not use FFT: convolution in spectral domain?
-% 
+%
 % XXXX: Talk about memory transfer requirements vs. speed vs. copy...
-% 
+%
 % we believe that our approach is the most practial one to get high perf on
 % recent hardware, since there is no consensus on hw features (and it won't
 % change soon)
-% 
+%
 % XXX: deliver significant performance increases at very low run-time cost (less
 % than a second if the input domain has not been seen before, zero if it
 % has, since it will hit the cache) compared with the reference
 % implementation
-% 
+%
 % XXX always delivered good performance: optimality without loss of productivity?
-% 
+%
 % XXX such machine learning derived model-based empirical auto-tuner hold great
 % promise for dev productivity, portability, performance on future multi-core hw
 % with different architectural features
-% 
+%
 % XXX frameworks for predicting performance exist \cite{XXX Hwu An Adaptive
 % Performance Modeling Tool for GPU Architectures}
 % but for non-GPU architectures
-% 
+%
 % auto-tuning required hardward expertise *and* application-domain knowledge, we
 % want to remove these restrictions ultimately we want a ml-based approach to
 % code optimization that will where a set of generic but deep code
@@ -940,27 +944,38 @@ with small (and controllable) run-time costs.
 \section{Future Work}
 \label{sec:fw}
 
-While the present work serves as a basic demonstration of the value of using
-machine learning models to predict optimal implementation parameters, there are
-many avenues for taking these ideas further. A natural route to extend of our
-current approach is to include more features as inputs to the predictive model.
-In addition to further instrumentation of the kernel in question, input
-features could include a much broader range of hardware-related information,
-from more detailed information about device capabilities to micro-benchmarks
-\citep{wong2010demystifying}, and results from performance limiter analyses
-\citep{micikevicius2010analysis}. Such additional features would increase the
-predictive model's ability to adapt to a wide range of different kinds of
-hardware, including new devices not available at the time of kernel creation.
+While the present work serves as a basic demonstration of the value of
+using machine learning models to predict optimal implementation
+parameters on a specific application, there are many avenues for taking
+these ideas further.
 
-Another potentially interesting avenue of research is in interpreting the model
-learned by predictive auto-tuning.  While traditional model-based auto-tuning
-approaches by design assume a given model, and empirical auto-tuning approaches
-are completely model free, the predictive approach described here
-\emph{generates} a model from performance data.  Because this generated model
-can be interrogated by a variety of means, a significant opportunity exists to
-learn about the factors that drive the performance of a given kernel.  These
-insights can be used to further guide the development and instrumentation of
-the kernel, potentially yielding even greater gains.
+A natural route to extend of our current approach is to include more
+features as inputs to the predictive model.  In addition to further
+instrumentation of the kernel in question, input features could include
+a much broader range of hardware-related information, from more detailed
+information about device capabilities to micro-benchmarks
+\citep{wong2010demystifying}, and results from performance limiter
+analyses \citep{micikevicius2010analysis}. Such additional features
+would increase the predictive model's ability to adapt to a wide range
+of different kinds of hardware, including new devices not available at
+the time of kernel creation.
+
+Another potentially interesting avenue of research is in interpreting
+the model learned by predictive auto-tuning.  While traditional
+model-based auto-tuning approaches by design assume a given model, and
+empirical auto-tuning approaches are completely model free, the
+predictive approach described here \emph{generates} a model from
+performance data.  Because this generated model can be interrogated by
+a variety of means, a significant opportunity exists to learn about the
+factors that drive the performance of a given kernel.  These insights
+can be used to further guide the development and instrumentation of the
+kernel, potentially yielding even greater gains.
+
+Other directions will include the validation of our predictive
+auto-tuning framework to other domains and environments, in particular
+general data-parallel primitives and non data-parallel applications,
+other multi-core heterogeneous architectures, and software platforms
+such as OpenCL.
 
 % more features (this is the hardest, and most manual part, may require
 % domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
@@ -973,13 +988,13 @@ the kernel, potentially yielding even greater gains.
 % * more data-layout
 % * more threading strategies to lower latency
 % (finding a good representation is key, again...)
-% 
+%
 % online distributed auto-tuning with learning, especially w/ HT-based
 % experiments \cite{HT} our method is indeed very well suited for parallel
 % explorating of multiple configurations for learning (in a cluster, e.g. in HT
 % context) this may get us \emph{more} than linear speed ups for better accuracy,
 % especially when more features will be present (see above)
-% 
+%
 % interpret the learned model and confront the performance against theoreticial
 % (or approximated) models of mem/com/compute, arithmetic intensity, etc. to
 % understand performance limiters, the hardware, etc.
@@ -987,7 +1002,7 @@ the kernel, potentially yielding even greater gains.
 % DDC: XXX is "Conclusion" a "required" section in any sense.  If not, I think we could probably do without
 %\section{Conclusion}
 
-%Our 
+%Our
 
 {\small
     \bibliography{local}
