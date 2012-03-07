@@ -1,2 +1,8 @@
 draft1.pdf
 abstract.pdf
+final.pdf
+*.aux
+*.bbl
+*.blg
+*.log
+*.tex.bak
