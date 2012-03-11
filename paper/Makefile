@@ -16,4 +16,4 @@ abstract.pdf: abstract.tex
 	pdflatex abstract
 
 view: final.pdf
-	open $^
+	open -a Preview $^
