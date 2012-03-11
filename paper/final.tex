@@ -357,7 +357,7 @@ We did not attempt a systematic study of the effect of these variables on perfor
 We chose a maximum depth of 4, so that each new tree would be a {\em weak}
 learner without too much capacity;
 a minimum number of examples per leaf of 10,
-so that the ensemble would resist overfitting;
+so that the ensemble would resist over-fitting;
 and 100 iterations of boosting, after which the residual error on training
 data appeared to have reached a minimum.  Test examples were not used to
 choose these values.
@@ -681,7 +681,7 @@ range of problem configurations in our study, we find that empirically
 auto-tuned implementations are on average about 50\% faster than the reference
 implementation.  The reference in turn, is about 50\% faster than
 implementations that were empirically auto-tuned for a \emph{randomly chosen}
-different argument configuration.  This shows that it is genereally not enough
+different argument configuration.  This shows that it is generally not enough
 to auto-tune for particular argument configurations; instead it is important to
 choose the right kernel for the job for each unique argument configuration
 (input-dependent auto-tuning).
@@ -755,7 +755,7 @@ requires {\em input-dependent auto-tuning}.
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
 size on predictive auto-tuning.
 Models trained on as few as 25 configurations outperformed the reference.
-Models trained on 50 or more configurations rivaled empirical auto-tuning.
+Models trained on 50 or more configurations rivalled empirical auto-tuning.
 Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
@@ -908,7 +908,7 @@ with small (and controllable) run-time costs.
 % filterbank correlation was parametrized by 10 parameters, some of which
 % were binary and others of which were integer-valued. The full configuration
 % space included 12000 kernels.
-% XXX: how to make sense of these paramters without code listing?
+% XXX: how to make sense of these parameters without code listing?
 %
 % XXX: What to all the parameters mean?
 %
@@ -923,7 +923,7 @@ with small (and controllable) run-time costs.
 %
 % XXXX: Talk about memory transfer requirements vs. speed vs. copy...
 %
-% we believe that our approach is the most practial one to get high perf on
+% we believe that our approach is the most practical one to get high perf on
 % recent hardware, since there is no consensus on hw features (and it won't
 % change soon)
 %
@@ -942,7 +942,7 @@ with small (and controllable) run-time costs.
 % Performance Modeling Tool for GPU Architectures}
 % but for non-GPU architectures
 %
-% auto-tuning required hardward expertise *and* application-domain knowledge, we
+% auto-tuning required hardware expertise *and* application-domain knowledge, we
 % want to remove these restrictions ultimately we want a ml-based approach to
 % code optimization that will where a set of generic but deep code
 % transformations, could be templated and injected in any domain-specific
@@ -987,7 +987,7 @@ other multi-core architectures, and heterogeneous software platforms
 such as OpenCL.
 
 % more features (this is the hardest, and most manual part, may require
-% domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
+% domain-specific knowledge, but not necessarily, e.g. microbenchmarking)
 % * features derived from micro-benchmarking \citep{wong2010demystifying}
 % * features derived from performance limiter analysis \citep{micikevicius2010analysis}
 
@@ -1000,11 +1000,11 @@ such as OpenCL.
 %
 % online distributed auto-tuning with learning, especially w/ HT-based
 % experiments \cite{HT} our method is indeed very well suited for parallel
-% explorating of multiple configurations for learning (in a cluster, e.g. in HT
+% exploration of multiple configurations for learning (in a cluster, e.g. in HT
 % context) this may get us \emph{more} than linear speed ups for better accuracy,
 % especially when more features will be present (see above)
 %
-% interpret the learned model and confront the performance against theoreticial
+% interpret the learned model and confront the performance against theoretical
 % (or approximated) models of mem/com/compute, arithmetic intensity, etc. to
 % understand performance limiters, the hardware, etc.
 
