@@ -1,4 +1,10 @@
-all: abstract.pdf draft1.pdf
+all: final.pdf
+
+final.pdf: final.tex local.bib
+	pdflatex final
+	pdflatex final
+	bibtex final
+	pdflatex final
 
 draft1.pdf: draft1.tex local.bib
 	pdflatex draft1
@@ -9,5 +15,5 @@ draft1.pdf: draft1.tex local.bib
 abstract.pdf: abstract.tex
 	pdflatex abstract
 
-view: draft1.pdf
+view: final.pdf
 	open $^

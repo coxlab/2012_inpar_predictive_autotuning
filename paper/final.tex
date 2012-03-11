@@ -1,4 +1,4 @@
-\documentclass{inpar12}
+\documentclass{sig-alternate}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -17,26 +17,21 @@
 \numberofauthors{3}
 
 \author{
-\tiny
-%\alignauthor First Last\titlenote{}\\
 \alignauthor James Bergstra\\
-\affaddr{The Rowland Institute at Harvard}\\
-\affaddr{Harvard University}\\
-\affaddr{Cambridge, MA 02142, USA}\\
-\email{bergstra@rowland.harvard.edu}
+\affaddr{\small{Rowland Institute at Harvard}}\\
+\affaddr{\small{Cambridge MA, US}}\\
+\email{\emph{\small{bergstra@rowland.harvard.edu}}}
 % 2nd author
-%\alignauthor First Last\titlenote{None}\\
 \alignauthor Nicolas Pinto\\
-\affaddr{Massachusetts Institute of Technology}\\
-\affaddr{Cambridge, MA 02139, USA}\\
-\email{pinto@mit.edu}
+\affaddr{\small{Rowland Institute at Harvard}}\\
+\affaddr{\small{McGovern Institute at MIT}}\\
+\affaddr{\small{Cambridge MA, USA}}\\
+\email{\emph{\small{pinto@rowland.harvard.edu}}}
 % 3rd author
-%\alignauthor First Last\titlenote{None}\\
-\alignauthor David D. Cox\\
-\affaddr{The Rowland Institute at Harvard}\\
-\affaddr{Harvard University}\\
-\affaddr{Cambridge, MA 02142, USA}\\
-\email{cox@rowland.harvard.edu}
+\alignauthor David Cox\\
+\affaddr{\small{Rowland Institute at Harvard}}\\
+\affaddr{\small{Cambridge MA, USA}}\\
+\email{\emph{\small{cox@harvard.rowland.edu}}}
 }
 
 \begin{document}
@@ -100,7 +95,7 @@ control and understand the various trade-offs among performance, reliability,
 energy efficiency, production costs, etc. This evolution has profoundly
 altered the landscape of application development: programmers are now
 facing a wide diversity of low-level architectural issues
-that must be carefully balanced if they are to write code that is both
+that must be carefully balanced if one is to write code that is both
 high-performance \emph{and} portable.
 
 % =============================================================================
@@ -114,16 +109,14 @@ development tools and libraries that fully utilize system resources
 remains a daunting task. Even within specialized architectures from the
 \emph{same} vendor, such as NVIDIA's Graphics Processing Units (GPUs) and the
 Compute Unified Device Architecture (CUDA) \citep{nickolls2008scalable,
-nvidia2011cuda}, many developers apply massive amounts of manual labor
-to optimize CUDA code to specific input domains. This hand-tuning
+nvidia2011cuda}, many developers default to massive amounts of manual labor
+to optimize CUDA code to specific input domains. In addition, hand-tuning
 rarely generalizes well to new hardware generations or different input
-domains, is prone to error, results in unmaintainable code, and does not even
-guarantee optimal performance.
-One of the
-reasons is that GPU kernels can yield staggeringly large optimization spaces
+domains, and it can also be error-prone or far from optimal. One of the
+reason is that kernels can produce staggeringly large optimization spaces
 \citep{datta2008stencil}. The problem is further compounded by the fact that
 these spaces can be highly discontinuous \citep{ryoo2008program}, difficult
-to explore, and optimal performance is often realized at the edge of ``performance
+to explore, and quasi-optimal solutions lie at the edge of ``performance
 cliffs'' induced by hard device-specific constraints (e.g. register file
 size or low-latency cache size).
 
@@ -136,7 +129,7 @@ size or low-latency cache size).
 
 One strategy for addressing these challenges is to use one of a variety of
 automatic methods known collectively as ``auto-tuning.'' Two major auto-tuning
-approaches have emer-ged in the extensive literature covering the subject (see
+approaches have emerged in the extensive literature covering the subject (see
 surveys in e.g.
 \citep{vuduc2001statistical, demmel2005self, vuduc2005oski, williams2008auto,
 datta2008stencil, cavazos2008intelligent, li2009note, park2011evaluation}):
@@ -148,7 +141,7 @@ analytical model-driven optimization and empirical optimization
 The model-driven optimization approach uses analytical abstractions to model
 the hardware architectures, in order to identify possible code transformations and their complex
 interactions. Even though highly-accurate analytical models are generally
-difficult to build, this approach has been quite successful in the past, especially for 
+difficult to build, this approach has been quite successful in the past, especially for
 accelerating serial code, utilizing simplified but general abstractions. However,
 large speed-ups for parallel code require more accurate high-dimensional models
 and since this approach is bound by the quality and scalability of its
@@ -194,7 +187,7 @@ can be directly derived from the analytical model.
 
 % hybrid optimization: the bad way
 
-To addess this weakness, it is intuitively appealing to combine the two
+To address this weakness, it is intuitively appealing to combine the two
 approaches by first constraining the search space with an analytical model and
 then exploring the reduced space empirically \citep{chen2005combining,
 li2009note}. Unfortunately, such a hybrid approach is still bound by the quality
@@ -203,7 +196,7 @@ of the analytical model, which remains hard to build by hand.
 % hybrid optimization: the ML way (note that ML-based are in essence
 % model-driven too just with an empirically learned model)
 
-In this paper, we show that it is possible to \emph{learn the model} using non-linear regression
+In this paper, we propose to \emph{learn the model} using non-linear regression
 modeling techniques instead of constructing a model manually. By learning the model, one can
 hope to achieve elements of the best of both approaches: the search speed of model-based auto-tuning with the broad applicability
 and ease of implementation of empirical auto-tuning.
@@ -223,19 +216,22 @@ how to do fast predictive auto-tuning that satisfies the requirements to:
 % XXX: are these last references appropriate
 % XXX: there are 4 versions of the stencil work - consolidate to just the full journal version
 
-
-The paper is organized as follows:
-Section~\ref{sec:brtree} describes the boosted regression tree model and the procedure for fitting it to empirical timing data.
-Section~\ref{sec:kernel} describes the sort of kernel we employ for our benchmarking,
-Section~\ref{sec:exp} presents the results of our benchmarking experiments, which
-compare a reference implementation to a) empirical auto-tuning over a domain-specific grid,
-b) empirical auto-tuning over a hill-climbing search, and
-c) predictive auto-tuning.
-Section~\ref{sec:discuss} provides discussion of our results, and
-Section~\ref{sec:fw} outlines directions for future work.
+The paper is organized as follows: Section~\ref{sec:predautotuning}
+describes the boosted regression tree model and the procedure for
+fitting it to empirical timing data.  Section~\ref{sec:fbcorr} details
+the data-parallel image processing algorithm we use to illustrate our
+auto-tuning framework.  Section~\ref{sec:kernel} describes the sort of
+kernel we employ for our benchmarking. Section~\ref{sec:exp} and
+\ref{sec:results} present the results of our benchmarking experiments,
+which compare a reference implementation to a) empirical auto-tuning
+over a domain-specific grid, b) empirical auto-tuning over
+a hill-climbing search, and c) predictive auto-tuning.
+Section~\ref{sec:discuss} provides discussion and concluding remarks,
+while Section~\ref{sec:fw} outlines directions for future work.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Predictive Auto-Tuning}
+\label{sec:predautotuning}
 
 \begin{figure}[!ht]
 \centerline{
@@ -305,12 +301,11 @@ y^{(i)}
 One unique aspect of our setting compared with standard regression
 is that not all kernel implementations ($b$) are {\em valid}
 for all input configurations. One option for dealing with these invalid configurations
-would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that
-would lead to a regression model that suggests invalid configurations.
+would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that would lead to a biased regression model.
 Instead, we chose to associate invalid $(a, b, c)$ tuples with a constant $y = \zeta$.
 It makes sense to choose $\zeta < 0$ so that invalid configurations are treated as being worse than the reference,
-but the question of how much worse is an empirical one.
-In our experiments, we compare $\zeta$ in the range $\log(0.01) \leq \zeta \leq \log(.99)$.
+but the question of how much worse these points should be is an empirical one.
+Our experiments evaluate $\log(0.01) \leq \zeta \leq \log(.99)$.
 
 % =============================================================================
 \subsection{Regression Trees}
@@ -354,13 +349,9 @@ training procedure:
 2) the minimum number of examples to allow at a regression tree leaf, and
 3) the number of trees constructed by boosting.
 We did not attempt a systematic study of the effect of these variables on performance.
-We chose a maximum depth of 4, so that each new tree would be a {\em weak}
-learner without too much capacity;
-a minimum number of examples per leaf of 10,
-so that the ensemble would resist overfitting;
-and 100 iterations of boosting, after which the residual error on training
-data appeared to have reached a minimum.  Test examples were not used to
-choose these values.
+We chose a maximum depth of 4,
+a minimum number of examples of 10,
+and 100 iterations of boosting.
 
 \subsection{Search Algorithms}
 
@@ -376,14 +367,13 @@ The {\em hill-climbing} (HC) search algorithm starts from the reference
 implementation and resamples each of the parameters
 of the current best implementation randomly with
 probability $0.25$ (keeping the current best setting with probability $0.75$).
-On each hill-climbing iteration, if the predicted speed of the newly sampled point is greater than the previous point, then it becomes the current point.
+On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
 We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbing for 25, 50, and 75 iterations respectively.
 The {\em grid} algorithm is specific to the kernel used in our case study,
 the details of the grid are provided with our experimental results in Section~\ref{sec:refgrid}
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Filterbank Correlation}
-
 \label{sec:fbcorr}
 
 Filterbank correlation is a simple spatial image filtering operation that is
@@ -442,20 +432,21 @@ for images that are large relative to filters.
 Each $F$ output writes corresponds to approximately $D$ input reads
 and $F$ inner products between $DHW$ elements.
 
-The high potential for arithmetic intensity makes the GPU an ideal platform for computing filterbank correlations,
-and and filterbank correlation is used extensively in image and video processing,
-where it is often a computational bottleneck.
-One might expect then, that it would be easy to implement a library providing
-this operation as a simple function that takes pointers and strides for $x$, $f$, and $z$ and performs the computation.
-However, as shown in \citet{pinto+cox:2011gcg} 
-it is challenging to provide an implementation
-or even an implementation strategy that provides satisfactory performance
-across the range of inputs (shapes, physical layouts) that occur in
-typical usage.
-\citet{kamil+etal:2009} summarize a related situation related to general stencil computations in their abstract:
-``Although the auto-tuning strategy has been successfully applied to libraries,
-generalized stencil kernels are not amenable to packaging as libraries.''
-
+The high potential for arithmetic intensity makes the GPU an ideal
+platform for computing filterbank correlations, and filterbank
+correlation is used extensively in image and video processing, where it
+is often a computational bottleneck.  One might expect then, that it
+would be easy to implement a library providing this operation as
+a simple function that takes pointers and strides for $x$, $f$, and $z$
+and performs the computation.  However, as shown in
+\citet{pinto+cox:2011gcg} it is challenging to provide an implementation
+or even an implementation strategy that provides satisfactory
+performance across the range of inputs (shapes, physical layouts) that
+occur in typical usage.  \citet{kamil+etal:2009} summarize a related
+situation related to general stencil computations in their abstract:
+``Although the auto-tuning strategy has been successfully applied to
+libraries, generalized stencil kernels are not amenable to packaging as
+libraries.''
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -573,7 +564,7 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \label{sec:refgrid}
 
 \cite{pinto+cox:2011gcg} recommends as a reference implementation:
-block\_w = 8, 
+block\_w = 8,
 block\_h = 8,
 n\_filter\_rows = 1,
 n\_output\_4s = all,
@@ -650,17 +641,17 @@ inefficiency in implementing them via multiple calls with smaller images and few
 With the experiments searched an argument space included 602 configurations with between 1 and 50 GFLOP.
 
 For the implementation features $b$, we directly used the integer and binary
-% XXX: MANUAL HYPHENATION
-values (block\_w, block\_h, etc.) that paramet-rized the kernels.  We did not
+values (block\_w, block\_h, etc.) that paraded-raced the kernels.  We did not
 use platform features ($c$) in our experiments. We leave the investigation of
 cross-platform predictive auto-tuning for future work.
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
+\label{sec:results}
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=.9\linewidth]{illustrator/fig_main_R1.pdf}
+\includegraphics[width=.9\linewidth]{illustrator/fig_main_R2.pdf}
 \caption{
 Computation speed for novel problem configurations using predictive
 vs. empirical auto-tuning.
@@ -734,7 +725,7 @@ devices in our study.
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\linewidth]{illustrator/fig_allstars_mixup_580_R1.pdf}
+\includegraphics[width=\linewidth]{illustrator/fig_allstars_mixup_580_R2.pdf}
 \caption{Different arguments call for different kernels:
 {\em left} is the average argument-specific empirical
 auto-tuned performance across 100 random argument configurations,
@@ -751,7 +742,7 @@ requires {\em input-dependent auto-tuning}.
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\linewidth]{illustrator/fig_ntrain_munctional0_580.pdf} % on vader
+\includegraphics[width=\linewidth]{illustrator/fig_ntrain_munctional0_580_R2.pdf} % on vader
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
 size on predictive auto-tuning.
 Models trained on as few as 25 configurations outperformed the reference.
@@ -814,7 +805,7 @@ with small (and controllable) run-time costs.
 % is present.  With these features a model-assisted auto-tuning approach
 % might be able to make very good guesses on hardware for which no auto-tuning
 % has ever been done.
-% 
+%
 % In a complete implementation of Eq.~\ref{eq:z}, there would be parameters
 % related to the physical layout (e.g. strides) of $x$, $f$ and $z$ arrays in
 % addition to the mathematical parameters of heights and widths and so on,
@@ -829,14 +820,14 @@ with small (and controllable) run-time costs.
 % our model-based technique to auto-tune in full problem configuration space, so
 % that we can optimize as much of the computation as possible within the
 % predictive auto-tuning framework (XXX name).
-% 
+%
 % Platform Space: XXX
-% 
+%
 % %\renewcommand{\bibsection}{\section*{Bibliography}}
 % %\setlength{\bibsep}{5pt}
-% 
-% 
-% 
+%
+%
+%
 % One might expect then, that it would be easy to implement a library providing
 % this operation -- this hypothetical library could have quite a simple interface
 % following the spirit of FFTW or a BLAS routine:
@@ -850,31 +841,31 @@ with small (and controllable) run-time costs.
 % or even an implementation strategy that provides satisfactory performance
 % across the range of inputs (shapes, physical layouts) that occur even in
 % typical usage.
-% 
+%
 % Current state-of-the art is to do empirical auto-tuning.
 % XXX \vspace{12pt}
-% 
+%
 % Increasingly, machine learning and statistical inference strategies are
 % finding application in compiler technology.
 % XXX \vspace{12pt}
-% 
+%
 % machine learning
-% 
+%
 % This paper shows that a kernel with several  boosted
-% 
-% 
+%
+%
 % There is a natural function from
 % problem space x implementation space x platform space to runtime:
 % how much wall time elapses on the given platform when solving the given
 % problem with the given implementation.
-% 
+%
 % Auto-tuning is a family of empirical techniques for finding the implementation
 % that minimizes that runtime function, when the platform and the problem
 % configuration are given.
-% 
+%
 % XXX: some math, or possibly a picture with the three boxes that was on Pinto's
 % whiteboard.
-% 
+%
 % This paper is about different ways of doing the minimization.
 % For a particular problem (filterbank correlation) we
 % look at a parameterized kernel implementation (from \citet{pinto+cox:2011gcg})
@@ -889,59 +880,59 @@ with small (and controllable) run-time costs.
 % Model-based auto-tuning makes it possible to simulate auto-tuning quickly and
 % accurately enough to be used within a single library call of the computational
 % routine.
-% 
+%
 % Best arithmetic density
-% 
+%
 % A bandwidth analysis that takes the blocking structure into account would
 % reveal that larger $H$ and $W$ require each block to read a larger input
 % region, and store it in a larger shared memory region, which reduces the
 % potential for high occupancy.
-% 
+%
 % Filterbank correlation represents a difficult code-optimization problem
 % because of the number of interacting constraints: a large value of $P$ reduces
 % arithmetic density, but a small value of $P$ requires that each thread do more
 % work, and makes global memory access latency harder to hide. (XXX: is there a
 % better reason?)
-% 
-% 
+%
+%
 % The kernel used to perform
 % filterbank correlation was parametrized by 10 parameters, some of which
 % were binary and others of which were integer-valued. The full configuration
 % space included 12000 kernels.
 % XXX: how to make sense of these paramters without code listing?
-% 
+%
 % XXX: What to all the parameters mean?
-% 
+%
 % XXX: how many configurations are in the configuration space
-% 
+%
 % XXX: what was the reference kernel, and how was it chosen?
-% 
+%
 % XXX: analysis of READ traffic, WRITE traffic, DATA re-use and CACHEing
 % strategies. FLOPS per write etc.
-% 
+%
 % XXX: Why not use FFT: convolution in spectral domain?
-% 
+%
 % XXXX: Talk about memory transfer requirements vs. speed vs. copy...
-% 
+%
 % we believe that our approach is the most practial one to get high perf on
 % recent hardware, since there is no consensus on hw features (and it won't
 % change soon)
-% 
+%
 % XXX: deliver significant performance increases at very low run-time cost (less
 % than a second if the input domain has not been seen before, zero if it
 % has, since it will hit the cache) compared with the reference
 % implementation
-% 
+%
 % XXX always delivered good performance: optimality without loss of productivity?
-% 
+%
 % XXX such machine learning derived model-based empirical auto-tuner hold great
 % promise for dev productivity, portability, performance on future multi-core hw
 % with different architectural features
-% 
+%
 % XXX frameworks for predicting performance exist \cite{XXX Hwu An Adaptive
 % Performance Modeling Tool for GPU Architectures}
 % but for non-GPU architectures
-% 
+%
 % auto-tuning required hardward expertise *and* application-domain knowledge, we
 % want to remove these restrictions ultimately we want a ml-based approach to
 % code optimization that will where a set of generic but deep code
@@ -953,27 +944,38 @@ with small (and controllable) run-time costs.
 \section{Future Work}
 \label{sec:fw}
 
-While the present work serves as a basic demonstration of the value of using
-machine learning models to predict optimal implementation parameters, there are
-many avenues for taking these ideas further. A natural route to extend of our
-current approach is to include more features as inputs to the predictive model.
-In addition to further instrumentation of the kernel in question, input
-features could include a much broader range of hardware-related information,
-from more detailed information about device capabilities to micro-benchmarks
-\citep{wong2010demystifying}, and results from performance limiter analyses
-\citep{micikevicius2010analysis}. Such additional features would increase the
-predictive model's ability to adapt to a wide range of different kinds of
-hardware, including new devices not available at the time of kernel creation.
+While the present work serves as a basic demonstration of the value of
+using machine learning models to predict optimal implementation
+parameters on a specific application, there are many avenues for taking
+these ideas further.
 
-Another potentially interesting avenue of research is in interpreting the model
-learned by predictive auto-tuning.  While traditional model-based auto-tuning
-approaches by design assume a given model, and empirical auto-tuning approaches
-are completely model free, the predictive approach described here
-\emph{generates} a model from performance data.  Because this generated model
-can be interrogated by a variety of means, a significant opportunity exists to
-learn about the factors that drive the performance of a given kernel.  These
-insights can be used to further guide the development and instrumentation of
-the kernel, potentially yielding even greater gains.
+A natural route to extend of our current approach is to include more
+features as inputs to the predictive model.  In addition to further
+instrumentation of the kernel in question, input features could include
+a much broader range of hardware-related information, from more detailed
+information about device capabilities to micro-benchmarks
+\citep{wong2010demystifying}, and results from performance limiter
+analyses \citep{micikevicius2010analysis}. Such additional features
+would increase the predictive model's ability to adapt to a wide range
+of different kinds of hardware, including new devices not available at
+the time of kernel creation.
+
+Another potentially interesting avenue of research is in interpreting
+the model learned by predictive auto-tuning.  While traditional
+model-based auto-tuning approaches by design assume a given model, and
+empirical auto-tuning approaches are completely model free, the
+predictive approach described here \emph{generates} a model from
+performance data.  Because this generated model can be interrogated by
+a variety of means, a significant opportunity exists to learn about the
+factors that drive the performance of a given kernel.  These insights
+can be used to further guide the development and instrumentation of the
+kernel, potentially yielding even greater gains.
+
+Other directions will include the validation of our predictive
+auto-tuning framework to other domains and environments, in particular
+general data-parallel primitives and non data-parallel applications,
+other multi-core architectures, and heterogeneous software platforms
+such as OpenCL.
 
 % more features (this is the hardest, and most manual part, may require
 % domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
@@ -986,13 +988,13 @@ the kernel, potentially yielding even greater gains.
 % * more data-layout
 % * more threading strategies to lower latency
 % (finding a good representation is key, again...)
-% 
+%
 % online distributed auto-tuning with learning, especially w/ HT-based
 % experiments \cite{HT} our method is indeed very well suited for parallel
 % explorating of multiple configurations for learning (in a cluster, e.g. in HT
 % context) this may get us \emph{more} than linear speed ups for better accuracy,
 % especially when more features will be present (see above)
-% 
+%
 % interpret the learned model and confront the performance against theoreticial
 % (or approximated) models of mem/com/compute, arithmetic intensity, etc. to
 % understand performance limiters, the hardware, etc.
@@ -1000,7 +1002,7 @@ the kernel, potentially yielding even greater gains.
 % DDC: XXX is "Conclusion" a "required" section in any sense.  If not, I think we could probably do without
 %\section{Conclusion}
 
-%Our 
+%Our
 
 {\small
     \bibliography{local}
