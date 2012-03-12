@@ -1,4 +1,4 @@
-\documentclass{sig-alternate}
+\documentclass{inpar12}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -17,23 +17,26 @@
 \numberofauthors{3}
 
 \author{
+\tiny
 %\alignauthor First Last\titlenote{}\\
-\alignauthor First Last\\
-\affaddr{Affiliation line 1}\\
-\affaddr{Affiliation line 2}\\
-\email{anon@mail.com}
+\alignauthor James Bergstra\\
+\affaddr{The Rowland Institute at Harvard}\\
+\affaddr{Harvard University}\\
+\affaddr{Cambridge, MA 02142, USA}\\
+\email{bergstra@rowland.harvard.edu}
 % 2nd author
 %\alignauthor First Last\titlenote{None}\\
-\alignauthor First Last\\
-\affaddr{Affiliation line 1}\\
-\affaddr{Affiliation line 2}\\
-\email{anon@mail.com}
+\alignauthor Nicolas Pinto\\
+\affaddr{Massachusetts Institute of Technology}\\
+\affaddr{Cambridge, MA 02139, USA}\\
+\email{pinto@mit.edu}
 % 3rd author
 %\alignauthor First Last\titlenote{None}\\
-\alignauthor First Last\\
-\affaddr{Affiliation line 1}\\
-\affaddr{Affiliation line 2}\\
-\email{anon@mail.com}
+\alignauthor David D. Cox\\
+\affaddr{The Rowland Institute at Harvard}\\
+\affaddr{Harvard University}\\
+\affaddr{Cambridge, MA 02142, USA}\\
+\email{cox@rowland.harvard.edu}
 }
 
 \begin{document}
@@ -97,7 +100,7 @@ control and understand the various trade-offs among performance, reliability,
 energy efficiency, production costs, etc. This evolution has profoundly
 altered the landscape of application development: programmers are now
 facing a wide diversity of low-level architectural issues
-that must be carefully balanced if one is to write code that is both
+that must be carefully balanced if they are to write code that is both
 high-performance \emph{and} portable.
 
 % =============================================================================
@@ -111,14 +114,16 @@ development tools and libraries that fully utilize system resources
 remains a daunting task. Even within specialized architectures from the
 \emph{same} vendor, such as NVIDIA's Graphics Processing Units (GPUs) and the
 Compute Unified Device Architecture (CUDA) \citep{nickolls2008scalable,
-nvidia2011cuda}, many developers default to massive amounts of manual labor
-to optimize CUDA code to specific input domains. In addition, hand-tuning
+nvidia2011cuda}, many developers apply massive amounts of manual labor
+to optimize CUDA code to specific input domains. This hand-tuning
 rarely generalizes well to new hardware generations or different input
-domains, and it can also be error-prone or far from optimal. One of the
-reason is that kernels can produce staggeringly large optimization spaces
+domains, is prone to error, results in unmaintainable code, and does not even
+guarantee optimal performance.
+One of the
+reasons is that GPU kernels can yield staggeringly large optimization spaces
 \citep{datta2008stencil}. The problem is further compounded by the fact that
 these spaces can be highly discontinuous \citep{ryoo2008program}, difficult
-to explore, and quasi-optimal solutions lie at the edge of ``performance
+to explore, and optimal performance is often realized at the edge of ``performance
 cliffs'' induced by hard device-specific constraints (e.g. register file
 size or low-latency cache size).
 
@@ -198,7 +203,7 @@ of the analytical model, which remains hard to build by hand.
 % hybrid optimization: the ML way (note that ML-based are in essence
 % model-driven too just with an empirically learned model)
 
-In this paper, we propose to \emph{learn the model} using non-linear regression
+In this paper, we show that it is possible to \emph{learn the model} using non-linear regression
 modeling techniques instead of constructing a model manually. By learning the model, one can
 hope to achieve elements of the best of both approaches: the search speed of model-based auto-tuning with the broad applicability
 and ease of implementation of empirical auto-tuning.
@@ -300,11 +305,12 @@ y^{(i)}
 One unique aspect of our setting compared with standard regression
 is that not all kernel implementations ($b$) are {\em valid}
 for all input configurations. One option for dealing with these invalid configurations
-would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that would lead to a biased regression model.
+would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that
+would lead to a regression model that suggests invalid configurations.
 Instead, we chose to associate invalid $(a, b, c)$ tuples with a constant $y = \zeta$.
 It makes sense to choose $\zeta < 0$ so that invalid configurations are treated as being worse than the reference,
-but the question of how much worse these points should be is an empirical one.
-Our experiments evaluate $\log(0.01) \leq \zeta \leq \log(.99)$.
+but the question of how much worse is an empirical one.
+In our experiments, we compare $\zeta$ in the range $\log(0.01) \leq \zeta \leq \log(.99)$.
 
 % =============================================================================
 \subsection{Regression Trees}
@@ -348,9 +354,13 @@ training procedure:
 2) the minimum number of examples to allow at a regression tree leaf, and
 3) the number of trees constructed by boosting.
 We did not attempt a systematic study of the effect of these variables on performance.
-We chose a maximum depth of 4,
-a minimum number of examples of 10,
-and 100 iterations of boosting.
+We chose a maximum depth of 4, so that each new tree would be a {\em weak}
+learner without too much capacity;
+a minimum number of examples per leaf of 10,
+so that the ensemble would resist overfitting;
+and 100 iterations of boosting, after which the residual error on training
+data appeared to have reached a minimum.  Test examples were not used to
+choose these values.
 
 \subsection{Search Algorithms}
 
@@ -366,7 +376,7 @@ The {\em hill-climbing} (HC) search algorithm starts from the reference
 implementation and resamples each of the parameters
 of the current best implementation randomly with
 probability $0.25$ (keeping the current best setting with probability $0.75$).
-On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
+On each hill-climbing iteration, if the predicted speed of the newly sampled point is greater than the previous point, then it becomes the current point.
 We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbing for 25, 50, and 75 iterations respectively.
 The {\em grid} algorithm is specific to the kernel used in our case study,
 the details of the grid are provided with our experimental results in Section~\ref{sec:refgrid}
@@ -640,6 +650,7 @@ inefficiency in implementing them via multiple calls with smaller images and few
 With the experiments searched an argument space included 602 configurations with between 1 and 50 GFLOP.
 
 For the implementation features $b$, we directly used the integer and binary
+% XXX: MANUAL HYPHENATION
 values (block\_w, block\_h, etc.) that paramet-rized the kernels.  We did not
 use platform features ($c$) in our experiments. We leave the investigation of
 cross-platform predictive auto-tuning for future work.

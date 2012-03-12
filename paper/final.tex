@@ -1,4 +1,4 @@
-\documentclass{sig-alternate}
+\documentclass{inpar12}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -19,7 +19,8 @@
 \author{
 \alignauthor James Bergstra\\
 \affaddr{\small{Rowland Institute at Harvard}}\\
-\affaddr{\small{Cambridge MA, US}}\\
+\affaddr{\small{Harvard University}}\\
+\affaddr{\small{Cambridge MA, USA}}\\
 \email{\emph{\small{bergstra@rowland.harvard.edu}}}
 % 2nd author
 \alignauthor Nicolas Pinto\\
@@ -30,6 +31,7 @@
 % 3rd author
 \alignauthor David Cox\\
 \affaddr{\small{Rowland Institute at Harvard}}\\
+\affaddr{\small{Harvard University}}\\
 \affaddr{\small{Cambridge MA, USA}}\\
 \email{\emph{\small{cox@harvard.rowland.edu}}}
 }
@@ -95,7 +97,7 @@ control and understand the various trade-offs among performance, reliability,
 energy efficiency, production costs, etc. This evolution has profoundly
 altered the landscape of application development: programmers are now
 facing a wide diversity of low-level architectural issues
-that must be carefully balanced if one is to write code that is both
+that must be carefully balanced if they are to write code that is both
 high-performance \emph{and} portable.
 
 % =============================================================================
@@ -109,14 +111,16 @@ development tools and libraries that fully utilize system resources
 remains a daunting task. Even within specialized architectures from the
 \emph{same} vendor, such as NVIDIA's Graphics Processing Units (GPUs) and the
 Compute Unified Device Architecture (CUDA) \citep{nickolls2008scalable,
-nvidia2011cuda}, many developers default to massive amounts of manual labor
-to optimize CUDA code to specific input domains. In addition, hand-tuning
+nvidia2011cuda}, many developers apply massive amounts of manual labor
+to optimize CUDA code to specific input domains. This hand-tuning
 rarely generalizes well to new hardware generations or different input
-domains, and it can also be error-prone or far from optimal. One of the
-reason is that kernels can produce staggeringly large optimization spaces
+domains, is prone to error, results in unmaintainable code, and does not even
+guarantee optimal performance.
+One of the
+reasons is that GPU kernels can yield staggeringly large optimization spaces
 \citep{datta2008stencil}. The problem is further compounded by the fact that
 these spaces can be highly discontinuous \citep{ryoo2008program}, difficult
-to explore, and quasi-optimal solutions lie at the edge of ``performance
+to explore, and optimal performance is often realized at the edge of ``performance
 cliffs'' induced by hard device-specific constraints (e.g. register file
 size or low-latency cache size).
 
@@ -196,7 +200,7 @@ of the analytical model, which remains hard to build by hand.
 % hybrid optimization: the ML way (note that ML-based are in essence
 % model-driven too just with an empirically learned model)
 
-In this paper, we propose to \emph{learn the model} using non-linear regression
+In this paper, we show that it is possible to \emph{learn the model} using non-linear regression
 modeling techniques instead of constructing a model manually. By learning the model, one can
 hope to achieve elements of the best of both approaches: the search speed of model-based auto-tuning with the broad applicability
 and ease of implementation of empirical auto-tuning.
@@ -301,11 +305,12 @@ y^{(i)}
 One unique aspect of our setting compared with standard regression
 is that not all kernel implementations ($b$) are {\em valid}
 for all input configurations. One option for dealing with these invalid configurations
-would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that would lead to a biased regression model.
+would be to simply omit them from $\mathcal{X}$ and $\mathcal{Y}$, but that
+would lead to a regression model that suggests invalid configurations.
 Instead, we chose to associate invalid $(a, b, c)$ tuples with a constant $y = \zeta$.
 It makes sense to choose $\zeta < 0$ so that invalid configurations are treated as being worse than the reference,
-but the question of how much worse these points should be is an empirical one.
-Our experiments evaluate $\log(0.01) \leq \zeta \leq \log(.99)$.
+but the question of how much worse is an empirical one.
+In our experiments we compare $\zeta$ in the range $\log(0.01) \leq \zeta \leq \log(.99)$.
 
 % =============================================================================
 \subsection{Regression Trees}
@@ -349,9 +354,13 @@ training procedure:
 2) the minimum number of examples to allow at a regression tree leaf, and
 3) the number of trees constructed by boosting.
 We did not attempt a systematic study of the effect of these variables on performance.
-We chose a maximum depth of 4,
-a minimum number of examples of 10,
-and 100 iterations of boosting.
+We chose a maximum depth of 4, so that each new tree would be a {\em weak}
+learner without too much capacity;
+a minimum number of examples per leaf of 10,
+so that the ensemble would resist over-fitting;
+and 100 iterations of boosting, after which the residual error on training
+data appeared to have reached a minimum.  Test examples were not used to
+choose these values.
 
 \subsection{Search Algorithms}
 
@@ -367,7 +376,7 @@ The {\em hill-climbing} (HC) search algorithm starts from the reference
 implementation and resamples each of the parameters
 of the current best implementation randomly with
 probability $0.25$ (keeping the current best setting with probability $0.75$).
-On each hill-climbing iteration, if the speed of the newly sampled point is greater than the previous point, then it becomes the current point.
+On each hill-climbing iteration, if the predicted speed of the newly sampled point is greater than the previous point, then it becomes the current point.
 We show results for search variants HC25, HC50, and HC75, which correspond do hill-climbing for 25, 50, and 75 iterations respectively.
 The {\em grid} algorithm is specific to the kernel used in our case study,
 the details of the grid are provided with our experimental results in Section~\ref{sec:refgrid}
@@ -672,7 +681,7 @@ range of problem configurations in our study, we find that empirically
 auto-tuned implementations are on average about 50\% faster than the reference
 implementation.  The reference in turn, is about 50\% faster than
 implementations that were empirically auto-tuned for a \emph{randomly chosen}
-different argument configuration.  This shows that it is genereally not enough
+different argument configuration.  This shows that it is generally not enough
 to auto-tune for particular argument configurations; instead it is important to
 choose the right kernel for the job for each unique argument configuration
 (input-dependent auto-tuning).
@@ -746,7 +755,7 @@ requires {\em input-dependent auto-tuning}.
 \caption{The effect of the invalid configuration score ($\zeta$) and training set
 size on predictive auto-tuning.
 Models trained on as few as 25 configurations outperformed the reference.
-Models trained on 50 or more configurations rivaled empirical auto-tuning.
+Models trained on 50 or more configurations rivalled empirical auto-tuning.
 Moderate values of $\zeta$ between $\log(0.25)$ and $\log(0.75)$ are best.
 }
 \label{fig:fig_ntrain}
@@ -899,7 +908,7 @@ with small (and controllable) run-time costs.
 % filterbank correlation was parametrized by 10 parameters, some of which
 % were binary and others of which were integer-valued. The full configuration
 % space included 12000 kernels.
-% XXX: how to make sense of these paramters without code listing?
+% XXX: how to make sense of these parameters without code listing?
 %
 % XXX: What to all the parameters mean?
 %
@@ -914,7 +923,7 @@ with small (and controllable) run-time costs.
 %
 % XXXX: Talk about memory transfer requirements vs. speed vs. copy...
 %
-% we believe that our approach is the most practial one to get high perf on
+% we believe that our approach is the most practical one to get high perf on
 % recent hardware, since there is no consensus on hw features (and it won't
 % change soon)
 %
@@ -933,7 +942,7 @@ with small (and controllable) run-time costs.
 % Performance Modeling Tool for GPU Architectures}
 % but for non-GPU architectures
 %
-% auto-tuning required hardward expertise *and* application-domain knowledge, we
+% auto-tuning required hardware expertise *and* application-domain knowledge, we
 % want to remove these restrictions ultimately we want a ml-based approach to
 % code optimization that will where a set of generic but deep code
 % transformations, could be templated and injected in any domain-specific
@@ -978,7 +987,7 @@ other multi-core architectures, and heterogeneous software platforms
 such as OpenCL.
 
 % more features (this is the hardest, and most manual part, may require
-% domain-specific knowledge, but not necessariyly, e.g. microbenchmarking)
+% domain-specific knowledge, but not necessarily, e.g. microbenchmarking)
 % * features derived from micro-benchmarking \citep{wong2010demystifying}
 % * features derived from performance limiter analysis \citep{micikevicius2010analysis}
 
@@ -991,11 +1000,11 @@ such as OpenCL.
 %
 % online distributed auto-tuning with learning, especially w/ HT-based
 % experiments \cite{HT} our method is indeed very well suited for parallel
-% explorating of multiple configurations for learning (in a cluster, e.g. in HT
+% exploration of multiple configurations for learning (in a cluster, e.g. in HT
 % context) this may get us \emph{more} than linear speed ups for better accuracy,
 % especially when more features will be present (see above)
 %
-% interpret the learned model and confront the performance against theoreticial
+% interpret the learned model and confront the performance against theoretical
 % (or approximated) models of mem/com/compute, arithmetic intensity, etc. to
 % understand performance limiters, the hardware, etc.
 
