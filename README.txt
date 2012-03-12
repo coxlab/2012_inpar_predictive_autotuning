@@ -1,3 +1,17 @@
+=====================================================================================
+INPAR 2012: Machine Learning for Predictive Auto-tuning with Boosted Regression Trees
+=====================================================================================
+
+This was originally a fork of fbconv-gcg.
+
+The latex source is in
+
+* paper/final.tex for the camera-ready
+
+* paper/draft1.tex for the original submission
+
+The code in the root directory was used to run the experiments for the paper.
+
 # TODO: clean this up
 
 Dependencies:
