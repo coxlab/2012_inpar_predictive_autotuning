@@ -56,8 +56,8 @@ with the generality and simplicity of empirical auto-tuning.
 We validate our approach using the filterbank
 correlation kernel described in \citet{pinto+cox:2011gcg}, where we find that
 0.1 seconds of hill climbing on the regression model (``{\em
-predictive} auto-tuning'') can achieve an average of 95\% of the
-speed-up brought by minutes of empirical auto-tuning.  Our approach is not
+predictive} auto-tuning'') can achieve almost the same
+speed-up as is brought by minutes of empirical auto-tuning.  Our approach is not
 specific to filterbank correlation, nor even to GPU kernel auto-tuning, and can
 be applied to almost any templated-code optimization problem, spanning a wide
 variety of problem types, kernel types, and platforms.
@@ -572,7 +572,7 @@ especially ``block\_w'', ``block\_h'', ``n\_output\_4s'' and ``n\_filter\_rows.'
 \subsection{Reference and Grid}
 \label{sec:refgrid}
 
-\cite{pinto+cox:2011gcg} recommends as a reference implementation:
+\cite{pinto+cox:2011gcg} recommend as a reference implementation:
 block\_w = 8,
 block\_h = 8,
 n\_filter\_rows = 1,
@@ -718,8 +718,8 @@ dealt with this scenario by backtracking through the various best-estimates
 found during the hill-climbing search.  Some invalid kernels can only be
 discovered after compiling code and attempting to run the compiled code, so in
 these cases predictive auto-tuning took up to 3 seconds.  Even in these cases
-the predictive model is much faster than empirical auto-tuning, because the
-first kernel that actually runs is a fast one.
+the predictive model is much faster than empirical auto-tuning because the
+first kernel that runs successfully is still typically a fast one.
 
 Figure~\ref{fig:fig_ntrain} shows how the training set size
 and the value of $\zeta$ affect the accuracy of predictive auto-tuning.
@@ -1012,12 +1012,6 @@ such as OpenCL.
 %\section{Conclusion}
 
 %Our
-\section{Acknowledgments}
-
-This work was funded by the Rowland Institute of Harvard, the NVIDIA
-Graduate Fellowship, and the National Science Foundation (IIS 0963668).
-Hardware support was generously provided by the NVIDIA Corporation.
-
 \section{Acknowledgments}
 
 This work was funded by the Rowland Institute of Harvard, the NVIDIA
