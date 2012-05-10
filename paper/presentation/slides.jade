@@ -1,3 +1,5 @@
+//TODO: get svg_include working
+//TODO: latexpng
 
 .slide
 
@@ -184,6 +186,7 @@
     h1 Mapping timing to a regression problem
 
     p  Log-speedup over reference implementation.
+    p  How do we deal with invalid configurations?
 
     //-
         \begin{equation}
@@ -193,34 +196,30 @@
         \label{eq:y}
         \end{equation}
 
-    p  How do we deal with invalid configurations?
-
-
-
-.slide
-
-    h1 regression trees
 
 
 .slide
 
-    h1 boosted regression trees
-
-    p iteratively fit residuals
+    svg_include(src='svg/regression_tree.svg')
 
 
 .slide
 
-    h1 Making use of the fitted model
-
-    p JIT Optimization of the dtree ensemble with stochastic search "HC75"
-
-    p Backtracking to deal with runtime failures
+    svg_include(src='svg/boosted_regression_tree.svg')
 
 
 .slide
 
-    h1 Results: matching empirical auto-tuning -> GOOD
+    h1 Making use of fitted model T(x)
+
+    p find argmax T(x) by a greedy stochastic search
+
+    p Backtrack to recover from invalid configurations
+
+
+.slide
+
+    //h1 Results: matching empirical auto-tuning -> GOOD
 
     svg_include(src='svg/fig_main_R1.svg')
 
@@ -241,12 +240,33 @@
 
     h1 Summary
 
+    p scientists rely on high-level mathematical abstraction boundaries.
+
+    p new hardware platforms are driving up the number of implementations needed to satisfy those abstractions with good performance.
+
+    p we presented a standard, inexpensive approach to managing this increasing complexity: Predictive Auto-Tuning
+
+.slide
+
+    h1 Summary
+
+    p predictict auto-tuning centers on the idea of using empirical data to
+    fit a model of system performance for the purpose of optimizing a
+    particular instrumented piece of code.
+
+    p we showed how to apply this approach to filterbank correlation, fitting
+    model with boosted regression trees but the approach certainly applies
+    beyond that regime.
+
+    p makes it easy to trade off JIT cost vs. install cost vs. running efficiency.
+
 
 .slide
 
     h1 Future Work
 
-    p platform features: device inspection, micro-benchmarks -> cross-platform
-    generalization.
+    p platform features (device inspection, micro-benchmarks) generalize to future hardware
+    p how far can you scale to larger search spaces
+    p model-driven profiling, debugging, optimization
 
 
