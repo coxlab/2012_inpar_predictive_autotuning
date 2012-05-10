@@ -116,14 +116,43 @@
 
     p cartoon and math
 
+    //-
+        latex2png:
+            \begin{equation}
+            \mathbf{z}[r,c,k] = \sum_{w=0}^{W-1} \sum_{h=0}^{H-1} \sum_{d=0}^{D-1}
+            \mathbf{x}[r+h, c+h, d]~ \mathbf{f}[k, h, w, d].
+            \label{eq:z}
+            \end{equation}
+
     p application domains that care
 
     p show ranges of problem dimensions, relevance of different cases.
 
+    //R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
+    //H = W & \in \{ 3, 5, 7, 9, 11 \} \\
+    //D &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \} \\
+    //F &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \}
 
 .slide
 
     h1 filterbank correlation implementation
+
+    //-
+        latex2png: //TODO: implement this filter in jade
+            \begin{algorithm}{$\Algo{thread\_fbcorr}\big(gX, cF, gZ \big)$}
+            \Aitem shared $sX \setto$ all channels of region ($\beta$) of $gX$
+            \Aitem $x, y \setto$ position of this thread in output image
+            \Aitem \_\_syncthreads()
+            \Aitem $v[0:N] \setto 0$, for $N=4\times n\_output\_4s$
+            \Aitem for $d \setto 0$~\To~$D$,
+            \Aitem ~ for $h \setto 0$~\To~$H / n\_filter\_r$,
+            \Aitem ~ ~ for $w \setto 0$~\To~$W$,
+            \Aitem ~ ~ ~ $u \setto sX[x+h, y+w, d]$
+            \Aitem ~ ~ ~ for $n \setto 0$~\To~$n\_output\_4s - 1$,
+            \Aitem ~ ~ ~ ~  $v[n] \setto v[n] + cF[n, h, w, d]$
+            \Aitem for $n \setto 0$~\To~$n\_output\_4s - 1$,
+            \Aitem ~  gZ[x][y][4n:4n+n] += v[4n:4n+n], (float4)
+            \end{algorithm}
 
     p show crazy templated code
 
@@ -134,12 +163,35 @@
 
     p list the options that we tuned
 
+    //-
+        latex2png: // TODO: add this to jade
+            \begin{align*}
+            \mathrm{block\_h}    & \in (4, 8, 16, 32, 64, 128) \\
+            \mathrm{block\_w}    & \in (4, 8, 16, 32, 64, 128) \\
+            \mathrm{n\_filter\_r} & \in (1, 2) \\
+            \mathrm{n\_output\_4s} & \in (\mathrm{all}, 1, 2) \\
+            \mathrm{spill}      & \in (False, True) \\
+            \mathrm{imul\_fast}  & \in (False, True) \\
+            \mathrm{pad\_shared} & \in (False, True) \\
+            \mathrm{use\_tex1d}  & \in (False, True) \\
+            \mathrm{maxrreg}    & \in (8, 16, 20, 24, 28, 32, \infty) \\
+            \mathrm{fast\_math}  & \in (False, True)
+            \end{align*}
+
 
 .slide
 
     h1 Mapping timing to a regression problem
 
     p  Log-speedup over reference implementation.
+
+    //-
+        \begin{equation}
+        y^{(i)}
+        = \log\left(\frac{\mathrm{speed}(a, b, c)}{\mathrm{speed}(a, b^{(\mathrm{ref})}, c)} \right)
+        = \log\left(\frac{t(a, b^{(\mathrm{ref})}, c)}{t(a, b, c)} \right)
+        \label{eq:y}
+        \end{equation}
 
     p  How do we deal with invalid configurations?
 
@@ -170,16 +222,20 @@
 
     h1 Results: matching empirical auto-tuning -> GOOD
 
+    svg_include(src='svg/fig_main_R1.svg')
+
 
 .slide
 
     h1 Results: avg GFLOPs when using the wrong model -> BAD
 
+    svg_include(src='svg/fig_allstars_mixup_580_R1.svg')
 
 .slide
 
     h1 Results: how sensitive is the approach to the score of invalid points?
 
+    svg_include(src='svg/fig_ntrain_munctional0_580.svg')
 
 .slide
 
