@@ -130,6 +130,8 @@
 
     p show ranges of problem dimensions, relevance of different cases.
 
+    svg_include(src='svg/fbcorr.svg')
+
     //R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
     //H = W & \in \{ 3, 5, 7, 9, 11 \} \\
     //D &  \in \{1, 4, 8, 16, 32, 64, 128, 256 \} \\
@@ -137,7 +139,7 @@
 
 .slide
 
-    h1 filterbank correlation implementation
+    h1 Filter bank correlation implementation (see file)
 
     //-
         latex2png: //TODO: implement this filter in jade
@@ -156,7 +158,6 @@
             \Aitem ~  gZ[x][y][4n:4n+n] += v[4n:4n+n], (float4)
             \end{algorithm}
 
-    p show crazy templated code
 
 
 .slide
