@@ -160,10 +160,19 @@
 
 
 .slide
+    // ALL THE OPTIONS SO MANY OPTIONS!
 
-    h1 filterbank correlation implementation
-
-    p list the options that we tuned
+    ul
+        li block height  (4 / 8 / 16 / 32 / 64 / 128)
+        li block width  (4 / 8 / 16 /32 / 64 / 128)
+        li n. filter rows  (1 / 2)
+        li n. output 4s (1 / 2 / all)
+        li spill (y / n)
+        li 24bit imul (y / n)
+        li pad shared (y / n)
+        li use tex1d (y / n)
+        li maxrreg (8 / 16 / 20 / 24 / 28 / 32 / inf)
+        li fast math (y / n)
 
     //-
         latex2png: // TODO: add this to jade
@@ -185,8 +194,9 @@
 
     h1 Mapping timing to a regression problem
 
-    p  Log-speedup over reference implementation.
-    p  How do we deal with invalid configurations?
+    ul
+        li log-speedup over reference configuration
+        li invalid configuration? log-speedup epsilon
 
     //-
         \begin{equation}
@@ -210,11 +220,7 @@
 
 .slide
 
-    h1 Making use of fitted model T(x)
-
-    p find argmax T(x) by a greedy stochastic search
-
-    p Backtrack to recover from invalid configurations
+    svg_include(src='svg/rforest_argmax.svg')
 
 
 .slide
@@ -226,7 +232,7 @@
 
 .slide
 
-    h1 Results: avg GFLOPs when using the wrong model -> BAD
+    //h1 Results: avg GFLOPs when using the wrong model -> BAD
 
     svg_include(src='svg/fig_allstars_mixup_580_R1.svg')
 
