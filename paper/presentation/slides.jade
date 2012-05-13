@@ -9,9 +9,10 @@
 
     h1 Desiderata (user)
 
-    ul
-        li libs with conventional interfaces
+    ul.incremental
+        li libs with conventional interfaces (math)
         li platform independence
+        li 100% efficiency for all inputs
 
     h1 Desiderata (library provider)
 
@@ -38,7 +39,7 @@
     h3 Low-level:
     ul
         li loop unrolling
-        li register spilling
+        //li register spilling
         li registers / shared / texture / const
 
 
@@ -61,6 +62,7 @@
         li actually run the fn many ways, measure time
         li installation saves ptr to fastest config
         li Pro: very fast implementations
+        li Con: very slow search
         li Con: brittle ...
         ul.incremental
             li to different input array size
@@ -68,6 +70,14 @@
 
     //p In these cases you're on your own, empirical auto-tuning offers no help.
 
+
+.slide
+
+    //h1 Results: avg GFLOPs when using the wrong model -> BAD
+
+    svg_include(src='svg/fig_allstars_mixup_580_R1.svg')
+    build fade_in(#autotune)
+    build fade_in(#mismatch)
 
 .slide
     h1 SoA 2: Model-Driven Tuning
@@ -78,14 +88,6 @@
         li pick fastest config according to simulator
         li Pro: general, high-performance JIT approach
         li Con: who is going to provide simulators for all platforms??
-
-.slide
-
-    //h1 Results: avg GFLOPs when using the wrong model -> BAD
-
-    svg_include(src='svg/fig_allstars_mixup_580_R1.svg')
-    build fade_in(#autotune)
-    build fade_in(#mismatch)
 
 .slide
     h1 Predictive Auto-tuning: <br> Best of both worlds
