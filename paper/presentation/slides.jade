@@ -2,12 +2,7 @@
 //TODO: latexpng
 
 .slide
-
-    h1 Machine Learning for Predictive Auto-Tuning with Boosted Regression Trees
-
-    p Authors: James Bergstra, Nicolas Pinto, David D. Cox
-    p Date: May 13, 2012
-    p Place: INPAR 2012
+    svg_include(src='svg/title.svg')
 
 
 .slide
@@ -15,108 +10,94 @@
     h1 Desiderata (user)
 
     ul
-        li abstraction barriers beyond which "it just works"
-        li fast libs across wide range of GPU devices
+        li libs with conventional interfaces
+        li platform independence
 
     h1 Desiderata (library provider)
 
-    ul
-        li [support for providing] fast libs across wide range of GPU devices
+    ul.incremental
+        li help !?
 
+.slide
+    h1 Library Provider's Dilemma
+    ul.incremental
+        li platforms are different
+        li different-sized inputs change everything
+        li good performance across the board is HARD
 
 .slide
 
-    h1 State of art: How to make a fast function for a GPU
+    h1 Library Provider's Dilemma (part 2)
 
-    p as kernel library author we optimize e.g:
-
+    h3 High-level:
     ul
         li blocking strategy
         li global and shared memory layout
+        li synchronization vs. recomputation
+
+    h3 Low-level:
+    ul
         li loop unrolling
         li register spilling
-        li global / constant / texture memory
         li registers vs. shared memory
-
-    p joint optimization of all this is HARD
-
-
-.slide
-
-    h1 State of art: How to make a fast function for a GPU
-
-    p joint optimization of all this is HARD.  Two approaches emerge:
-
-    ul
-        li empirical auto-tuning
-        li model-driven Tuning
+        //li global / constant / texture memory
 
 
 .slide
 
-    h1 State of art: Empirical Auto-tuning
+    h1 Library Provider's Options
 
     ul
-        li instrument your fn
+        li Empirical Auto-Tuning
+
+        li Model-driven Tuning
+
+
+.slide
+
+    h1 SoA 1: Empirical Auto-tuning
+
+    ul.incremental
+        li instrument your implementation
         li actually run the fn many ways, measure time
-        li when installing lib, save pointer to fastest config
+        li installation saves ptr to fastest config
+        li Pro: very fast implementations
+        li Con: what if the input array size changes?
+        li Con: what about different hardware revisions / generations?
 
-    p Pro: very fast implementations
-
-    p Con: what if the input array size changes?
-
-    p Con: what about different hardware revisions / generations?
-
-    p In these cases you're on your own, empirical auto-tuning offers no help.
+    //p In these cases you're on your own, empirical auto-tuning offers no help.
 
 
 .slide
-    h1 State of Art: Model-Driven Tuning
+    h1 SoA 2: Model-Driven Tuning
 
-    ul
-        li instrument your fn
+    ul.incremental
+        li instrument your implementation
         li write a hardware simulator
         li pick fastest config according to simulator
-
-    p Pro: general, high-performance JIT approach
-
-    p Con: who is going to provide simulators for all platforms?
-
+        li Pro: general, high-performance JIT approach
+        li Con: who is going to provide simulators for all platforms?
 
 .slide
     h1 Predictive Auto-tuning: Best of both worlds
 
-    ul
-        li instrument your /function/
-        li instrument your /implementation/
-        li instrument your /platform/
-        li /measure timing/ as in empirical auto-tuning
-        li /fit/ a timing model using machine learning methods
+    ul.incremental
+        li instrument your implementation
+        li instrument your problem
+        li instrument your platform
+        li measure time for many combinations
+        li fit a timing model using machine learning
 
+.slide
+    svg_include(src='svg/predictive_auto_tuning.svg')
 
 .slide
 
-    h1 Contribution: Proof of Concept
+    //h1 filterbank correlation
 
-    ul
-        li function: filterbank correlation
-        li instrumented implementation: [cite]
-        li test on several platforms (platform instrumentation is future work)
-        li measure timing relative to reference implementation
-        li fit boosted regression trees regression model
+    //p instance of a stencil computation
 
-    p Result: we can match the excellent call-time performance of empirical
-    auto-tuning across a range of image and filter sizes without the
-    computational cost of empirical auto-tuning.
-
-
-.slide
-
-    h1 filterbank correlation
-
-    p instance of a stencil computation
-
-    p cartoon and math
+    //p cartoon and math
 
     //-
         latex2png:
@@ -126,9 +107,9 @@
             \label{eq:z}
             \end{equation}
 
-    p application domains that care
+    //p application domains that care
 
-    p show ranges of problem dimensions, relevance of different cases.
+    //p show ranges of problem dimensions, relevance of different cases.
 
     svg_include(src='svg/fbcorr.svg')
 
@@ -275,5 +256,4 @@
     p platform features (device inspection, micro-benchmarks) generalize to future hardware
     p how far can you scale to larger search spaces
     p model-driven profiling, debugging, optimization
-
 
