@@ -40,15 +40,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="634.96182"
-     inkscape:cy="327.14286"
+     inkscape:cx="577.81896"
+     inkscape:cy="405.76685"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1603"
-     inkscape:window-height="894"
-     inkscape:window-x="450"
-     inkscape:window-y="227"
+     inkscape:window-width="1280"
+     inkscape:window-height="756"
+     inkscape:window-x="170"
+     inkscape:window-y="38"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -58,7 +58,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -75,11 +75,11 @@
        sodipodi:cy="279.42856"
        sodipodi:rx="209.28572"
        sodipodi:ry="58.57143"
-       d="m 584.28572,279.42856 a 209.28572,58.57143 0 1 1 -418.57144,0 209.28572,58.57143 0 1 1 418.57144,0 z"
+       d="m 584.28572,279.42856 c 0,32.34811 -93.70041,58.57143 -209.28572,58.57143 -115.58531,0 -209.28572,-26.22332 -209.28572,-58.57143 0,-32.34811 93.70041,-58.57143 209.28572,-58.57143 115.58531,0 209.28572,26.22332 209.28572,58.57143 z"
        transform="translate(140,208.2677)" />
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="400.28571"
        y="493.41052"
        id="text2994"
@@ -90,7 +90,7 @@
          y="493.41052">image rows &gt; 128</tspan></text>
     <path
        transform="translate(-100,388.2677)"
-       d="m 584.28572,279.42856 a 209.28572,58.57143 0 1 1 -418.57144,0 209.28572,58.57143 0 1 1 418.57144,0 z"
+       d="m 584.28572,279.42856 c 0,32.34811 -93.70041,58.57143 -209.28572,58.57143 -115.58531,0 -209.28572,-26.22332 -209.28572,-58.57143 0,-32.34811 93.70041,-58.57143 209.28572,-58.57143 115.58531,0 209.28572,26.22332 209.28572,58.57143 z"
        sodipodi:ry="58.57143"
        sodipodi:rx="209.28572"
        sodipodi:cy="279.42856"
@@ -103,7 +103,7 @@
        id="text3002"
        y="673.41052"
        x="182.28571"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="673.41052"
          x="182.28571"
@@ -111,7 +111,7 @@
          sodipodi:role="line">maxrreg &gt; 24</tspan></text>
     <path
        transform="translate(380,388.2677)"
-       d="m 584.28572,279.42856 a 209.28572,58.57143 0 1 1 -418.57144,0 209.28572,58.57143 0 1 1 418.57144,0 z"
+       d="m 584.28572,279.42856 c 0,32.34811 -93.70041,58.57143 -209.28572,58.57143 -115.58531,0 -209.28572,-26.22332 -209.28572,-58.57143 0,-32.34811 93.70041,-58.57143 209.28572,-58.57143 115.58531,0 209.28572,26.22332 209.28572,58.57143 z"
        sodipodi:ry="58.57143"
        sodipodi:rx="209.28572"
        sodipodi:cy="279.42856"
@@ -124,7 +124,7 @@
        id="text3008"
        y="673.41052"
        x="604.28571"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="673.41052"
          x="604.28571"
@@ -169,7 +169,7 @@
        y="820.83911" />
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="134.28571"
        y="864.83911"
        id="text4244"
@@ -183,7 +183,7 @@
        id="text4248"
        y="864.83911"
        x="354.28571"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="864.83911"
          x="354.28571"
@@ -191,7 +191,7 @@
          sodipodi:role="line">1.5</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="634.28571"
        y="864.83911"
        id="text4252"
@@ -205,7 +205,7 @@
        id="text4256"
        y="864.83911"
        x="854.28571"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="864.83911"
          x="854.28571"
@@ -213,21 +213,21 @@
          sodipodi:role="line">10.3</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
-       x="341.71429"
+       style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
+       x="321.71429"
        y="367.98199"
        id="text4260"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         id="tspan4262"
-         x="341.71429"
-         y="367.98199">Regression Trees</tspan></text>
+         x="321.71429"
+         y="367.98199"
+         id="tspan7338">Regression Trees</tspan></text>
     <text
        sodipodi:linespacing="125%"
        id="text4283"
        y="909.98199"
        x="237.71429"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="909.98199"
          x="237.71429"
@@ -235,7 +235,7 @@
          sodipodi:role="line">Log-speedup over reference implementation</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="378.57144"
        y="570.55341"
        id="text4287"
@@ -249,7 +249,7 @@
        id="text4291"
        y="570.55341"
        x="598.57141"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="570.55341"
          x="598.57141"
@@ -260,7 +260,7 @@
        id="text4295"
        y="750.55341"
        x="158.57144"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="750.55341"
          x="158.57144"
@@ -268,7 +268,7 @@
          sodipodi:role="line">yes</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="638.57141"
        y="750.55341"
        id="text4299"
@@ -279,7 +279,7 @@
          y="750.55341">yes</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="338.57141"
        y="750.55341"
        id="text4303"
@@ -293,7 +293,7 @@
        id="text4307"
        y="750.55341"
        x="818.57141"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        xml:space="preserve"><tspan
          y="750.55341"
          x="818.57141"
@@ -301,11 +301,12 @@
          sodipodi:role="line">no</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="50"
        y="996.2677"
-       id="text4311"
-       sodipodi:linespacing="125%"><tspan
+       id="textbottom"
+       sodipodi:linespacing="125%"
+       inkscape:label="#text4311"><tspan
          sodipodi:role="line"
          x="50"
          y="996.2677"
@@ -313,14 +314,12 @@
          sodipodi:role="line"
          x="50"
          y="1036.2677"
-         id="tspan4321">- Fast, simple fitting algorithm</tspan><tspan
+         id="tspan4323">- Fast, simple fitting algorithm,<tspan
+   style="fill:#ff0000"
+   id="tspan7344"> not very accurate</tspan></tspan><tspan
          sodipodi:role="line"
          x="50"
          y="1076.2677"
-         id="tspan4323" /><tspan
-         sodipodi:role="line"
-         x="50"
-         y="1116.2677"
          id="tspan4315" /></text>
   </g>
 </svg>

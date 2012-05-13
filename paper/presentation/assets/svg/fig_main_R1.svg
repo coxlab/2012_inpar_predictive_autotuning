@@ -278,15 +278,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1395"
-     inkscape:window-height="1149"
+     inkscape:window-width="1280"
+     inkscape:window-height="756"
      id="namedview4"
      showgrid="false"
-     inkscape:zoom="0.99688625"
-     inkscape:cx="465.0234"
+     inkscape:zoom="0.49844313"
+     inkscape:cx="701.06139"
      inkscape:cy="368.10661"
-     inkscape:window-x="625"
-     inkscape:window-y="57"
+     inkscape:window-x="252"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="g10" /><g
      id="g10"
@@ -1488,6 +1488,8 @@
      y="0"
      id="tspan816">0</tspan></text>
 
+
+
 </g></g><g
    id="g818"
    transform="matrix(0.47986699,0,0,0.47986699,131.26425,10.808881)"><path
@@ -1506,6 +1508,8 @@
      y="0"
      sodipodi:role="line"
      id="tspan832">200</tspan></text>
+
+
 
 </g></g><g
    id="g834"
@@ -1526,6 +1530,8 @@
      sodipodi:role="line"
      id="tspan848">350</tspan></text>
 
+
+
 </g></g><g
    id="g850"
    transform="matrix(0.47986699,0,0,0.47986699,55.879445,17.105696)"><path
@@ -1542,6 +1548,8 @@
      x="48.176235"
      y="-15.489888"
      id="tspan856">0</tspan></text>
+
+
 
 <g
    id="g858"
@@ -1561,6 +1569,8 @@
      sodipodi:role="line"
      id="tspan864">200</tspan></text>
 
+
+
 <g
    id="g866"
    transform="matrix(0.47986699,0,0,0.47986699,55.879445,162.18911)"><path
@@ -1578,6 +1588,8 @@
      y="-160.57283"
      sodipodi:role="line"
      id="tspan872">350</tspan></text>
+
+
 
 <g
    id="g874"
@@ -1602,6 +1614,8 @@
      y="-171.09756"
      sodipodi:role="line"
      id="tspan884">GTX295</tspan></text>
+
+
 
 <path
    d="m 537.3265,17.106368 121.96875,0 0,145.081552 -121.96875,0 0,-145.081552 z"
@@ -2847,6 +2861,8 @@
      y="0"
      id="tspan1722">0</tspan></text>
 
+
+
 </g></g><g
    id="g1724"
    transform="matrix(0.47986699,0,0,0.47986699,598.31097,10.809313)"><path
@@ -2865,6 +2881,8 @@
      y="0"
      sodipodi:role="line"
      id="tspan1738">400</tspan></text>
+
+
 
 </g></g><g
    id="g1740"
@@ -2885,6 +2903,8 @@
      sodipodi:role="line"
      id="tspan1754">800</tspan></text>
 
+
+
 </g></g><g
    id="g1756"
    transform="matrix(0.47986699,0,0,0.47986699,532.24327,17.106176)"><path
@@ -2901,6 +2921,8 @@
      x="522.16962"
      y="-15.557729"
      id="tspan1762">0</tspan></text>
+
+
 
 <g
    id="g1764"
@@ -2920,6 +2942,8 @@
      sodipodi:role="line"
      id="tspan1770">400</tspan></text>
 
+
+
 <g
    id="g1772"
    transform="matrix(0.47986699,0,0,0.47986699,532.24327,162.18768)"><path
@@ -2937,6 +2961,8 @@
      y="-161.27919"
      sodipodi:role="line"
      id="tspan1778">800</tspan></text>
+
+
 
 <g
    id="g1780"
@@ -2961,6 +2987,8 @@
      y="-171.8488"
      sodipodi:role="line"
      id="tspan1790">TeslaC2070</tspan></text>
+
+
 
 <path
    d="m 215.6323,17.106848 120.90345,0 0,145.082032 -120.90345,0 0,-145.082032 z"
@@ -4206,6 +4234,8 @@
      y="0"
      id="tspan2628">0</tspan></text>
 
+
+
 </g></g><g
    id="g2630"
    transform="matrix(0.47986699,0,0,0.47986699,284.7188,10.809313)"><path
@@ -4224,6 +4254,8 @@
      y="0"
      sodipodi:role="line"
      id="tspan2644">200</tspan></text>
+
+
 
 </g></g><g
    id="g2646"
@@ -4244,6 +4276,8 @@
      sodipodi:role="line"
      id="tspan2660">350</tspan></text>
 
+
+
 </g></g><g
    id="g2662"
    transform="matrix(0.47986699,0,0,0.47986699,209.33539,17.106656)"><path
@@ -4260,6 +4294,8 @@
      x="201.6306"
      y="-15.488976"
      id="tspan2668">0</tspan></text>
+
+
 
 <g
    id="g2670"
@@ -4279,6 +4315,8 @@
      sodipodi:role="line"
      id="tspan2676">200</tspan></text>
 
+
+
 <g
    id="g2678"
    transform="matrix(0.47986699,0,0,0.47986699,209.33539,162.18864)"><path
@@ -4296,6 +4334,8 @@
      y="-160.57187"
      sodipodi:role="line"
      id="tspan2684">350</tspan></text>
+
+
 
 <g
    id="g2686"
@@ -4320,6 +4360,8 @@
      y="-171.09665"
      sodipodi:role="line"
      id="tspan2696">TeslaC1060</tspan></text>
+
+
 
 <path
    d="m 389.88832,17.930779 114.23522,0 0,142.679331 -114.23522,0 0,-142.679331 z"
@@ -5564,6 +5606,8 @@
      y="-2.6684155"
      id="tspan3526">0</tspan></text>
 
+
+
 <g
    id="g3528"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -5585,6 +5629,8 @@
      y="-2.6684155"
      sodipodi:role="line"
      id="tspan3542">600</tspan></text>
+
+
 
 <g
    id="g3544"
@@ -5608,6 +5654,8 @@
      sodipodi:role="line"
      id="tspan3558">1200</tspan></text>
 
+
+
 <g
    id="g3560"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -5628,6 +5676,8 @@
      x="382.02264"
      y="-15.756724"
      id="tspan3574">0</tspan></text>
+
+
 
 <g
    id="g3576"
@@ -5651,6 +5701,8 @@
      sodipodi:role="line"
      id="tspan3590">600</tspan></text>
 
+
+
 <g
    id="g3592"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -5672,6 +5724,8 @@
      y="-155.61003"
      sodipodi:role="line"
      id="tspan3606">1200</tspan></text>
+
+
 
 <g
    id="g3608"
@@ -5700,6 +5754,8 @@
      y="-166.61409"
      sodipodi:role="line"
      id="tspan3626">GTX480</tspan></text>
+
+
 
 <g
    id="g3628"
@@ -6960,6 +7016,8 @@
      y="-238.98842"
      id="tspan4488">0</tspan></text>
 
+
+
 <g
    id="g4490"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -6981,6 +7039,8 @@
      y="-238.98842"
      sodipodi:role="line"
      id="tspan4504">200</tspan></text>
+
+
 
 <g
    id="g4506"
@@ -7004,6 +7064,8 @@
      sodipodi:role="line"
      id="tspan4520">400</tspan></text>
 
+
+
 <g
    id="g4522"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7025,6 +7087,8 @@
      y="-238.98842"
      sodipodi:role="line"
      id="tspan4536">600</tspan></text>
+
+
 
 <g
    id="g4538"
@@ -7048,6 +7112,8 @@
      sodipodi:role="line"
      id="tspan4552">800</tspan></text>
 
+
+
 <g
    id="g4554"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7069,6 +7135,8 @@
      y="-238.98842"
      sodipodi:role="line"
      id="tspan4568">1000</tspan></text>
+
+
 
 <g
    id="g4570"
@@ -7092,6 +7160,8 @@
      sodipodi:role="line"
      id="tspan4584">1200</tspan></text>
 
+
+
 <g
    id="g4586"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7114,6 +7184,8 @@
      sodipodi:role="line"
      id="tspan4600">1400</tspan></text>
 
+
+
 <text
    transform="scale(1,-1)"
    id="text4602"
@@ -7125,6 +7197,8 @@
      y="-219.85373"
      sodipodi:role="line"
      id="tspan4604">GFLOP/sofempiricalauto-tuning</tspan></text>
+
+
 
 <g
    id="g4606"
@@ -7146,6 +7220,8 @@
      x="412.44357"
      y="-263.80139"
      id="tspan4620">0</tspan></text>
+
+
 
 <g
    id="g4622"
@@ -7169,6 +7245,8 @@
      sodipodi:role="line"
      id="tspan4636">200</tspan></text>
 
+
+
 <g
    id="g4638"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7190,6 +7268,8 @@
      y="-336.45532"
      sodipodi:role="line"
      id="tspan4652">400</tspan></text>
+
+
 
 <g
    id="g4654"
@@ -7213,6 +7293,8 @@
      sodipodi:role="line"
      id="tspan4668">600</tspan></text>
 
+
+
 <g
    id="g4670"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7234,6 +7316,8 @@
      y="-409.10736"
      sodipodi:role="line"
      id="tspan4684">800</tspan></text>
+
+
 
 <g
    id="g4686"
@@ -7257,6 +7341,8 @@
      sodipodi:role="line"
      id="tspan4700">1000</tspan></text>
 
+
+
 <g
    id="g4702"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7279,6 +7365,8 @@
      sodipodi:role="line"
      id="tspan4716">1200</tspan></text>
 
+
+
 <text
    transform="matrix(0,1,1,0,0,0)"
    id="text4718"
@@ -7290,6 +7378,8 @@
      y="387.49844"
      sodipodi:role="line"
      id="tspan4720">GFLOP/sofpredictiveauto-tuning</tspan></text>
+
+
 
 <g
    id="g4722"
@@ -7329,6 +7419,8 @@
      sodipodi:role="line"
      id="tspan4744">2xfaster</tspan></text>
 
+
+
 <g
    id="g4746"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7341,6 +7433,8 @@
      y="0"
      sodipodi:role="line"
      id="tspan4756">GTX580</tspan></text>
+
+
 
 <path
    d="m 137.974,549.892 505.684,0 0,443.567 -505.684,0 0,-443.567 z"
@@ -7479,6 +7573,8 @@
      y="-247.96155"
      id="tspan4854">0</tspan></text>
 
+
+
 <g
    id="g4856"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7500,6 +7596,8 @@
      y="-247.96155"
      sodipodi:role="line"
      id="tspan4870">100</tspan></text>
+
+
 
 <g
    id="g4872"
@@ -7523,6 +7621,8 @@
      sodipodi:role="line"
      id="tspan4886">200</tspan></text>
 
+
+
 <text
    transform="scale(1,-1)"
    id="text4888"
@@ -7539,6 +7639,8 @@
      y="-212.45326"
      sodipodi:role="line"
      id="tspan4892">conﬁgurationsusedfortraining</tspan></text>
+
+
 
 <g
    id="g4894"
@@ -7562,6 +7664,8 @@
      sodipodi:role="line"
      id="tspan4908">300</tspan></text>
 
+
+
 <g
    id="g4910"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7583,6 +7687,8 @@
      y="-333.2298"
      sodipodi:role="line"
      id="tspan4924">400</tspan></text>
+
+
 
 <g
    id="g4926"
@@ -7606,6 +7712,8 @@
      sodipodi:role="line"
      id="tspan4940">500</tspan></text>
 
+
+
 <g
    id="g4942"
    transform="matrix(0.47986699,0,0,0.47986699,1.7594214,1.2827537)"><g
@@ -7627,6 +7735,8 @@
      y="-475.13174"
      sodipodi:role="line"
      id="tspan4956">600</tspan></text>
+
+
 
 <g
    id="g4958"
@@ -7661,6 +7771,8 @@
      sodipodi:role="line"
      id="tspan4978">Referencemean</tspan></text>
 
+
+
 <text
    transform="matrix(0,1,1,0,0,0)"
    id="text4980"
@@ -7672,6 +7784,8 @@
      y="32.367592"
      sodipodi:role="line"
      id="tspan4982">GFLOP/sofpredictiveauto-tuning</tspan></text>
+
+
 
 <g
    id="g4984"
@@ -7708,39 +7822,47 @@
      sodipodi:role="line"
      id="tspan5006">(c)</tspan></text>
 
+
+
 </g></g><text
    xml:space="preserve"
-   style="font-size:25.60000038px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
-   x="226.45952"
-   y="-583.41663"
+   style="font-size:44.79999924px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
+   x="66.459518"
+   y="-573.81677"
    id="text6994"
    sodipodi:linespacing="125%"
    transform="scale(1,-1)"><tspan
      sodipodi:role="line"
      id="tspan6996"
-     x="226.45952"
-     y="-583.41663">Predictive Auto-Tuning Performance</tspan></text>
-<rect
-   style="fill:#f9f9f9;fill-opacity:1;stroke:none"
-   id="rect6998"
-   width="1026.1953"
-   height="261.81522"
-   x="-2.006247"
+     x="66.459518"
+     y="-573.81677">Predictive Auto-Tuning Performance</tspan></text>
+
+
+<g
+   id="overlay"
+   inkscape:label="#g12531"><rect
+   transform="matrix(0.8,0,0,-0.8,0,614.4)"
    y="505.18164"
-   transform="matrix(0.8,0,0,-0.8,0,614.4)" /><text
-   xml:space="preserve"
-   style="font-size:25.60000038px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LMSans12;-inkscape-font-specification:LMSans12"
-   x="90.829407"
-   y="-103.67227"
-   id="text7000"
+   x="-2.006247"
+   height="261.81522"
+   width="1026.1953"
+   id="rect6998"
+   style="fill:#f9f9f9;fill-opacity:1;stroke:none" /><text
+   transform="scale(1,-1)"
    sodipodi:linespacing="125%"
-   transform="scale(1,-1)"><tspan
-     sodipodi:role="line"
+   id="text7000"
+   y="-103.67227"
+   x="90.829407"
+   style="font-size:25.60000038px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
+   xml:space="preserve"><tspan
+     y="-103.67227"
+     x="90.829407"
      id="tspan7002"
-     x="90.829407"
-     y="-103.67227">Empirical tuning: 1-3 minutes</tspan><tspan
-     sodipodi:role="line"
-     x="90.829407"
+     sodipodi:role="line">Empirical tuning: 1-3 minutes</tspan><tspan
+     id="tspan7004"
      y="-71.672272"
-     id="tspan7004">Predictive tuning: 0.15 seconds (naive Python implementation)</tspan></text>
+     x="90.829407"
+     sodipodi:role="line">Predictive tuning: 0.15 seconds (naive Python implementation)</tspan></text>
+
+</g>
 </g></svg>

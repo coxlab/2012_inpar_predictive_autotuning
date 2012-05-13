@@ -39,8 +39,7 @@
     ul
         li loop unrolling
         li register spilling
-        li registers vs. shared memory
-        //li global / constant / texture memory
+        li registers / shared / texture / const
 
 
 .slide
@@ -62,8 +61,10 @@
         li actually run the fn many ways, measure time
         li installation saves ptr to fastest config
         li Pro: very fast implementations
-        li Con: what if the input array size changes?
-        li Con: what about different hardware revisions / generations?
+        li Con: brittle ...
+        ul.incremental
+            li to different input array size
+            li to different platform
 
     //p In these cases you're on your own, empirical auto-tuning offers no help.
 
@@ -76,10 +77,18 @@
         li write a hardware simulator
         li pick fastest config according to simulator
         li Pro: general, high-performance JIT approach
-        li Con: who is going to provide simulators for all platforms?
+        li Con: who is going to provide simulators for all platforms??
 
 .slide
-    h1 Predictive Auto-tuning: Best of both worlds
+
+    //h1 Results: avg GFLOPs when using the wrong model -> BAD
+
+    svg_include(src='svg/fig_allstars_mixup_580_R1.svg')
+    build fade_in(#autotune)
+    build fade_in(#mismatch)
+
+.slide
+    h1 Predictive Auto-tuning: <br> Best of both worlds
 
     ul.incremental
         li instrument your implementation
@@ -90,6 +99,8 @@
 
 .slide
     svg_include(src='svg/predictive_auto_tuning.svg')
+    build fade_in(#emp)
+    build fade_in(#tx)
 
 .slide
 
@@ -112,6 +123,7 @@
     //p show ranges of problem dimensions, relevance of different cases.
 
     svg_include(src='svg/fbcorr.svg')
+    build fade_in(#bottomtext)
 
     //R = C & \in \{ 256, 512, 1024, 2048, 4096 \} \\
     //H = W & \in \{ 3, 5, 7, 9, 11 \} \\
@@ -120,7 +132,12 @@
 
 .slide
 
-    h1 Filter bank correlation implementation (see file)
+    h1 Filter bank correlation implementation
+
+    ul.incremental
+        li implementation of (Pinto and Cox, 2011)
+        li for kernel pseudocode, see paper
+        li (show file)
 
     //-
         latex2png: //TODO: implement this filter in jade
@@ -146,7 +163,7 @@
 
     ul
         li block height  (4 / 8 / 16 / 32 / 64 / 128)
-        li block width  (4 / 8 / 16 /32 / 64 / 128)
+        li block width  (4 / 8 / 16 / 32 / 64 / 128)
         li n. filter rows  (1 / 2)
         li n. output 4s (1 / 2 / all)
         li spill (y / n)
@@ -172,13 +189,43 @@
             \end{align*}
 
 
+//.slide
+//    svg_include(src='svg/predictive_auto_tuning.svg')
+
+
 .slide
+    h1 Feature Space
 
-    h1 Mapping timing to a regression problem
+    ul.incremental
+        li Problem configuration
+        ul
+            li N.filters, height, width, rows, cols, etc.
+        li Implementation choices
+        ul
+            li block height, 24bit mul, use_tex1d, etc.
+        li Platform features
+        ul
+            li ... Future work
 
-    ul
-        li log-speedup over reference configuration
-        li invalid configuration? log-speedup epsilon
+.slide
+    h1 Fitting a timing model (part 1)
+
+    ul.incremental
+        li x = (problem, implementation, hardware)
+        li y = time to completion
+        li fitting minimizes average cost(y, T(x))
+        li boosting is easy for (f(y) - f(T(x)))^2
+        li what f will make fitting do what we want?
+
+.slide
+    h1 Fitting a timing model (part 2)
+    ul.incremental
+        li we have reference implementation
+        li our choice: optimize speedup
+        li f(y) = log(yref / y)
+        li invalid configuration?
+        ul
+            li define y = ζ * yref
 
     //-
         \begin{equation}
@@ -189,71 +236,66 @@
         \end{equation}
 
 
-
 .slide
 
     svg_include(src='svg/regression_tree.svg')
+
+    build fade_in(#textbottom)
 
 
 .slide
 
     svg_include(src='svg/boosted_regression_tree.svg')
+    build fade_out(#loop_cover)
+    build fade_in(#Tx)
+    build fade_in(#bottomtext)
 
 
 .slide
 
     svg_include(src='svg/rforest_argmax.svg')
+    build fade_in(#algo)
+    build fade_in(#search0)
+    build fade_in(#search1)
+    build fade_in(#search2)
+    build fade_in(#search3)
+    build fade_in(#bottomtext)
+
 
 
 .slide
-
-    //h1 Results: matching empirical auto-tuning -> GOOD
-
     svg_include(src='svg/fig_main_R1.svg')
 
+    build fade_out(#overlay)
+
 
 .slide
-
-    //h1 Results: avg GFLOPs when using the wrong model -> BAD
-
-    svg_include(src='svg/fig_allstars_mixup_580_R1.svg')
-
-.slide
-
-    h1 Results: how sensitive is the approach to the score of invalid points?
 
     svg_include(src='svg/fig_ntrain_munctional0_580.svg')
 
-.slide
-
-    h1 Summary
-
-    p scientists rely on high-level mathematical abstraction boundaries.
-
-    p new hardware platforms are driving up the number of implementations needed to satisfy those abstractions with good performance.
-
-    p we presented a standard, inexpensive approach to managing this increasing complexity: Predictive Auto-Tuning
 
 .slide
 
     h1 Summary
 
-    p predictict auto-tuning centers on the idea of using empirical data to
-    fit a model of system performance for the purpose of optimizing a
-    particular instrumented piece of code.
-
-    p we showed how to apply this approach to filterbank correlation, fitting
-    model with boosted regression trees but the approach certainly applies
-    beyond that regime.
-
-    p makes it easy to trade off JIT cost vs. install cost vs. running efficiency.
-
+    ul.incremental
+        li Scientists rely on mathematical abstraction boundaries.
+        li New hardware demands multiplicity of implementations.
+        li Predictive Auto-Tuning is standardized, inexpensive approach to providing JIT selection of fast problem-specific implementations.
 
 .slide
 
     h1 Future Work
 
-    p platform features (device inspection, micro-benchmarks) generalize to future hardware
-    p how far can you scale to larger search spaces
-    p model-driven profiling, debugging, optimization
+    ul
+        li generalizing across hardware
+        ul
+            li device inspection
+            li micro-benchmarking
+        li faster forest optimization
+    //p how far can you scale to larger search spaces
+    //p model-driven profiling, debugging, optimization
 
+.slide
+
+    h1 Thank You

@@ -46,7 +46,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.35355339"
-     inkscape:cx="532.96761"
+     inkscape:cx="32.336008"
      inkscape:cy="325.35819"
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
@@ -72,17 +72,24 @@
      id="layer1"
      inkscape:label="Layer 1"
      inkscape:groupmode="layer">
+    <rect
+       style="fill:#8f8f8f;fill-opacity:0.34615389000000002;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect16039"
+       width="1024"
+       height="368"
+       x="0"
+       y="-6.0396133e-14" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="116.93607"
-       y="423.61819"
+       y="463.61819"
        id="text7833"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan7835"
          x="116.93607"
-         y="423.61819">James Bergstra, Nicolas Pinto, David D. Cox</tspan></text>
+         y="463.61819">James Bergstra, Nicolas Pinto, David D. Cox</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
@@ -106,27 +113,27 @@
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="116.93607"
-       y="484.95627"
+       y="524.9563"
        id="text3027"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3029"
          x="116.93607"
-         y="484.95627">The Rowland Institute at Harvard</tspan></text>
+         y="524.9563">The Rowland Institute at Harvard</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
+       style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Latin Modern Sans;-inkscape-font-specification:Latin Modern Sans"
        x="116.93607"
-       y="603.95123"
+       y="683.95123"
        id="text3031"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3033"
          x="116.93607"
-         y="603.95123">May 13, 2012</tspan><tspan
+         y="683.95123">May 13, 2012</tspan><tspan
          sodipodi:role="line"
          x="116.93607"
-         y="653.95123"
+         y="733.95123"
          id="tspan3035">Innovative Parallel Computation (INPAR)</tspan></text>
   </g>
 </svg>
