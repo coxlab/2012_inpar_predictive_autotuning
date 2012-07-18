@@ -70,10 +70,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 
-def main():
+def main(port):
     try:
-        server = HTTPServer(('', 8080), Handler)
-        print 'Server up'
+        server = HTTPServer(('', port), Handler)
+        print 'Server up on port %i' % port
         server.serve_forever()
     except KeyboardInterrupt:
         print 'ctrl-c, going down'
@@ -81,4 +81,8 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        port = int(sys.argv[1])
+    except IndexError:
+        port = 8082
+    sys.exit(main(port))
